@@ -1,0 +1,35 @@
+{
+  "name": "type-crafter",
+  "version": "0.0.1",
+  "description": "A tool to generate types from a yaml schema for any language",
+  "main": "./src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "tsc --watch",
+    "format:all": "npx prettier --write .",
+    "lint": "prettier --plugin-search-dir . --check . && eslint ."
+  },
+  "keywords": [],
+  "author": "Sahil Sinha",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sinha-sahil/type-crafter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sinha-sahil/type-crafter/issues"
+  },
+  "homepage": "https://github.com/sinha-sahil/type-crafter#readme",
+  "dependencies": {
+    "yaml": "^2.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.4",
+    "@typescript-eslint/eslint-plugin": "^6.7.5",
+    "@typescript-eslint/parser": "^6.7.5",
+    "eslint": "^8.51.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2"
+  }
+}
