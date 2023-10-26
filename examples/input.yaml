@@ -1,8 +1,8 @@
 info:
   version: 0.0.0
   title: Sample Typing Spec
-typings:
-  GroupOne: 
+groupedTypes:
+  GroupOne:
     SampleObjectOne:
       type: object
       required:
@@ -13,3 +13,14 @@ typings:
           type: string
         name:
           type: string
+types:
+  SampleObjectTwo:
+    type: object
+    required:
+      - id
+      - name
+    properties:
+      id:
+        type: string
+      name:
+        type: string

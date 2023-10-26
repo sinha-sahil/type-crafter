@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/sinha-sahil/type-crafter#readme",
   "dependencies": {
+    "type-decoder": "^1.2.0",
     "yaml": "^2.3.2"
   },
   "devDependencies": {
