@@ -28,7 +28,9 @@
       "$types": ["./src/types"],
       "$types/*": ["./src/types/*"],
       "$utils": ["./src/utils"],
-      "$utils/*": ["./src/utils/*"]
+      "$utils/*": ["./src/utils/*"],
+      "$generators": ["./src/generators"],
+      "$generators/*": ["./src/generators/*"]
     },
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
