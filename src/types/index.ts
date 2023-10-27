@@ -1,5 +1,42 @@
 export * from "./decoders";
 
+//#region Config Type
+
+export type Configuration = {
+  input: string;
+  output: OutputConfig;
+  template: Template;
+  language: LanguageConfig;
+};
+
+export type OutputConfig = {
+  fileExtension: string;
+  directory: string;
+}
+
+export type Template = {
+  objectSyntax: string;
+}
+
+export type LanguageConfig = {
+  keywords: LanguageKeywords;
+}
+
+export type LanguageKeywords = {
+  "string": string;
+  "number": string;
+  "integer": string;
+  "boolean": string;
+  "object": string;
+  "date": string;
+  "array": string;
+  "any": string;
+}
+
+//#endregion
+
+//#region Spec File Data
+
 export type SpecFileData = {
   info: SpecInfo;
   groupedTypes: GroupedTypes | null;
@@ -33,7 +70,35 @@ export type TypeProperty = {
   type: string;
 };
 
-export type Configuration = {
-  inputFile: string;
-  outputDirectory: string;
-};
+//#endregion
+
+//#region Writer Data
+
+export type ObjectTemplateInput = {
+  typeName: string;
+  properties: {
+    [propertyName: string]: {
+      type: string; 
+      required: boolean;
+    };
+  }
+}
+
+//#endregion
+
+//#region Output Data
+
+export type GenerationResult = {
+  groupedTypes: GroupedTypesOutput;
+  types: TypesOutput;
+}
+
+export type GroupedTypesOutput = {
+  [groupName: string]: TypesOutput;
+}
+
+export type TypesOutput = {
+  [typeName: string]: string;
+}
+
+//#endregion
