@@ -1,6 +1,6 @@
 import yaml from "yaml";
 import { Configuration, decodeSpecFileData } from "$types";
-import { readFile } from "$utils";
+import { readFile, writeOutput } from "$utils";
 import { generator } from "$generators/generic";
 
 export async function generate(config: Configuration): Promise<void> {
@@ -11,7 +11,8 @@ export async function generate(config: Configuration): Promise<void> {
     if (decodedSpecData === null) {
       throw new Error("Invalid spec file data!");
     }
-    generator(config, decodedSpecData);
+    const result = generator(config, decodedSpecData);
+    await writeOutput(config, result);
   } catch (e) {
     console.error("Generation failed!");
   }

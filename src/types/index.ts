@@ -10,8 +10,13 @@ export type Configuration = {
 };
 
 export type OutputConfig = {
+  cleanWrite: boolean;
   fileExtension: string;
   directory: string;
+  writerMode: {
+    groupedTypes: 'FolderWithFiles' | 'SingleFile';
+    types: 'SingleFile' | 'Files';
+  }
 }
 
 export type Template = {

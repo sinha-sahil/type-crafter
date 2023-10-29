@@ -3,7 +3,28 @@ info:
   title: Sample Typing Spec
 groupedTypes:
   GroupOne:
-    SampleObjectOne:
+    GroupObjectOne:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+  GroupTwo:
+    GroupTwoObjectOne:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    GroupTwoObjectTwo:
       type: object
       required:
         - id
@@ -14,7 +35,27 @@ groupedTypes:
         name:
           type: string
 types:
-  SampleObjectTwo:
+  TypeObjectTwo:
+    type: object
+    required:
+      - id
+      - name
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+  TypeObjectThree:
+    type: object
+    required:
+      - id
+      - name
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+  TypeObjectFour:
     type: object
     required:
       - id
