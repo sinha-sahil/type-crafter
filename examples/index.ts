@@ -7,8 +7,13 @@ async function generateTypescript() {
   generate({
     input: "examples/input.yaml",
     output: {
+      cleanWrite: true,
       fileExtension: ".ts",
-      directory: "examples/output/"
+      directory: "examples/output",
+      writerMode: {
+        groupedTypes: 'FolderWithFiles', 
+        types: 'SingleFile'
+      }
     },
     template: {
       objectSyntax

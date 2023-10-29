@@ -22,6 +22,14 @@ export async function createFolder(basePath: string, folderName: string) {
   await fs.mkdir(folderPath, { recursive: true });
 }
 
+export async function _createFolder(folderPath: string) {
+  await fs.mkdir(folderPath, { recursive: true });
+}
+
+export async function deleteFolder(folderPath: string) {
+  await fs.rmdir(folderPath, { recursive: true });
+}
+
 export async function writeFile(
   basePath: string,
   fileName: string,
