@@ -1,8 +1,11 @@
 import { readFile } from "$utils";
 import { generate } from "../src";
 
-async function generateTypescript() { 
+async function generateTypescript() {
   const objectSyntax = await readFile("templates/typescript/object-syntax.hbs");
+  const exporterModuleSyntax = await readFile(
+    "templates/typescript/exporter-module-syntax.hbs",
+  );
 
   generate({
     input: "examples/input.yaml",
@@ -11,27 +14,28 @@ async function generateTypescript() {
       fileExtension: ".ts",
       directory: "examples/output",
       writerMode: {
-        groupedTypes: 'FolderWithFiles', 
-        types: 'SingleFile'
-      }
+        groupedTypes: "FolderWithFiles",
+        types: "Files",
+      },
     },
     template: {
-      objectSyntax
+      objectSyntax,
+      exporterModuleSyntax,
     },
     language: {
+      exporterModuleName: "index",
       keywords: {
-        "string": "string",
-        "number": "number",
-        "integer": "number",
-        "boolean": "boolean",
-        "object": "Record<string, unknown>",
-        "date": "Date",
-        "array": "unknown[]",
-        "any": "unknown"
-      }
-    }
+        string: "string",
+        number: "number",
+        integer: "number",
+        boolean: "boolean",
+        object: "Record<string, unknown>",
+        date: "Date",
+        array: "unknown[]",
+        any: "unknown",
+      },
+    },
   });
 }
-
 
 generateTypescript();
