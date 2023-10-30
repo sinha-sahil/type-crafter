@@ -14,29 +14,31 @@ export type OutputConfig = {
   fileExtension: string;
   directory: string;
   writerMode: {
-    groupedTypes: 'FolderWithFiles' | 'SingleFile';
-    types: 'SingleFile' | 'Files';
-  }
-}
+    groupedTypes: "FolderWithFiles" | "SingleFile";
+    types: "SingleFile" | "Files";
+  };
+};
 
 export type Template = {
   objectSyntax: string;
-}
+  exporterModuleSyntax: string;
+};
 
 export type LanguageConfig = {
   keywords: LanguageKeywords;
-}
+  exporterModuleName: string;
+};
 
 export type LanguageKeywords = {
-  "string": string;
-  "number": string;
-  "integer": string;
-  "boolean": string;
-  "object": string;
-  "date": string;
-  "array": string;
-  "any": string;
-}
+  string: string;
+  number: string;
+  integer: string;
+  boolean: string;
+  object: string;
+  date: string;
+  array: string;
+  any: string;
+};
 
 //#endregion
 
@@ -83,11 +85,11 @@ export type ObjectTemplateInput = {
   typeName: string;
   properties: {
     [propertyName: string]: {
-      type: string; 
+      type: string;
       required: boolean;
     };
-  }
-}
+  };
+};
 
 //#endregion
 
@@ -96,14 +98,14 @@ export type ObjectTemplateInput = {
 export type GenerationResult = {
   groupedTypes: GroupedTypesOutput;
   types: TypesOutput;
-}
+};
 
 export type GroupedTypesOutput = {
   [groupName: string]: TypesOutput;
-}
+};
 
 export type TypesOutput = {
   [typeName: string]: string;
-}
+};
 
 //#endregion

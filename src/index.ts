@@ -1,7 +1,8 @@
 import yaml from "yaml";
 import { Configuration, decodeSpecFileData } from "$types";
-import { readFile, writeOutput } from "$utils";
+import { readFile } from "$utils";
 import { generator } from "$generators/generic";
+import { writeOutput } from "$writer";
 
 export async function generate(config: Configuration): Promise<void> {
   try {
