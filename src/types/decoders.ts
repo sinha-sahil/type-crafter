@@ -1,5 +1,7 @@
 import type {
   GroupedTypes,
+  ObjectTemplateInputProperties,
+  ObjectTemplateInputProperty,
   SpecFileData,
   SpecInfo,
   TypeInfo,
@@ -10,6 +12,7 @@ import type {
 import {
   __decodeString,
   decodeArray,
+  decodeBoolean,
   decodeString,
   isJSON,
   noErrorOrNullValues,
@@ -123,6 +126,41 @@ function decodeTypeProperty(rawInput: unknown): TypeProperty | null {
     if (noErrorOrNullValues(result)) {
       return result;
     }
+  }
+  return null;
+}
+
+function decodeObjectTemplateInputProperty(
+  rawInput: unknown,
+): ObjectTemplateInputProperty | null {
+  if (isJSON(rawInput)) {
+    const required = decodeBoolean(rawInput.required);
+    const _type = decodeString(rawInput.type);
+    if (required !== null && _type !== null) {
+      return {
+        type: _type,
+        required,
+      };
+    }
+  }
+  return null;
+}
+
+export function decodeObjectTemplateInputProperties(
+  rawInput: unknown,
+): ObjectTemplateInputProperties | null {
+  if (isJSON(rawInput)) {
+    const result: ObjectTemplateInputProperties = {};
+    for (let key in rawInput) {
+      const value = rawInput[key];
+      const decodedValue = decodeObjectTemplateInputProperty(value);
+      if (decodedValue !== null) {
+        result[key] = decodedValue;
+      } else {
+        return null;
+      }
+    }
+    return Object.keys(result).length > 0 ? result : null;
   }
   return null;
 }
