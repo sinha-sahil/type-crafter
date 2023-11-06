@@ -83,12 +83,16 @@ export type TypeProperty = {
 
 export type ObjectTemplateInput = {
   typeName: string;
-  properties: {
-    [propertyName: string]: {
-      type: string;
-      required: boolean;
-    };
-  };
+  properties: ObjectTemplateInputProperties;
+};
+
+export type ObjectTemplateInputProperties = {
+  [propertyName: string]: ObjectTemplateInputProperty;
+};
+
+export type ObjectTemplateInputProperty = {
+  type: string;
+  required: boolean;
 };
 
 //#endregion
