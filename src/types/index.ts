@@ -78,6 +78,7 @@ export type TypeDataType = 'string' | 'number' | 'integer' | 'boolean' | 'array'
 export type TypeProperty = {
   type: TypeDataType;
   format: string | null;
+  items: TypeProperty | null;
 };
 
 //#endregion

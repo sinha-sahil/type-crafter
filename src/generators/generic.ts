@@ -8,7 +8,8 @@ import {
   Types,
   GroupedTypes,
   GroupedTypesOutput,
-  TypeDataType
+  TypeDataType,
+  TypeProperty
 } from '$types';
 import Handlebars from 'handlebars';
 import { Runtime } from '../runtime';
@@ -16,16 +17,35 @@ import { isJSON } from 'type-decoder';
 
 type TemplateGenerator = (input: ObjectTemplateInput) => string;
 
-function getLanguageDataType(dataType: TypeDataType, format: string | null): string {
+function fillPatterns(input: string, patterns: { regex: RegExp; value: string }[]): string {
+  let result = input;
+  patterns.forEach((pattern) => {
+    result = result.replace(pattern.regex, pattern.value);
+  });
+  return result;
+}
+
+function getLanguageDataType(
+  dataType: TypeDataType,
+  format: string | null,
+  items: TypeProperty | null
+): string {
   const typeMapper = Runtime.config?.language.typeMapper ?? null;
   const mappedType = typeMapper !== null ? typeMapper[dataType] : null;
+  const itemsType =
+    items !== null ? getLanguageDataType(items.type, items.format, items.items) : null;
+  const fillerPatterns = [];
+  if (itemsType !== null) {
+    fillerPatterns.push({ regex: /~ItemType~/g, value: itemsType });
+  }
+
   if (typeof mappedType === 'string') {
-    return mappedType;
+    return fillPatterns(mappedType, fillerPatterns);
   } else if (isJSON(mappedType)) {
     const defaultType = mappedType.default;
     const mappedTypeWithFormat = mappedType[format ?? ''] ?? defaultType;
     if (typeof mappedTypeWithFormat !== 'undefined') {
-      return mappedTypeWithFormat;
+      return fillPatterns(mappedTypeWithFormat, fillerPatterns);
     }
   }
   return dataType;
@@ -44,10 +64,11 @@ function generateTypeString(
   for (let propertyName in typeInfo.properties) {
     const propertyType = typeInfo.properties[propertyName].type;
     const propertyFormat = typeInfo.properties[propertyName].format;
+    const propertyItems = typeInfo.properties[propertyName].items ?? null;
     templateInput.properties = {
       ...templateInput.properties,
       [propertyName]: {
-        type: getLanguageDataType(propertyType, propertyFormat),
+        type: getLanguageDataType(propertyType, propertyFormat, propertyItems),
         required: typeInfo.required?.includes(propertyName) ?? false
       }
     };

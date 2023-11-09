@@ -27,7 +27,7 @@ async function generateTypescript() {
         number: { default: 'number' },
         integer: { default: 'integer' },
         boolean: 'boolean',
-        array: 'Array',
+        array: '~ItemType~[]',
         object: 'type'
       }
     }

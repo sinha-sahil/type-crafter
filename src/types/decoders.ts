@@ -137,10 +137,12 @@ function decodeTypeDataType(rawInput: unknown): TypeDataType | null {
 function decodeTypeProperty(rawInput: unknown): TypeProperty | null {
   if (isJSON(rawInput)) {
     const _type = decodeTypeDataType(rawInput.type);
+    const items = decodeTypeProperty(rawInput.items);
     if (_type !== null) {
       return {
         type: _type,
-        format: decodeString(rawInput.format)
+        format: decodeString(rawInput.format),
+        items
       };
     }
   }
