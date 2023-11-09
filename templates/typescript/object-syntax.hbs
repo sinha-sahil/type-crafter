@@ -1,5 +1,5 @@
-export type {{typeName}} = { 
+export type {{typeName}} = {
   {{#each properties}}
-    {{@key}}: {{this.type}}{{#unless this.required}} | null{{/unless}};
+    {{@key}}: {{{this.type}}}{{#unless this.required}} | null{{/unless}};
   {{/each}}
 };
