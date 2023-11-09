@@ -1,4 +1,4 @@
-export * from "./decoders";
+export * from './decoders';
 
 //#region Config Type
 
@@ -14,8 +14,8 @@ export type OutputConfig = {
   fileExtension: string;
   directory: string;
   writerMode: {
-    groupedTypes: "FolderWithFiles" | "SingleFile";
-    types: "SingleFile" | "Files";
+    groupedTypes: 'FolderWithFiles' | 'SingleFile';
+    types: 'SingleFile' | 'Files';
   };
 };
 
@@ -25,19 +25,19 @@ export type Template = {
 };
 
 export type LanguageConfig = {
-  keywords: LanguageKeywords;
   exporterModuleName: string;
+  typeMapper: LanguageTypeMapper;
 };
 
-export type LanguageKeywords = {
-  string: string;
-  number: string;
-  integer: string;
-  boolean: string;
-  object: string;
-  date: string;
-  array: string;
-  any: string;
+/**
+ * @description Mappers for all the types supported by OpenAPI 3.0.0
+ * @see https://swagger.io/docs/specification/data-models/data-types/
+ */
+export type LanguageTypeMapper = Record<TypeDataType, FormatType | string>;
+
+export type FormatType = {
+  default: string;
+  [format: string]: string | undefined;
 };
 
 //#endregion
@@ -73,8 +73,11 @@ export type TypeProperties = {
   [propertyName: string]: TypeProperty;
 };
 
+export type TypeDataType = 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'object';
+
 export type TypeProperty = {
-  type: string;
+  type: TypeDataType;
+  format: string | null;
 };
 
 //#endregion
