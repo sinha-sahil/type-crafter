@@ -4,19 +4,20 @@ import type {
   ObjectTemplateInputProperty,
   SpecFileData,
   SpecInfo,
+  TypeDataType,
   TypeInfo,
   TypeProperties,
   TypeProperty,
-  Types,
-} from ".";
+  Types
+} from '.';
 import {
   __decodeString,
   decodeArray,
   decodeBoolean,
   decodeString,
   isJSON,
-  noErrorOrNullValues,
-} from "type-decoder";
+  noErrorOrNullValues
+} from 'type-decoder';
 
 export function decodeSpecFileData(rawInput: unknown): SpecFileData | null {
   if (isJSON(rawInput)) {
@@ -28,7 +29,7 @@ export function decodeSpecFileData(rawInput: unknown): SpecFileData | null {
       const result: SpecFileData = {
         info,
         types,
-        groupedTypes,
+        groupedTypes
       };
       return result;
     }
@@ -40,7 +41,7 @@ function decodeSpecInfo(rawInput: unknown): SpecInfo | null {
   if (isJSON(rawInput)) {
     const result = {
       version: __decodeString(rawInput.version),
-      title: __decodeString(rawInput.title),
+      title: __decodeString(rawInput.title)
     };
     if (noErrorOrNullValues(result)) {
       return result;
@@ -91,9 +92,9 @@ function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
       const result: TypeInfo = {
         type: __decodeString(rawInput.type),
         required,
-        properties,
+        properties
       };
-      if (noErrorOrNullValues(result, ["required"])) {
+      if (noErrorOrNullValues(result, ['required'])) {
         return result;
       }
     }
@@ -118,28 +119,42 @@ function decodeTypeProperties(rawInput: unknown): TypeProperties | null {
   return null;
 }
 
-function decodeTypeProperty(rawInput: unknown): TypeProperty | null {
-  if (isJSON(rawInput)) {
-    const result = {
-      type: __decodeString(rawInput.type),
-    };
-    if (noErrorOrNullValues(result)) {
-      return result;
+function decodeTypeDataType(rawInput: unknown): TypeDataType | null {
+  if (typeof rawInput === 'string') {
+    switch (rawInput) {
+      case 'string':
+      case 'number':
+      case 'integer':
+      case 'boolean':
+      case 'array':
+      case 'object':
+        return rawInput;
     }
   }
   return null;
 }
 
-function decodeObjectTemplateInputProperty(
-  rawInput: unknown,
-): ObjectTemplateInputProperty | null {
+function decodeTypeProperty(rawInput: unknown): TypeProperty | null {
+  if (isJSON(rawInput)) {
+    const _type = decodeTypeDataType(rawInput.type);
+    if (_type !== null) {
+      return {
+        type: _type,
+        format: decodeString(rawInput.format)
+      };
+    }
+  }
+  return null;
+}
+
+function decodeObjectTemplateInputProperty(rawInput: unknown): ObjectTemplateInputProperty | null {
   if (isJSON(rawInput)) {
     const required = decodeBoolean(rawInput.required);
     const _type = decodeString(rawInput.type);
     if (required !== null && _type !== null) {
       return {
         type: _type,
-        required,
+        required
       };
     }
   }
@@ -147,7 +162,7 @@ function decodeObjectTemplateInputProperty(
 }
 
 export function decodeObjectTemplateInputProperties(
-  rawInput: unknown,
+  rawInput: unknown
 ): ObjectTemplateInputProperties | null {
   if (isJSON(rawInput)) {
     const result: ObjectTemplateInputProperties = {};
