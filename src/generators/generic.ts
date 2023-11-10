@@ -1,5 +1,4 @@
 import {
-  Configuration,
   GenerationResult,
   ObjectTemplateInput,
   SpecFileData,
@@ -27,7 +26,7 @@ function fillPatterns(input: string, patterns: { regex: RegExp; value: string }[
 function getLanguageDataType(
   dataType: TypeDataType,
   format: string | null,
-  items: TypeProperty | null
+  items: TypeInfo | null
 ): string {
   const typeMapper = Runtime.config?.language.typeMapper ?? null;
   const mappedType = typeMapper !== null ? typeMapper[dataType] : null;
