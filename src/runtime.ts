@@ -1,9 +1,19 @@
-import { Configuration } from '$types';
+import type { Configuration } from '$types';
 
-export class Runtime {
-  static config: Configuration | null = null;
+let config: Configuration | null = null;
 
-  static setConfiguration(config: Configuration) {
-    this.config = config;
-  }
+function setConfig(newConfig: Configuration): void {
+  config = newConfig;
 }
+
+function getConfig(): Configuration {
+  if (config === null) {
+    throw new Error('Configuration not set!');
+  }
+  return config;
+}
+
+export default {
+  getConfig,
+  setConfig
+};

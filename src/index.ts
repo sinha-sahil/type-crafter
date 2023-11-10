@@ -1,14 +1,14 @@
 import yaml from 'yaml';
-import { Configuration, decodeSpecFileData } from '$types';
+import { type Configuration, decodeSpecFileData } from '$types';
 import { getOptionalKeys, readFile } from '$utils';
 import { generator } from '$generators/generic';
 import { writeOutput } from '$writer';
 import Handlebars from 'handlebars';
-import { Runtime } from './runtime';
+import Runtime from './runtime';
 
 export async function generate(config: Configuration): Promise<void> {
   try {
-    Runtime.setConfiguration(config);
+    Runtime.setConfig(config);
     const specFileData = await readFile(config.input);
     const specJSONData = yaml.parse(specFileData);
     const decodedSpecData = decodeSpecFileData(specJSONData);

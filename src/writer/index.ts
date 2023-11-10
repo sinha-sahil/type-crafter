@@ -1,4 +1,9 @@
-import { Configuration, GenerationResult, TypesOutput } from '$types';
+import type {
+  Configuration,
+  ExporterModuleTemplateInput,
+  GenerationResult,
+  TypesOutput
+} from '$types';
 import {
   addValuesToMappedSet,
   createFolder,
@@ -8,16 +13,16 @@ import {
   writeFile
 } from '$utils';
 import Handlebars from 'handlebars';
-import { Runtime } from '../runtime';
+import Runtime from '../runtime';
 
-//#region Localized types
+// #region Localized types
 
 type FileWriterOutput = {
   folderName: string;
   files: string[];
 };
 
-//#endregion
+// #endregion
 
 async function writeTypesToFiles(
   config: Configuration,
@@ -28,7 +33,7 @@ async function writeTypesToFiles(
     folderName: config.output.directory + '/' + folderName,
     files: []
   };
-  for (let typeName in types) {
+  for (const typeName in types) {
     const file = typeName + config.output.fileExtension;
     await writeFile(result.folderName, file, types[typeName]);
     result.files.push(file);
@@ -42,7 +47,7 @@ async function writeTypesToFile(
   fileName: string = 'types'
 ): Promise<FileWriterOutput> {
   let content = '';
-  for (let typeName in types) {
+  for (const typeName in types) {
     content += types[typeName] + '\n';
   }
   await writeFile(config.output.directory, fileName + config.output.fileExtension, content);
@@ -52,18 +57,30 @@ async function writeTypesToFile(
   };
 }
 
-export async function writeOutput(generationResult: GenerationResult) {
-  if (Runtime.config === null) {
-    throw new Error('Configuration not set!');
-  }
-  const config = Runtime.config;
+async function writeExporterModules(
+  files: Set<string>,
+  folder: string,
+  exporterModuleTemplate: HandlebarsTemplateDelegate<ExporterModuleTemplateInput>
+): Promise<void> {
+  const exporterModuleContent = exporterModuleTemplate({
+    modules: [...files].map((file) => file.replace(Runtime.getConfig().output.fileExtension, ''))
+  });
+  await writeFile(
+    folder,
+    Runtime.getConfig().language.exporterModuleName + Runtime.getConfig().output.fileExtension,
+    exporterModuleContent
+  );
+}
+
+export async function writeOutput(generationResult: GenerationResult): Promise<void> {
+  const config: Configuration = Runtime.getConfig();
 
   if (config.output.cleanWrite) {
     await deleteFolder(config.output.directory);
   }
   await createFolder(config.output.directory);
 
-  const writtenFiles: Map<string, Set<string>> = new Map();
+  const writtenFiles: Map<string, Set<string>> = new Map<string, Set<string>>();
 
   // writing types to output directory
 
@@ -84,7 +101,7 @@ export async function writeOutput(generationResult: GenerationResult) {
 
   // writing grouped types to output directory
   if (config.output.writerMode.groupedTypes === 'FolderWithFiles') {
-    for (let groupName in generationResult.groupedTypes) {
+    for (const groupName in generationResult.groupedTypes) {
       let groupFilesWritten = null;
       await createFolderWithBasePath(config.output.directory, groupName);
       addValuesToMappedSet(writtenFiles, await getCompleteFolderPath(config.output.directory), [
@@ -104,7 +121,7 @@ export async function writeOutput(generationResult: GenerationResult) {
       }
     }
   } else if (config.output.writerMode.groupedTypes === 'SingleFile') {
-    for (let groupName in generationResult.groupedTypes) {
+    for (const groupName in generationResult.groupedTypes) {
       let groupFilesWritten = null;
       groupFilesWritten = await writeTypesToFile(
         config,
@@ -122,16 +139,10 @@ export async function writeOutput(generationResult: GenerationResult) {
   }
 
   // writing exporter modules
-  const exporterModuleTemplate = Handlebars.compile(config.template.exporterModuleSyntax);
+  const exporterModuleTemplate: HandlebarsTemplateDelegate<ExporterModuleTemplateInput> =
+    Handlebars.compile(config.template.exporterModuleSyntax);
 
-  writtenFiles.forEach(async (files, folder) => {
-    const exporterModuleContent = exporterModuleTemplate({
-      modules: [...files].map((file) => file.replace(config.output.fileExtension, ''))
-    });
-    await writeFile(
-      folder,
-      config.language.exporterModuleName + config.output.fileExtension,
-      exporterModuleContent
-    );
+  writtenFiles.forEach((files, folder) => {
+    void writeExporterModules(files, folder, exporterModuleTemplate);
   });
 }

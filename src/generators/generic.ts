@@ -1,4 +1,4 @@
-import {
+import type {
   GenerationResult,
   ObjectTemplateInput,
   SpecFileData,
@@ -9,13 +9,11 @@ import {
   TypeDataType
 } from '$types';
 import Handlebars from 'handlebars';
-import { Runtime } from '../runtime';
+import Runtime from '../runtime';
 import { isJSON } from 'type-decoder';
 import { toPascalCase } from '$utils';
 
-type TemplateGenerator = (input: ObjectTemplateInput) => string;
-
-function fillPatterns(input: string, patterns: { regex: RegExp; value: string }[]): string {
+function fillPatterns(input: string, patterns: Array<{ regex: RegExp; value: string }>): string {
   let result = input;
   patterns.forEach((pattern) => {
     result = result.replace(pattern.regex, pattern.value);
@@ -28,7 +26,7 @@ function getLanguageDataType(
   format: string | null,
   items: TypeInfo | null
 ): string {
-  const typeMapper = Runtime.config?.language.typeMapper ?? null;
+  const typeMapper = Runtime.getConfig().language.typeMapper ?? null;
   const mappedType = typeMapper !== null ? typeMapper[dataType] : null;
   const itemsType =
     items !== null ? getLanguageDataType(items.type, items.format, items.items) : null;
@@ -42,7 +40,7 @@ function getLanguageDataType(
   } else if (isJSON(mappedType)) {
     const defaultType = mappedType.default;
     const mappedTypeWithFormat = mappedType[format ?? ''] ?? defaultType;
-    if (typeof mappedTypeWithFormat !== 'undefined') {
+    if (typeof mappedTypeWithFormat === 'string') {
       return fillPatterns(mappedTypeWithFormat, fillerPatterns);
     }
   }
@@ -50,7 +48,7 @@ function getLanguageDataType(
 }
 
 function generateTypeString(
-  template: TemplateGenerator,
+  template: HandlebarsTemplateDelegate<ObjectTemplateInput>,
   typeName: string,
   typeInfo: TypeInfo
 ): string {
@@ -61,7 +59,7 @@ function generateTypeString(
 
   let recursiveTypeString = '';
 
-  for (let propertyName in typeInfo.properties) {
+  for (const propertyName in typeInfo.properties) {
     const propertyType = typeInfo.properties[propertyName].type;
     const propertyFormat = typeInfo.properties[propertyName].format;
     const propertyItems = typeInfo.properties[propertyName].items ?? null;
@@ -85,9 +83,12 @@ function generateTypeString(
   return template(templateInput) + recursiveTypeString;
 }
 
-function generateTypes(template: TemplateGenerator, types: Types): TypesOutput {
+function generateTypes(
+  template: HandlebarsTemplateDelegate<ObjectTemplateInput>,
+  types: Types
+): TypesOutput {
   const result: TypesOutput = {};
-  for (let type in types) {
+  for (const type in types) {
     const typeInfo: TypeInfo = types[type];
     const typeString = generateTypeString(template, type, typeInfo);
     result[type] = typeString;
@@ -96,17 +97,15 @@ function generateTypes(template: TemplateGenerator, types: Types): TypesOutput {
 }
 
 export function generator(specFileData: SpecFileData): GenerationResult {
-  if (Runtime.config === null) {
-    throw new Error('Configuration not set!');
-  }
-
   const result: GenerationResult = {
     groupedTypes: {},
     types: {}
   };
 
   // compiling templates
-  const objectSyntaxTemplate = Handlebars.compile(Runtime.config.template.objectSyntax);
+  const objectSyntaxTemplate: HandlebarsTemplateDelegate<ObjectTemplateInput> = Handlebars.compile(
+    Runtime.getConfig().template.objectSyntax
+  );
 
   // generating types
   if (specFileData.types !== null) {
@@ -115,7 +114,7 @@ export function generator(specFileData: SpecFileData): GenerationResult {
 
   // generating grouped types
   const groupedTypes: GroupedTypesOutput = {};
-  for (let groupName in specFileData.groupedTypes) {
+  for (const groupName in specFileData.groupedTypes) {
     groupedTypes[groupName] = generateTypes(
       objectSyntaxTemplate,
       specFileData.groupedTypes[groupName]

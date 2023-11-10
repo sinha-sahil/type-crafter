@@ -52,7 +52,7 @@ function decodeSpecInfo(rawInput: unknown): SpecInfo | null {
 function decodeGroupedTypes(rawInput: unknown): GroupedTypes | null {
   if (isJSON(rawInput)) {
     const result: GroupedTypes = {};
-    for (let key in rawInput) {
+    for (const key in rawInput) {
       const value = rawInput[key];
       const decodedValue = decodeTypes(value);
       if (decodedValue !== null) {
@@ -69,7 +69,7 @@ function decodeGroupedTypes(rawInput: unknown): GroupedTypes | null {
 function decodeTypes(rawInput: unknown): Types | null {
   if (isJSON(rawInput)) {
     const result: Types = {};
-    for (let key in rawInput) {
+    for (const key in rawInput) {
       const value = rawInput[key];
       const decodedValue = decodeTypeInfo(value);
       if (decodedValue !== null) {
@@ -108,7 +108,7 @@ function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
 function decodeTypeProperties(rawInput: unknown): TypeProperties | null {
   if (isJSON(rawInput)) {
     const result: TypeProperties = {};
-    for (let key in rawInput) {
+    for (const key in rawInput) {
       const value = rawInput[key];
       const decodedValue = decodeTypeInfo(value);
       if (decodedValue !== null) {
@@ -156,7 +156,7 @@ export function decodeObjectTemplateInputProperties(
 ): ObjectTemplateInputProperties | null {
   if (isJSON(rawInput)) {
     const result: ObjectTemplateInputProperties = {};
-    for (let key in rawInput) {
+    for (const key in rawInput) {
       const value = rawInput[key];
       const decodedValue = decodeObjectTemplateInputProperty(value);
       if (decodedValue !== null) {

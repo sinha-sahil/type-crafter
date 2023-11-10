@@ -1,11 +1,11 @@
 import { readFile } from '$utils';
 import { generate } from '../src';
 
-async function generateTypescript() {
+async function generateTypescript(): Promise<void> {
   const objectSyntax = await readFile('templates/typescript/object-syntax.hbs');
   const exporterModuleSyntax = await readFile('templates/typescript/exporter-module-syntax.hbs');
 
-  generate({
+  await generate({
     input: 'examples/input.yaml',
     output: {
       cleanWrite: true,
@@ -34,4 +34,11 @@ async function generateTypescript() {
   });
 }
 
-generateTypescript();
+generateTypescript()
+  .then(() => {
+    console.log('Done & Dusted');
+  })
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
