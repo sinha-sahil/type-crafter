@@ -7,7 +7,6 @@ import type {
   TypeDataType,
   TypeInfo,
   TypeProperties,
-  TypeProperty,
   Types
 } from '.';
 import {
@@ -88,13 +87,17 @@ function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
   if (isJSON(rawInput)) {
     const required = decodeArray(rawInput.required, decodeString);
     const properties = decodeTypeProperties(rawInput.properties);
-    if (properties !== null) {
+    const _type = decodeTypeDataType(rawInput.type);
+    const items = decodeTypeInfo(rawInput.items);
+    if (_type !== null) {
       const result: TypeInfo = {
-        type: __decodeString(rawInput.type),
+        type: _type,
         required,
-        properties
+        properties,
+        items,
+        format: decodeString(rawInput.format)
       };
-      if (noErrorOrNullValues(result, ['required'])) {
+      if (noErrorOrNullValues(result, ['required', 'properties', 'items', 'format'])) {
         return result;
       }
     }
@@ -107,7 +110,7 @@ function decodeTypeProperties(rawInput: unknown): TypeProperties | null {
     const result: TypeProperties = {};
     for (let key in rawInput) {
       const value = rawInput[key];
-      const decodedValue = decodeTypeProperty(value);
+      const decodedValue = decodeTypeInfo(value);
       if (decodedValue !== null) {
         result[key] = decodedValue;
       } else {
@@ -129,21 +132,6 @@ function decodeTypeDataType(rawInput: unknown): TypeDataType | null {
       case 'array':
       case 'object':
         return rawInput;
-    }
-  }
-  return null;
-}
-
-function decodeTypeProperty(rawInput: unknown): TypeProperty | null {
-  if (isJSON(rawInput)) {
-    const _type = decodeTypeDataType(rawInput.type);
-    const items = decodeTypeProperty(rawInput.items);
-    if (_type !== null) {
-      return {
-        type: _type,
-        format: decodeString(rawInput.format),
-        items
-      };
     }
   }
   return null;
