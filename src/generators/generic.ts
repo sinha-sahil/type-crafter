@@ -6,14 +6,13 @@ import {
   TypesOutput,
   TypeInfo,
   Types,
-  GroupedTypes,
   GroupedTypesOutput,
-  TypeDataType,
-  TypeProperty
+  TypeDataType
 } from '$types';
 import Handlebars from 'handlebars';
 import { Runtime } from '../runtime';
 import { isJSON } from 'type-decoder';
+import { toPascalCase } from '$utils';
 
 type TemplateGenerator = (input: ObjectTemplateInput) => string;
 
@@ -61,19 +60,30 @@ function generateTypeString(
     properties: {}
   };
 
+  let recursiveTypeString = '';
+
   for (let propertyName in typeInfo.properties) {
     const propertyType = typeInfo.properties[propertyName].type;
     const propertyFormat = typeInfo.properties[propertyName].format;
     const propertyItems = typeInfo.properties[propertyName].items ?? null;
+    const recursivePropertyName = toPascalCase(propertyName);
+    if (propertyType === 'object') {
+      recursiveTypeString +=
+        '\n' +
+        generateTypeString(template, recursivePropertyName, typeInfo.properties[propertyName]);
+    }
     templateInput.properties = {
       ...templateInput.properties,
       [propertyName]: {
-        type: getLanguageDataType(propertyType, propertyFormat, propertyItems),
+        type:
+          propertyType === 'object'
+            ? recursivePropertyName
+            : getLanguageDataType(propertyType, propertyFormat, propertyItems),
         required: typeInfo.required?.includes(propertyName) ?? false
       }
     };
   }
-  return template(templateInput);
+  return template(templateInput) + recursiveTypeString;
 }
 
 function generateTypes(template: TemplateGenerator, types: Types): TypesOutput {

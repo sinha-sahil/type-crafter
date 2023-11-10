@@ -64,22 +64,18 @@ export type Types = {
 };
 
 export type TypeInfo = {
-  type: string;
   required: string[] | null;
-  properties: TypeProperties;
+  type: TypeDataType;
+  format: string | null;
+  items: TypeInfo | null;
+  properties: TypeProperties | null;
 };
 
 export type TypeProperties = {
-  [propertyName: string]: TypeProperty;
+  [propertyName: string]: TypeInfo;
 };
 
 export type TypeDataType = 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'object';
-
-export type TypeProperty = {
-  type: TypeDataType;
-  format: string | null;
-  items: TypeProperty | null;
-};
 
 //#endregion
 
