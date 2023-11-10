@@ -12,7 +12,10 @@ export async function readFile(filePath: string): Promise<string> {
   return data;
 }
 
-export async function createFolderWithBasePath(basePath: string, folderName: string) {
+export async function createFolderWithBasePath(
+  basePath: string,
+  folderName: string
+): Promise<void> {
   const isAbsolutePath = path.isAbsolute(basePath);
   const folderPath = isAbsolutePath
     ? path.join(basePath, folderName)
@@ -20,15 +23,15 @@ export async function createFolderWithBasePath(basePath: string, folderName: str
   await fs.mkdir(folderPath, { recursive: true });
 }
 
-export async function createFolder(folderPath: string) {
+export async function createFolder(folderPath: string): Promise<void> {
   await fs.mkdir(folderPath, { recursive: true });
 }
 
-export async function deleteFolder(folderPath: string) {
+export async function deleteFolder(folderPath: string): Promise<void> {
   await fs.rmdir(folderPath, { recursive: true });
 }
 
-export async function getCompleteFolderPath(folderName: string) {
+export async function getCompleteFolderPath(folderName: string): Promise<string> {
   const isAbsolutePath = path.isAbsolute(folderName);
   const folderPath = isAbsolutePath ? folderName : path.join(process.cwd(), folderName);
 
@@ -38,7 +41,11 @@ export async function getCompleteFolderPath(folderName: string) {
   return folderPath;
 }
 
-export async function writeFile(basePath: string, fileName: string, content: string) {
+export async function writeFile(
+  basePath: string,
+  fileName: string,
+  content: string
+): Promise<void> {
   const isAbsolutePath = path.isAbsolute(basePath);
   const filePath = isAbsolutePath
     ? path.join(basePath, fileName)

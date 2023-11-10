@@ -1,0 +1,8 @@
+node_modules/
+dist/
+build/
+examples/
+coverage/
+*.config.js
+*.json
+*.md

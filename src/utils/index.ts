@@ -2,7 +2,11 @@ import { decodeObjectTemplateInputProperties } from '$types';
 
 export * from './file-system';
 
-export function addValuesToMappedSet(map: Map<string, Set<string>>, key: string, values: string[]) {
+export function addValuesToMappedSet(
+  map: Map<string, Set<string>>,
+  key: string,
+  values: string[]
+): void {
   const existingValues = map.get(key);
   map.set(
     key,
@@ -12,18 +16,18 @@ export function addValuesToMappedSet(map: Map<string, Set<string>>, key: string,
   );
 }
 
-export function getOptionalKeys(object: unknown) {
+export function getOptionalKeys(object: unknown): string[] {
+  const nullableKeys = [];
   const properties = decodeObjectTemplateInputProperties(object);
   if (properties !== null) {
-    const nullableKeys = [];
-    for (let propertyName in properties) {
+    for (const propertyName in properties) {
       const property = properties[propertyName];
       if (!property.required) {
         nullableKeys.push(propertyName);
       }
     }
-    return nullableKeys;
   }
+  return nullableKeys;
 }
 
 export function toPascalCase(input: string): string {

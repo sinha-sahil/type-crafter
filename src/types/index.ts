@@ -1,6 +1,6 @@
 export * from './decoders';
 
-//#region Config Type
+// #region Config Type
 
 export type Configuration = {
   input: string;
@@ -40,9 +40,9 @@ export type FormatType = {
   [format: string]: string | undefined;
 };
 
-//#endregion
+// #endregion
 
-//#region Spec File Data
+// #region Spec File Data
 
 export type SpecFileData = {
   info: SpecInfo;
@@ -55,13 +55,11 @@ export type SpecInfo = {
   title: string;
 };
 
-export type GroupedTypes = {
-  [groupName: string]: Types;
-};
+type GroupName = string;
+export type GroupedTypes = Record<GroupName, Types>;
 
-export type Types = {
-  [typeName: string]: TypeInfo;
-};
+type TypeName = string;
+export type Types = Record<TypeName, TypeInfo>;
 
 export type TypeInfo = {
   required: string[] | null;
@@ -71,45 +69,41 @@ export type TypeInfo = {
   properties: TypeProperties | null;
 };
 
-export type TypeProperties = {
-  [propertyName: string]: TypeInfo;
-};
+type PropertyName = string;
+export type TypeProperties = Record<PropertyName, TypeInfo>;
 
 export type TypeDataType = 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'object';
 
-//#endregion
+// #endregion
 
-//#region Writer Data
+// #region Writer Data
 
 export type ObjectTemplateInput = {
   typeName: string;
   properties: ObjectTemplateInputProperties;
 };
 
-export type ObjectTemplateInputProperties = {
-  [propertyName: string]: ObjectTemplateInputProperty;
-};
+export type ObjectTemplateInputProperties = Record<PropertyName, ObjectTemplateInputProperty>;
 
 export type ObjectTemplateInputProperty = {
   type: string;
   required: boolean;
 };
 
-//#endregion
+export type ExporterModuleTemplateInput = {
+  modules: string[];
+};
 
-//#region Output Data
+// #endregion
+
+// #region Output Data
 
 export type GenerationResult = {
   groupedTypes: GroupedTypesOutput;
   types: TypesOutput;
 };
 
-export type GroupedTypesOutput = {
-  [groupName: string]: TypesOutput;
-};
+export type GroupedTypesOutput = Record<GroupName, TypesOutput>;
+export type TypesOutput = Record<TypeName, string>;
 
-export type TypesOutput = {
-  [typeName: string]: string;
-};
-
-//#endregion
+// #endregion
