@@ -1,8 +1,8 @@
 import type {
   Configuration,
-  ExporterModuleTemplateInput,
   GenerationResult,
-  TypesOutput
+  GeneratedTypes,
+  TypesFileTemplateInput
 } from '$types';
 import {
   addValuesToMappedSet,
@@ -10,10 +10,11 @@ import {
   createFolderWithBasePath,
   deleteFolder,
   getCompleteFolderPath,
+  getExpectedWrittenPath,
   writeFile
 } from '$utils';
-import Handlebars from 'handlebars';
-import Runtime from '../runtime';
+import Runtime from '$runtime';
+import { generateExpectedOutputFile } from './helpers';
 
 // #region Localized types
 
@@ -26,7 +27,7 @@ type FileWriterOutput = {
 
 async function writeTypesToFiles(
   config: Configuration,
-  types: TypesOutput,
+  types: GeneratedTypes,
   folderName: string = ''
 ): Promise<FileWriterOutput> {
   const result: FileWriterOutput = {
@@ -34,8 +35,21 @@ async function writeTypesToFiles(
     files: []
   };
   for (const typeName in types) {
+    const typeData = types[typeName];
     const file = typeName + config.output.fileExtension;
-    await writeFile(result.folderName, file, types[typeName]);
+    const templateInput: TypesFileTemplateInput = {
+      referencedTypes: [...typeData.references],
+      primitives: [...typeData.primitives],
+      typesContent: typeData.content,
+      writtenAt: await getExpectedWrittenPath(result.folderName, file)
+    };
+
+    // remove duplicates
+    templateInput.primitives = [...new Set(templateInput.primitives)];
+    templateInput.referencedTypes = [...new Set(templateInput.referencedTypes)];
+
+    const content = Runtime.getTypesFileTemplate()(templateInput);
+    await writeFile(result.folderName, file, content);
     result.files.push(file);
   }
   return result;
@@ -43,13 +57,28 @@ async function writeTypesToFiles(
 
 async function writeTypesToFile(
   config: Configuration,
-  types: TypesOutput,
+  types: GeneratedTypes,
   fileName: string = 'types'
 ): Promise<FileWriterOutput> {
-  let content = '';
+  const templateInput: TypesFileTemplateInput = {
+    referencedTypes: [],
+    primitives: [],
+    typesContent: '',
+    writtenAt: ''
+  };
   for (const typeName in types) {
-    content += types[typeName] + '\n';
+    templateInput.primitives.push(...types[typeName].primitives);
+    templateInput.referencedTypes.push(...types[typeName].references);
+    templateInput.typesContent += types[typeName].content + '\n';
   }
+
+  // remove duplicates
+  templateInput.primitives = [...new Set(templateInput.primitives)];
+  templateInput.referencedTypes = [...new Set(templateInput.referencedTypes)];
+  templateInput.writtenAt = await getExpectedWrittenPath(config.output.directory, fileName);
+
+  const content = Runtime.getTypesFileTemplate()(templateInput);
+
   await writeFile(config.output.directory, fileName + config.output.fileExtension, content);
   return {
     folderName: config.output.directory,
@@ -57,12 +86,8 @@ async function writeTypesToFile(
   };
 }
 
-async function writeExporterModules(
-  files: Set<string>,
-  folder: string,
-  exporterModuleTemplate: HandlebarsTemplateDelegate<ExporterModuleTemplateInput>
-): Promise<void> {
-  const exporterModuleContent = exporterModuleTemplate({
+async function writeExporterModules(files: Set<string>, folder: string): Promise<void> {
+  const exporterModuleContent = Runtime.getExporterModuleTemplate()({
     modules: [...files].map((file) => file.replace(Runtime.getConfig().output.fileExtension, ''))
   });
   await writeFile(
@@ -81,6 +106,9 @@ export async function writeOutput(generationResult: GenerationResult): Promise<v
   await createFolder(config.output.directory);
 
   const writtenFiles: Map<string, Set<string>> = new Map<string, Set<string>>();
+
+  // pre compute all the folders and files that will be written
+  Runtime.setExpectedOutputFiles(generateExpectedOutputFile());
 
   // writing types to output directory
 
@@ -138,11 +166,7 @@ export async function writeOutput(generationResult: GenerationResult): Promise<v
     }
   }
 
-  // writing exporter modules
-  const exporterModuleTemplate: HandlebarsTemplateDelegate<ExporterModuleTemplateInput> =
-    Handlebars.compile(config.template.exporterModuleSyntax);
-
   writtenFiles.forEach((files, folder) => {
-    void writeExporterModules(files, folder, exporterModuleTemplate);
+    void writeExporterModules(files, folder);
   });
 }

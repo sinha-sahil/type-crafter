@@ -32,7 +32,9 @@
       "$generators": ["./src/generators"],
       "$generators/*": ["./src/generators/*"],
       "$writer": ["./src/writer"],
-      "$writer/*": ["./src/writer/*"]
+      "$writer/*": ["./src/writer/*"],
+      "$runtime": ["./src/runtime"],
+      "$runtime/*": ["./src/runtime/*"]
     },
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */

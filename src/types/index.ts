@@ -22,6 +22,7 @@ export type OutputConfig = {
 export type Template = {
   objectSyntax: string;
   exporterModuleSyntax: string;
+  typesFileSyntax: string;
 };
 
 export type LanguageConfig = {
@@ -63,16 +64,24 @@ export type Types = Record<TypeName, TypeInfo>;
 
 export type TypeInfo = {
   required: string[] | null;
-  type: TypeDataType;
+  type: TypeDataType | null;
   format: string | null;
   items: TypeInfo | null;
   properties: TypeProperties | null;
+  $ref: string | null;
 };
 
 type PropertyName = string;
 export type TypeProperties = Record<PropertyName, TypeInfo>;
 
-export type TypeDataType = 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'object';
+export type TypeDataType =
+  | 'string'
+  | 'number'
+  | 'integer'
+  | 'boolean'
+  | 'array'
+  | 'object'
+  | 'unknown';
 
 // #endregion
 
@@ -88,10 +97,24 @@ export type ObjectTemplateInputProperties = Record<PropertyName, ObjectTemplateI
 export type ObjectTemplateInputProperty = {
   type: string;
   required: boolean;
+  referenced: boolean;
 };
 
 export type ExporterModuleTemplateInput = {
   modules: string[];
+};
+
+export type TypesFileTemplateInput = {
+  referencedTypes: string[];
+  primitives: string[];
+  typesContent: string;
+  writtenAt: string;
+};
+
+export type ReferencedModule = {
+  modulePath: string;
+  moduleRelativePath: string;
+  referencedTypes: string[];
 };
 
 // #endregion
@@ -100,10 +123,16 @@ export type ExporterModuleTemplateInput = {
 
 export type GenerationResult = {
   groupedTypes: GroupedTypesOutput;
-  types: TypesOutput;
+  types: GeneratedTypes;
 };
+export type GeneratedType = { content: string; references: Set<string>; primitives: Set<string> };
+export type GroupedTypesOutput = Record<GroupName, GeneratedTypes>;
+export type GeneratedTypes = Record<TypeName, GeneratedType>;
 
-export type GroupedTypesOutput = Record<GroupName, TypesOutput>;
-export type TypesOutput = Record<TypeName, string>;
+export type TypeFilePath = {
+  modulePath: string;
+  filePath: string;
+  extension: string;
+};
 
 // #endregion

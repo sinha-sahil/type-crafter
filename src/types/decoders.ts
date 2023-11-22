@@ -85,22 +85,15 @@ function decodeTypes(rawInput: unknown): Types | null {
 
 function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
   if (isJSON(rawInput)) {
-    const required = decodeArray(rawInput.required, decodeString);
-    const properties = decodeTypeProperties(rawInput.properties);
-    const _type = decodeTypeDataType(rawInput.type);
-    const items = decodeTypeInfo(rawInput.items);
-    if (_type !== null) {
-      const result: TypeInfo = {
-        type: _type,
-        required,
-        properties,
-        items,
-        format: decodeString(rawInput.format)
-      };
-      if (noErrorOrNullValues(result, ['required', 'properties', 'items', 'format'])) {
-        return result;
-      }
-    }
+    const result: TypeInfo = {
+      type: decodeTypeDataType(rawInput.type),
+      required: decodeArray(rawInput.required, decodeString),
+      properties: decodeTypeProperties(rawInput.properties),
+      items: decodeTypeInfo(rawInput.items),
+      format: decodeString(rawInput.format),
+      $ref: decodeString(rawInput.$ref)
+    };
+    return result;
   }
   return null;
 }
@@ -131,6 +124,7 @@ function decodeTypeDataType(rawInput: unknown): TypeDataType | null {
       case 'boolean':
       case 'array':
       case 'object':
+      case 'unknown':
         return rawInput;
     }
   }
@@ -141,10 +135,12 @@ function decodeObjectTemplateInputProperty(rawInput: unknown): ObjectTemplateInp
   if (isJSON(rawInput)) {
     const required = decodeBoolean(rawInput.required);
     const _type = decodeString(rawInput.type);
-    if (required !== null && _type !== null) {
+    const referenced = decodeBoolean(rawInput.referenced);
+    if (required !== null && _type !== null && referenced !== null) {
       return {
         type: _type,
-        required
+        required,
+        referenced
       };
     }
   }

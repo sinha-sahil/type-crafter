@@ -2,16 +2,17 @@ import type {
   GenerationResult,
   ObjectTemplateInput,
   SpecFileData,
-  TypesOutput,
+  GeneratedTypes,
   TypeInfo,
   Types,
   GroupedTypesOutput,
-  TypeDataType
+  TypeDataType,
+  GeneratedType
 } from '$types';
-import Handlebars from 'handlebars';
-import Runtime from '../runtime';
-import { isJSON } from 'type-decoder';
+import Runtime from '$runtime';
 import { toPascalCase } from '$utils';
+import { resolveReference } from './helpers';
+import { isJSON } from 'type-decoder';
 
 function fillPatterns(input: string, patterns: Array<{ regex: RegExp; value: string }>): string {
   let result = input;
@@ -19,6 +20,11 @@ function fillPatterns(input: string, patterns: Array<{ regex: RegExp; value: str
     result = result.replace(pattern.regex, pattern.value);
   });
   return result;
+}
+
+function getReferenceName(reference: string): string {
+  const referenceParts = reference.split('/');
+  return referenceParts[referenceParts.length - 1];
 }
 
 function getLanguageDataType(
@@ -29,7 +35,10 @@ function getLanguageDataType(
   const typeMapper = Runtime.getConfig().language.typeMapper ?? null;
   const mappedType = typeMapper !== null ? typeMapper[dataType] : null;
   const itemsType =
-    items !== null ? getLanguageDataType(items.type, items.format, items.items) : null;
+    // eslint-disable-next-line
+    items !== null && items.type !== null
+      ? getLanguageDataType(items.type, items.format, items.items)
+      : null;
   const fillerPatterns = [];
   if (itemsType !== null) {
     fillerPatterns.push({ regex: /~ItemType~/g, value: itemsType });
@@ -47,52 +56,90 @@ function getLanguageDataType(
   return dataType;
 }
 
-function generateTypeString(
-  template: HandlebarsTemplateDelegate<ObjectTemplateInput>,
+function generateType(
   typeName: string,
-  typeInfo: TypeInfo
-): string {
+  typeInfo: TypeInfo,
+  groupedTypes: boolean = false
+): GeneratedType {
+  const result: GeneratedType = {
+    content: '',
+    references: new Set(),
+    primitives: new Set()
+  };
   const templateInput: ObjectTemplateInput = {
     typeName,
     properties: {}
   };
 
-  let recursiveTypeString = '';
+  let recursiveTypeGenOutput: GeneratedType | null = null;
 
   for (const propertyName in typeInfo.properties) {
     const propertyType = typeInfo.properties[propertyName].type;
     const propertyFormat = typeInfo.properties[propertyName].format;
     const propertyItems = typeInfo.properties[propertyName].items ?? null;
-    const recursivePropertyName = toPascalCase(propertyName);
-    if (propertyType === 'object') {
-      recursiveTypeString +=
-        '\n' +
-        generateTypeString(template, recursivePropertyName, typeInfo.properties[propertyName]);
+    const reference = typeInfo.properties[propertyName].$ref ?? null;
+
+    // Throwing error in case neither property type nor reference to a different type is present
+    if (propertyType === null && reference === null) {
+      throw new Error('Invalid property type for: ' + typeName + '.' + propertyName);
     }
+
+    let recursivePropertyName;
+    let languageDataType: string | null = null;
+    let isReferenced = false;
+
+    if (reference !== null) {
+      resolveReference(reference);
+      recursivePropertyName = getReferenceName(reference);
+      languageDataType = recursivePropertyName;
+      isReferenced = true;
+      result.references.add(recursivePropertyName);
+    } else if (propertyType === 'object') {
+      recursivePropertyName = toPascalCase(propertyName);
+      recursiveTypeGenOutput = generateType(
+        recursivePropertyName,
+        typeInfo.properties[propertyName],
+        groupedTypes
+      );
+      languageDataType = recursivePropertyName;
+      for (const reference of recursiveTypeGenOutput.references.values()) {
+        result.references.add(reference);
+      }
+      for (const primitive of recursiveTypeGenOutput.primitives.values()) {
+        result.primitives.add(primitive);
+      }
+    } else if (propertyType !== null) {
+      languageDataType = getLanguageDataType(propertyType, propertyFormat, propertyItems);
+      result.primitives.add(languageDataType);
+    }
+
+    if (languageDataType === null) {
+      throw new Error('Invalid language data type');
+    }
+
     templateInput.properties = {
       ...templateInput.properties,
       [propertyName]: {
-        type:
-          propertyType === 'object'
-            ? recursivePropertyName
-            : getLanguageDataType(propertyType, propertyFormat, propertyItems),
-        required: typeInfo.required?.includes(propertyName) ?? false
+        type: languageDataType,
+        required: typeInfo.required?.includes(propertyName) ?? false,
+        referenced: isReferenced
       }
     };
   }
-  return template(templateInput) + recursiveTypeString;
+
+  result.content =
+    Runtime.getObjectTemplate()(templateInput) + (recursiveTypeGenOutput?.content ?? '');
+  return result;
 }
 
-function generateTypes(
-  template: HandlebarsTemplateDelegate<ObjectTemplateInput>,
-  types: Types
-): TypesOutput {
-  const result: TypesOutput = {};
+function generateTypes(types: Types, groupedTypes: boolean = false): GeneratedTypes {
+  const result: GeneratedTypes = {};
   for (const type in types) {
     const typeInfo: TypeInfo = types[type];
-    const typeString = generateTypeString(template, type, typeInfo);
-    result[type] = typeString;
+    const genType = generateType(type, typeInfo);
+    result[type] = genType;
   }
+
   return result;
 }
 
@@ -102,23 +149,15 @@ export function generator(specFileData: SpecFileData): GenerationResult {
     types: {}
   };
 
-  // compiling templates
-  const objectSyntaxTemplate: HandlebarsTemplateDelegate<ObjectTemplateInput> = Handlebars.compile(
-    Runtime.getConfig().template.objectSyntax
-  );
-
   // generating types
   if (specFileData.types !== null) {
-    result.types = generateTypes(objectSyntaxTemplate, specFileData.types);
+    result.types = generateTypes(specFileData.types);
   }
 
   // generating grouped types
   const groupedTypes: GroupedTypesOutput = {};
   for (const groupName in specFileData.groupedTypes) {
-    groupedTypes[groupName] = generateTypes(
-      objectSyntaxTemplate,
-      specFileData.groupedTypes[groupName]
-    );
+    groupedTypes[groupName] = generateTypes(specFileData.groupedTypes[groupName], true);
   }
   result.groupedTypes = groupedTypes;
 
