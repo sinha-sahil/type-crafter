@@ -1,0 +1,5 @@
+{{#each (getReferencedTypeModules referencedTypes writtenAt)}}
+import type { {{{this.referencedTypes}}} } from '{{this.moduleRelativePath}}';
+{{/each}}
+
+{{{typesContent}}}

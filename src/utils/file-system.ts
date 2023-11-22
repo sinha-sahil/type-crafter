@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-function resolveFilePath(filePath: string): string {
+export function resolveFilePath(filePath: string): string {
   const isAbsolutePath = path.isAbsolute(filePath);
   const normalizedPath = isAbsolutePath ? filePath : path.join(process.cwd(), filePath);
   return path.resolve(normalizedPath);
@@ -39,6 +39,14 @@ export async function getCompleteFolderPath(folderName: string): Promise<string>
     return folderPath.slice(0, -1);
   }
   return folderPath;
+}
+
+export async function getExpectedWrittenPath(basePath: string, fileName: string): Promise<string> {
+  const isAbsolutePath = path.isAbsolute(basePath);
+  const filePath = isAbsolutePath
+    ? path.join(basePath, fileName)
+    : path.join(process.cwd(), basePath, fileName);
+  return filePath;
 }
 
 export async function writeFile(

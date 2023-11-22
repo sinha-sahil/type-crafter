@@ -4,6 +4,7 @@ import { generate } from '../src';
 async function generateTypescript(): Promise<void> {
   const objectSyntax = await readFile('templates/typescript/object-syntax.hbs');
   const exporterModuleSyntax = await readFile('templates/typescript/exporter-module-syntax.hbs');
+  const typesFileSyntax = await readFile('templates/typescript/types-file-syntax.hbs');
 
   await generate({
     input: 'examples/input.yaml',
@@ -13,12 +14,13 @@ async function generateTypescript(): Promise<void> {
       directory: 'examples/output',
       writerMode: {
         groupedTypes: 'FolderWithFiles',
-        types: 'Files'
+        types: 'SingleFile'
       }
     },
     template: {
       objectSyntax,
-      exporterModuleSyntax
+      exporterModuleSyntax,
+      typesFileSyntax
     },
     language: {
       exporterModuleName: 'index',
@@ -28,7 +30,8 @@ async function generateTypescript(): Promise<void> {
         integer: { default: 'integer' },
         boolean: 'boolean',
         array: '~ItemType~[]',
-        object: 'type'
+        object: 'type',
+        unknown: 'unknown'
       }
     }
   });
