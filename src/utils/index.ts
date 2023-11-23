@@ -5,6 +5,7 @@ import Runtime from '$runtime';
 import { resolveFilePath } from './file-system';
 
 export * from './file-system';
+export * from './logger';
 
 export function addValuesToMappedSet(
   map: Map<string, Set<string>>,
