@@ -1,5 +1,17 @@
-import { readFile } from '$utils';
-import { generate } from '../src';
+import { generate } from '../dist';
+import fs from 'fs/promises';
+import path from 'path';
+
+export function resolveFilePath(filePath: string): string {
+  const isAbsolutePath = path.isAbsolute(filePath);
+  const normalizedPath = isAbsolutePath ? filePath : path.join(process.cwd(), filePath);
+  return path.resolve(normalizedPath);
+}
+
+export async function readFile(filePath: string): Promise<string> {
+  const data = await fs.readFile(resolveFilePath(filePath), 'utf-8');
+  return data;
+}
 
 async function generateTypescript(): Promise<void> {
   const objectSyntax = await readFile('templates/typescript/object-syntax.hbs');

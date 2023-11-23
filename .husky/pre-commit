@@ -3,4 +3,4 @@
 
 echo "Running pre-commit hook"
 pnpm format:all
-pnpm lint
+pnpm lint:all
