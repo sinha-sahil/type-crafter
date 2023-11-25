@@ -18,7 +18,9 @@
     "format:all": "npx prettier --write .",
     "lint:all": "eslint . --ext .ts",
     "clean:output": "rm -rf dist",
-    "build": "npm run clean:output && rollup --config rollup.config.js"
+    "build": "npm run clean:output && rollup --config rollup.config.js",
+    "publish": "node scripts/publish.js",
+    "changeset:version": "changeset version && git add --all"
   },
   "keywords": [],
   "author": "Sahil Sinha",
@@ -38,6 +40,7 @@
   },
   "homepage": "https://github.com/sinha-sahil/type-crafter#readme",
   "devDependencies": {
+    "@changesets/cli": "^2.26.2",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.5",
