@@ -1,4 +1,5 @@
 import Runtime from '$runtime';
+import { InvalidSpecFileError, UnsupportedFeatureError } from '$utils/error-handler';
 import { readNestedValue } from '$utils';
 import type { JSONObject } from 'type-decoder';
 
@@ -19,10 +20,10 @@ export function resolveReference(reference: string): JSONObject {
     const referenceKeyPath = referenceParts.slice(1);
     return readNestedValue(specFileData, referenceKeyPath);
   } else if (referenceType === 'url') {
-    throw new Error('URL references are not supported yet');
+    throw new UnsupportedFeatureError('URL references are not supported yet');
   } else if (referenceType === 'remote') {
-    throw new Error('Remote references are not supported yet');
+    throw new UnsupportedFeatureError('Remote references are not supported yet');
   } else {
-    throw new Error('Invalid reference');
+    throw new InvalidSpecFileError('Invalid reference at: ' + reference);
   }
 }

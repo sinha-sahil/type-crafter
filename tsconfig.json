@@ -34,7 +34,9 @@
       "$writer": ["./src/writer"],
       "$writer/*": ["./src/writer/*"],
       "$runtime": ["./src/runtime"],
-      "$runtime/*": ["./src/runtime/*"]
+      "$runtime/*": ["./src/runtime/*"],
+      "$templates": ["./src/templates"],
+      "$templates/*": ["./src/templates/*"]
     },
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
@@ -94,5 +96,5 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
-  "exclude": ["examples"]
+  "exclude": ["examples", "./dist"]
 }

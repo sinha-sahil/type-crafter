@@ -1,13 +1,38 @@
-import chalk from 'chalk';
+const isColorSupported = process.env.COLORTERM === 'truecolor';
 
-const redLog = chalk.bgHex('#D2001A').hex('#EFEFEF').bold.overline;
-const greenLog = chalk.bgHex('#4f9907').hex('#000000').bold;
-const yellowLog = chalk.bgHex('#c49f02').hex('#000000').bold;
-const darkBlue = chalk.bgHex('#06283D').hex('#ffffff');
+function redLog(r: string): string {
+  if (!isColorSupported) {
+    return r;
+  }
+  return `\x1b[41m\x1b[37m${r}\x1b[0m`;
+}
 
-export function logError(header: string, message: string): void {
-  console.log(redLog(`${header}`));
-  console.log(`${message}`);
+function yellowLog(r: string): string {
+  if (!isColorSupported) {
+    return r;
+  }
+  return `\x1b[43m\x1b[37m${r}\x1b[0m`;
+}
+
+function greenLog(r: string): string {
+  if (!isColorSupported) {
+    return r;
+  }
+  return `\x1b[48;2;79;153;7m\x1b[30m${r}\x1b[0m`;
+}
+
+function darkBlue(r: string): string {
+  if (!isColorSupported) {
+    return r;
+  }
+  return `\x1b[48;2;6;40;61m\x1b[37m${r}\x1b[0m`;
+}
+
+export function logError(header: string, message: string | null = null): void {
+  console.log(redLog(` Crafting failed: ${header}`));
+  if (message !== null) {
+    console.log(`${message}`);
+  }
 }
 
 export function logWarning(header: string, message: string): void {
@@ -16,7 +41,7 @@ export function logWarning(header: string, message: string): void {
 }
 
 export function logSuccess(header: string, message: string): void {
-  console.log(greenLog(`${header}`));
+  console.log(greenLog(` ${header} `));
   console.log(`${message}`);
 }
 

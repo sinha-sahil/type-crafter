@@ -3,6 +3,7 @@ import Handlebars from 'handlebars';
 import { type JSONObject, type JSONValue, decodeArray, decodeString, isJSON } from 'type-decoder';
 import Runtime from '$runtime';
 import { resolveFilePath } from './file-system';
+import { InvalidSpecFileError } from './error-handler';
 
 export * from './file-system';
 export * from './logger';
@@ -103,7 +104,7 @@ export function readNestedValue(json: JSONObject, keyPath: string[]): JSONObject
     if (isJSON(result)) {
       result = result[key];
     } else {
-      throw new Error('Invalid Key Path for: ' + keyPath.join('.'));
+      throw new InvalidSpecFileError('Invalid Key Path for: ' + keyPath.join('.'));
     }
   });
   return result;

@@ -11,6 +11,7 @@ import type {
 } from '$types';
 import Runtime from '$runtime';
 import { toPascalCase } from '$utils';
+import { InvalidSpecFileError } from '$utils/error-handler';
 import { resolveReference } from './helpers';
 import { isJSON } from 'type-decoder';
 
@@ -81,7 +82,7 @@ function generateType(
 
     // Throwing error in case neither property type nor reference to a different type is present
     if (propertyType === null && reference === null) {
-      throw new Error('Invalid property type for: ' + typeName + '.' + propertyName);
+      throw new InvalidSpecFileError('Invalid property type for: ' + typeName + '.' + propertyName);
     }
 
     let recursivePropertyName;
@@ -114,7 +115,7 @@ function generateType(
     }
 
     if (languageDataType === null) {
-      throw new Error('Invalid language data type');
+      throw new InvalidSpecFileError(`Invalid language data type for: ${typeName}.${propertyName}`);
     }
 
     templateInput.properties = {

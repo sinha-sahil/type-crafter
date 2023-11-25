@@ -6,6 +6,7 @@ import type {
   TypeFilePath,
   TypesFileTemplateInput
 } from '$types';
+import { RuntimeError } from '$utils/error-handler';
 import Handlebars from 'handlebars';
 
 let config: Configuration | null = null;
@@ -22,7 +23,7 @@ function setConfig(newConfig: Configuration): void {
 
 function getConfig(): Configuration {
   if (config === null) {
-    throw new Error('Configuration not set!');
+    throw new RuntimeError('Failed to load configuration!');
   }
   return config;
 }
@@ -33,7 +34,7 @@ function setSpecFileData(newSpecFileData: SpecFileData): void {
 
 function getSpecFileData(): SpecFileData {
   if (specFileData === null) {
-    throw new Error('Spec file data not set!');
+    throw new RuntimeError('Failed to load Spec file data!');
   }
   return specFileData;
 }
@@ -47,21 +48,21 @@ function compileTemplates(): void {
 
 function getObjectTemplate(): HandlebarsTemplateDelegate<ObjectTemplateInput> {
   if (objectSyntaxTemplate === null) {
-    throw new Error('Object template not compiled!');
+    throw new RuntimeError('Object template not compiled!');
   }
   return objectSyntaxTemplate;
 }
 
 function getExporterModuleTemplate(): HandlebarsTemplateDelegate<ExporterModuleTemplateInput> {
   if (exporterModuleSyntaxTemplate === null) {
-    throw new Error('Exporter module template not compiled!');
+    throw new RuntimeError('Exporter module template not compiled!');
   }
   return exporterModuleSyntaxTemplate;
 }
 
 function getTypesFileTemplate(): HandlebarsTemplateDelegate<TypesFileTemplateInput> {
   if (typesFileSyntaxTemplate === null) {
-    throw new Error('Types file template not compiled!');
+    throw new RuntimeError('Types file template not compiled!');
   }
   return typesFileSyntaxTemplate;
 }
@@ -72,7 +73,7 @@ function setExpectedOutputFiles(newExpectedOutputFiles: Map<string, TypeFilePath
 
 function getExpectedOutputFiles(): Map<string, TypeFilePath> {
   if (expectedOutputFiles === null) {
-    throw new Error('Expected output files not set!');
+    throw new RuntimeError('Expected output files not set!');
   }
   return expectedOutputFiles;
 }

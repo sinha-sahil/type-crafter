@@ -2,6 +2,7 @@ import typescript from '@rollup/plugin-typescript';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import replace from '@rollup/plugin-replace';
+import copy from 'rollup-plugin-copy';
 
 function getVersion(args) {
   const environment = args.environment;
@@ -32,13 +33,19 @@ function config(args) {
       plugins: [
         nodeResolve(),
         replace({
-          __VERSION__: getVersion(args)
+          __VERSION__: getVersion(args),
+          __DEVELOPMENT__: 'PRODUCTION'
         }),
         commonjs({
           include: 'node_modules/**'
         }),
         typescript({
           tsconfig: './tsconfig.json'
+        }),
+        copy({
+          verbose: true,
+          flatten: false,
+          targets: [{ src: ['src/templates/**/*.hbs'], dest: 'dist' }]
         })
       ]
     }
