@@ -6,3 +6,4 @@
 /**/dist/
 /package/
 /examples/output
+/**/.pnpm-store/
