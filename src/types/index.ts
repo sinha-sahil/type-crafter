@@ -14,10 +14,13 @@ export type OutputConfig = {
   fileExtension: string;
   directory: string;
   writerMode: {
-    groupedTypes: 'FolderWithFiles' | 'SingleFile';
-    types: 'SingleFile' | 'Files';
+    groupedTypes: GroupedTypesWriterMode;
+    types: TypesWriterMode;
   };
 };
+
+export type GroupedTypesWriterMode = 'FolderWithFiles' | 'SingleFile';
+export type TypesWriterMode = 'SingleFile' | 'Files';
 
 export type Template = {
   objectSyntax: string;

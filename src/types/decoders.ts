@@ -1,5 +1,6 @@
 import type {
   GroupedTypes,
+  GroupedTypesWriterMode,
   ObjectTemplateInputProperties,
   ObjectTemplateInputProperty,
   SpecFileData,
@@ -7,7 +8,8 @@ import type {
   TypeDataType,
   TypeInfo,
   TypeProperties,
-  Types
+  Types,
+  TypesWriterMode
 } from '.';
 import {
   __decodeString,
@@ -17,6 +19,28 @@ import {
   isJSON,
   noErrorOrNullValues
 } from 'type-decoder';
+
+export function decodeGroupedTypesWriterMode(rawInput: unknown): GroupedTypesWriterMode | null {
+  if (typeof rawInput === 'string') {
+    switch (rawInput) {
+      case 'SingleFile':
+      case 'FolderWithFiles':
+        return rawInput;
+    }
+  }
+  return null;
+}
+
+export function decodeTypesWriterMode(rawInput: unknown): TypesWriterMode | null {
+  if (typeof rawInput === 'string') {
+    switch (rawInput) {
+      case 'SingleFile':
+      case 'Files':
+        return rawInput;
+    }
+  }
+  return null;
+}
 
 export function decodeSpecFileData(rawInput: unknown): SpecFileData | null {
   if (isJSON(rawInput)) {
