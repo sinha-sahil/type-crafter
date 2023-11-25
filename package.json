@@ -22,7 +22,14 @@
     "publish": "node scripts/publish.js",
     "changeset:version": "changeset version && git add --all"
   },
-  "keywords": [],
+  "keywords": [
+    "type-crafter",
+    "types",
+    "crafter",
+    "generation",
+    "generator",
+    "typescript"
+  ],
   "author": "Sahil Sinha",
   "license": "ISC",
   "exports": {
