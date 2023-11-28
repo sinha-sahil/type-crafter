@@ -1,5 +1,13 @@
 # type-crafter
 
+## 0.2.0
+
+### Minor Changes
+
+- e6e788d: feat: added support for generating typescript types with decoders
+
+  - now generate typescript types with decoders using `typescript-with-decoders` language param
+
 ## 0.1.1
 
 ### Patch Changes
