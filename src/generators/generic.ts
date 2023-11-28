@@ -28,6 +28,11 @@ function getReferenceName(reference: string): string {
   return referenceParts[referenceParts.length - 1];
 }
 
+function resolveAndGetReferenceName(reference: string): string {
+  resolveReference(reference);
+  return getReferenceName(reference);
+}
+
 function getLanguageDataType(
   dataType: TypeDataType,
   format: string | null,
@@ -37,8 +42,12 @@ function getLanguageDataType(
   const mappedType = typeMapper !== null ? typeMapper[dataType] : null;
   const itemsType =
     // eslint-disable-next-line
-    items !== null && items.type !== null
-      ? getLanguageDataType(items.type, items.format, items.items)
+    items !== null
+      ? items.type !== null
+        ? getLanguageDataType(items.type, items.format, items.items)
+        : items.$ref !== null
+          ? resolveAndGetReferenceName(items.$ref)
+          : null
       : null;
   const fillerPatterns = [];
   if (itemsType !== null) {
