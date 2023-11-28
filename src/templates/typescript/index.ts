@@ -8,14 +8,19 @@ export async function config(
   groupedTypesWriterMode: GroupedTypesWriterMode
 ): Promise<Configuration> {
   // __DEVELOPMENT__ will be replaced with PRODUCTION when package is built.
-  const directoryPrefix = '__DEVELOPMENT__'.includes('DEVELOPMENT') ? 'src/' : 'dist/';
+  const directoryPrefix = '__DEVELOPMENT__'.includes('DEVELOPMENT') ? 'src/' : './';
 
-  const objectSyntax = await readFile(directoryPrefix + 'templates/typescript/object-syntax.hbs');
+  const objectSyntax = await readFile(
+    directoryPrefix + 'templates/typescript/object-syntax.hbs',
+    false
+  );
   const exporterModuleSyntax = await readFile(
-    directoryPrefix + 'templates/typescript/exporter-module-syntax.hbs'
+    directoryPrefix + 'templates/typescript/exporter-module-syntax.hbs',
+    false
   );
   const typesFileSyntax = await readFile(
-    directoryPrefix + 'templates/typescript/types-file-syntax.hbs'
+    directoryPrefix + 'templates/typescript/types-file-syntax.hbs',
+    false
   );
   const config: Configuration = {
     input: inputFilePath,

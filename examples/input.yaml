@@ -108,3 +108,7 @@ types:
         type: string
       name:
         type: string
+      itemRefArr:
+        type: array
+        items:
+          $ref: '#/types/TypeObjectFour'

@@ -1,14 +1,25 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-export function resolveFilePath(filePath: string): string {
+function getSourceFileDirectory(): string {
+  const fileName = fileURLToPath(import.meta.url);
+  return path.dirname(fileName);
+}
+
+export function resolveFilePath(filePath: string, useCurrentDirectory: boolean = true): string {
   const isAbsolutePath = path.isAbsolute(filePath);
-  const normalizedPath = isAbsolutePath ? filePath : path.join(process.cwd(), filePath);
+  const normalizedPath = isAbsolutePath
+    ? filePath
+    : path.join(useCurrentDirectory ? process.cwd() : getSourceFileDirectory(), filePath);
   return path.resolve(normalizedPath);
 }
 
-export async function readFile(filePath: string): Promise<string> {
-  const data = await fs.readFile(resolveFilePath(filePath), 'utf-8');
+export async function readFile(
+  filePath: string,
+  useCurrentWorkingDirectory: boolean = true
+): Promise<string> {
+  const data = await fs.readFile(resolveFilePath(filePath, useCurrentWorkingDirectory), 'utf-8');
   return data;
 }
 
@@ -28,7 +39,11 @@ export async function createFolder(folderPath: string): Promise<void> {
 }
 
 export async function deleteFolder(folderPath: string): Promise<void> {
-  await fs.rmdir(folderPath, { recursive: true });
+  try {
+    await fs.rm(folderPath, { recursive: true });
+  } catch (e) {
+    console.log("Couldn't delete folder: ", folderPath);
+  }
 }
 
 export async function getCompleteFolderPath(folderName: string): Promise<string> {
