@@ -94,6 +94,8 @@ function generateType(
       throw new InvalidSpecFileError('Invalid property type for: ' + typeName + '.' + propertyName);
     }
 
+    const primitiveType = propertyType ?? 'object';
+    let composerType = null;
     let recursivePropertyName;
     let languageDataType: string | null = null;
     let isReferenced = false;
@@ -120,7 +122,12 @@ function generateType(
       }
     } else if (propertyType !== null) {
       languageDataType = getLanguageDataType(propertyType, propertyFormat, propertyItems);
-      result.primitives.add(languageDataType);
+      result.primitives.add(propertyItems !== null ? 'Array' : languageDataType);
+      if (propertyItems !== null) {
+        const itemsType = getReferenceName(propertyItems.$ref ?? '');
+        result.references.add(itemsType);
+        composerType = itemsType;
+      }
     }
 
     if (languageDataType === null) {
@@ -132,7 +139,9 @@ function generateType(
       [propertyName]: {
         type: languageDataType,
         required: typeInfo.required?.includes(propertyName) ?? false,
-        referenced: isReferenced
+        referenced: isReferenced,
+        primitiveType,
+        composerType
       }
     };
   }

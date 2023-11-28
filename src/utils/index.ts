@@ -36,6 +36,20 @@ export function getOptionalKeys(object: unknown): string[] {
   return nullableKeys;
 }
 
+export function getRequiredKeys(object: unknown): string[] {
+  const requiredKeys = [];
+  const properties = decodeObjectTemplateInputProperties(object);
+  if (properties !== null) {
+    for (const propertyName in properties) {
+      const property = properties[propertyName];
+      if (property.required) {
+        requiredKeys.push(propertyName);
+      }
+    }
+  }
+  return requiredKeys;
+}
+
 export function getReferencedTypes(object: unknown): string[] {
   const referencedTypes = [];
   const properties = decodeObjectTemplateInputProperties(object);
@@ -94,8 +108,19 @@ export function toPascalCase(input: string): string {
 
 export function registerTemplateHelpers(): void {
   Handlebars.registerHelper('getOptionalKeys', getOptionalKeys);
+  Handlebars.registerHelper('getRequiredKeys', getRequiredKeys);
+  Handlebars.registerHelper(
+    'areRequiredKeysPresent',
+    (object) => getRequiredKeys(object).length > 0
+  );
   Handlebars.registerHelper('getReferencedTypes', getReferencedTypes);
   Handlebars.registerHelper('getReferencedTypeModules', getReferencedTypeModules);
+  Handlebars.registerHelper('toPascalCase', toPascalCase);
+  Handlebars.registerHelper(
+    'isNonEmptyArray',
+    (value) => Array.isArray(value) && value.length === 0
+  );
+  Handlebars.registerHelper('eq', (value1, value2) => value1 === value2);
 }
 
 export function readNestedValue(json: JSONObject, keyPath: string[]): JSONObject {

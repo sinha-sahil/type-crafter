@@ -1,4 +1,4 @@
-import type { Configuration, TypesWriterMode, GroupedTypesWriterMode } from '$types';
+import type { Configuration, GroupedTypesWriterMode, TypesWriterMode } from '$types';
 import { readFile } from '$utils';
 
 export async function config(
@@ -8,11 +8,10 @@ export async function config(
   groupedTypesWriterMode: GroupedTypesWriterMode
 ): Promise<Configuration> {
   const devMode = '__DEVELOPMENT__'.includes('DEVELOPMENT');
-  // __DEVELOPMENT__ will be replaced with PRODUCTION when package is built.
   const directoryPrefix = devMode ? 'src/' : './';
 
   const objectSyntax = await readFile(
-    directoryPrefix + 'templates/typescript/object-syntax.hbs',
+    directoryPrefix + 'templates/typescript-with-decoders/object-syntax.hbs',
     devMode
   );
   const exporterModuleSyntax = await readFile(
@@ -20,7 +19,7 @@ export async function config(
     devMode
   );
   const typesFileSyntax = await readFile(
-    directoryPrefix + 'templates/typescript/types-file-syntax.hbs',
+    directoryPrefix + 'templates/typescript-with-decoders/types-file-syntax.hbs',
     devMode
   );
   const config: Configuration = {

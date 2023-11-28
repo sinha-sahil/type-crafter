@@ -160,11 +160,15 @@ function decodeObjectTemplateInputProperty(rawInput: unknown): ObjectTemplateInp
     const required = decodeBoolean(rawInput.required);
     const _type = decodeString(rawInput.type);
     const referenced = decodeBoolean(rawInput.referenced);
-    if (required !== null && _type !== null && referenced !== null) {
+    const primitiveType = decodeString(rawInput.primitiveType);
+    const composerType = decodeString(rawInput.composerType);
+    if (required !== null && _type !== null && referenced !== null && primitiveType !== null) {
       return {
         type: _type,
         required,
-        referenced
+        referenced,
+        primitiveType,
+        composerType
       };
     }
   }
