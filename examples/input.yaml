@@ -88,7 +88,24 @@ types:
         $ref: '#/groupedTypes/GroupTwo/GroupTwoObjectOne'
       refType22:
         $ref: '#/types/TypeObjectFive'
+
+  NonRequiredType:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
   TypeObjectFour:
+    type: object
+    required:
+      - id
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+  SampleObjectOne:
     type: object
     required:
       - id
@@ -103,11 +120,16 @@ types:
     required:
       - id
       - name
+      - refProperty
     properties:
       id:
         type: string
       name:
         type: string
+      refProperty:
+        $ref: '#/types/TypeObjectFour'
+      refProperty2:
+        $ref: '#/types/SampleObjectOne'
       itemRefArr:
         type: array
         items:

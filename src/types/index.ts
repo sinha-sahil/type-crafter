@@ -101,6 +101,8 @@ export type ObjectTemplateInputProperty = {
   type: string;
   required: boolean;
   referenced: boolean;
+  primitiveType: string;
+  composerType: string | null;
 };
 
 export type ExporterModuleTemplateInput = {

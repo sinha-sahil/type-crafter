@@ -1,0 +1,30 @@
+export type {{typeName}} = {
+  {{#each properties}}
+  {{@key}}: {{{this.type}}}{{#unless this.required}} | null{{/unless}};
+  {{/each}}
+};
+
+export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
+  if (isJSON(rawInput)) {
+    {{#each properties}}
+    const {{@key}} = {{#if (eq this.primitiveType 'array') }} decodeArray(rawInput.{{@key}}, decode{{{toPascalCase this.composerType}}}){{else}} decode{{{toPascalCase this.type}}}(rawInput.{{@key}}){{/if}};
+    {{/each}}
+
+    {{#if (areRequiredKeysPresent properties)}}
+    if (
+      {{#each (getRequiredKeys properties)}}
+      {{this}} === null{{#unless @last}} ||{{/unless}}
+      {{/each}}
+    ) {
+      return null;
+    }
+    {{/if}}
+
+    return {
+      {{#each properties}}
+      {{@key}},
+      {{/each}}
+    };
+  }
+  return null;
+}

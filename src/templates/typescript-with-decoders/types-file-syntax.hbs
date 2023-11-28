@@ -1,0 +1,7 @@
+{{#each (getReferencedTypeModules referencedTypes writtenAt)}}
+import { {{#each this.referencedTypes}}type {{this}}, decode{{this}}{{#unless @last}}, {{/unless}} {{/each}} } from '{{this.moduleRelativePath}}';
+{{/each}}
+import { isJSON, {{#each primitives}}decode{{{toPascalCase this}}}{{#unless @last}}, {{/unless}}{{/each}} } from 'type-decoder';
+
+{{{typesContent}}}
+

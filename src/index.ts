@@ -19,7 +19,7 @@ import {
 import { generator } from '$generators/generic';
 import { writeOutput } from '$writer';
 import Runtime from '$runtime';
-import { typescript } from '$templates';
+import { typescript, typescriptWithDecoders } from '$templates';
 
 export async function generate(config: Configuration): Promise<void> {
   Runtime.setConfig(config);
@@ -62,6 +62,14 @@ async function runner(
     switch (language.toLowerCase()) {
       case 'typescript':
         generatorConfig = await typescript.config(
+          inputFilePath,
+          outputDirectory,
+          typesWriterMode,
+          groupedTypesWriterMode
+        );
+        break;
+      case 'typescript-with-decoders':
+        generatorConfig = await typescriptWithDecoders.config(
           inputFilePath,
           outputDirectory,
           typesWriterMode,
