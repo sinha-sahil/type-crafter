@@ -1,5 +1,13 @@
 # type-crafter
 
+## 0.2.1
+
+### Patch Changes
+
+- 6cfdb89: fix: issue with composer types of array elements in case of primitive data types
+
+  - fixes issue with generated decoder for array types where items were of primitive type
+
 ## 0.2.0
 
 ### Minor Changes
