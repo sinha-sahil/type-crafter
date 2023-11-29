@@ -124,7 +124,7 @@ function generateType(
       languageDataType = getLanguageDataType(propertyType, propertyFormat, propertyItems);
       result.primitives.add(propertyItems !== null ? 'Array' : languageDataType);
       if (propertyItems !== null) {
-        const itemsType = getReferenceName(propertyItems.$ref ?? '');
+        const itemsType = propertyItems.type ?? getReferenceName(propertyItems.$ref ?? '');
         result.references.add(itemsType);
         composerType = itemsType;
       }

@@ -22,6 +22,7 @@ jobs:
         with:
           node-version: 18
           registry-url: https://registry.npmjs.org/
+          cache: pnpm
 
       - name: Setting up PNPM
         uses: pnpm/action-setup@v2
