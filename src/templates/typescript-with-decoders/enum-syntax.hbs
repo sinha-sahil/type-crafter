@@ -1,0 +1,15 @@
+export type {{enumName}} =
+{{#each values}}
+  | {{#if (eq ../enumType 'string') }}'{{/if}}{{{this}}}{{#if (eq ../enumType 'string')}}'{{/if}}
+{{/each}};
+
+
+export function decode{{enumName}}(rawInput: unknown): {{enumName}} | null {
+  switch (rawInput) {
+    {{#each values}}
+    case {{#if (eq ../enumType 'string') }}'{{/if}}{{this}}{{#if (eq ../enumType 'string')}}'{{/if}}:
+    {{/each}}
+     return rawInput;
+  }
+  return null;
+}

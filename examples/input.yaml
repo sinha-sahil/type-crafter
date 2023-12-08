@@ -15,6 +15,8 @@ groupedTypes:
           type: string
         refT:
           $ref: '#/types/TypeObjectTwo'
+        enumRefT1:
+          $ref: '#/types/SampleEnum'
     GroupObjectTwo:
       type: object
       required:
@@ -72,6 +74,12 @@ types:
             format: date
       refType:
         $ref: '#/types/TypeObjectThree'
+      sampleEnum:
+        type: string
+        enum:
+          - one
+          - two
+          - three
   TypeObjectThree:
     type: object
     required:
@@ -89,6 +97,13 @@ types:
       refType22:
         $ref: '#/types/TypeObjectFive'
 
+  SampleEnum:
+    type: number
+    enum:
+      - 1
+      - 2
+      - 3
+
   NonRequiredType:
     type: object
     properties:
@@ -96,6 +111,15 @@ types:
         type: string
       name:
         type: string
+      enumRefValue:
+        $ref: '#/types/SampleEnum'
+      greeting:
+        type: string
+        enum:
+          - 'hello'
+          - 'hi'
+          - 'hey'
+
   TypeObjectFour:
     type: object
     required:

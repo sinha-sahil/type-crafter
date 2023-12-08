@@ -7,7 +7,8 @@ import type {
   Types,
   GroupedTypesOutput,
   TypeDataType,
-  GeneratedType
+  GeneratedType,
+  EnumTemplateInput
 } from '$types';
 import Runtime from '$runtime';
 import { toPascalCase } from '$utils';
@@ -66,11 +67,7 @@ function getLanguageDataType(
   return dataType;
 }
 
-function generateType(
-  typeName: string,
-  typeInfo: TypeInfo,
-  groupedTypes: boolean = false
-): GeneratedType {
+function generateObjectType(typeName: string, typeInfo: TypeInfo): GeneratedType {
   const result: GeneratedType = {
     content: '',
     references: new Set(),
@@ -82,12 +79,15 @@ function generateType(
   };
 
   let recursiveTypeGenOutput: GeneratedType | null = null;
+  let dynamicGeneratedType: string = '';
 
   for (const propertyName in typeInfo.properties) {
-    const propertyType = typeInfo.properties[propertyName].type;
-    const propertyFormat = typeInfo.properties[propertyName].format;
-    const propertyItems = typeInfo.properties[propertyName].items ?? null;
-    const reference = typeInfo.properties[propertyName].$ref ?? null;
+    const propertyDetails = typeInfo.properties[propertyName];
+    const propertyType = propertyDetails.type;
+    const propertyFormat = propertyDetails.format;
+    const propertyItems = propertyDetails.items ?? null;
+    const reference = propertyDetails.$ref ?? null;
+    const enumValues = propertyDetails.enum ?? null;
 
     // Throwing error in case neither property type nor reference to a different type is present
     if (propertyType === null && reference === null) {
@@ -106,12 +106,15 @@ function generateType(
       languageDataType = recursivePropertyName;
       isReferenced = true;
       result.references.add(recursivePropertyName);
+    } else if (enumValues !== null) {
+      const enumName = toPascalCase(propertyName) + 'Enum';
+      dynamicGeneratedType = generateEnumType(enumName, propertyDetails).content;
+      languageDataType = enumName;
     } else if (propertyType === 'object') {
       recursivePropertyName = toPascalCase(propertyName);
-      recursiveTypeGenOutput = generateType(
+      recursiveTypeGenOutput = generateObjectType(
         recursivePropertyName,
-        typeInfo.properties[propertyName],
-        groupedTypes
+        typeInfo.properties[propertyName]
       );
       languageDataType = recursivePropertyName;
       for (const reference of recursiveTypeGenOutput.references.values()) {
@@ -147,16 +150,44 @@ function generateType(
   }
 
   result.content =
-    Runtime.getObjectTemplate()(templateInput) + (recursiveTypeGenOutput?.content ?? '');
+    Runtime.getObjectTemplate()(templateInput) +
+    (recursiveTypeGenOutput?.content ?? '') +
+    dynamicGeneratedType;
   return result;
 }
 
-function generateTypes(types: Types, groupedTypes: boolean = false): GeneratedTypes {
+function generateEnumType(typeName: string, typeInfo: TypeInfo): GeneratedType {
+  const result: GeneratedType = {
+    content: '',
+    references: new Set(),
+    primitives: new Set()
+  };
+  if (typeInfo.enum === null || typeInfo.enum.length === 0 || typeInfo.type === null) {
+    throw new InvalidSpecFileError('Invalid enum type for: ' + typeName);
+  }
+  const templateInput: EnumTemplateInput = {
+    enumName: typeName,
+    enumType: typeInfo.type,
+    values: typeInfo.enum
+  };
+
+  result.content = Runtime.getEnumTemplate()(templateInput);
+  return result;
+}
+
+function generateTypes(types: Types): GeneratedTypes {
   const result: GeneratedTypes = {};
   for (const type in types) {
     const typeInfo: TypeInfo = types[type];
-    const genType = generateType(type, typeInfo);
-    result[type] = genType;
+    const genType =
+      typeInfo.type === 'object'
+        ? generateObjectType(type, typeInfo)
+        : typeInfo.enum !== null
+          ? generateEnumType(type, typeInfo)
+          : null;
+    if (genType !== null) {
+      result[type] = genType;
+    }
   }
 
   return result;
@@ -176,7 +207,7 @@ export function generator(specFileData: SpecFileData): GenerationResult {
   // generating grouped types
   const groupedTypes: GroupedTypesOutput = {};
   for (const groupName in specFileData.groupedTypes) {
-    groupedTypes[groupName] = generateTypes(specFileData.groupedTypes[groupName], true);
+    groupedTypes[groupName] = generateTypes(specFileData.groupedTypes[groupName]);
   }
   result.groupedTypes = groupedTypes;
 

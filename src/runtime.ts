@@ -1,5 +1,6 @@
 import type {
   Configuration,
+  EnumTemplateInput,
   ExporterModuleTemplateInput,
   ObjectTemplateInput,
   SpecFileData,
@@ -15,6 +16,7 @@ let objectSyntaxTemplate: HandlebarsTemplateDelegate<ObjectTemplateInput> | null
 let exporterModuleSyntaxTemplate: HandlebarsTemplateDelegate<ExporterModuleTemplateInput> | null =
   null;
 let typesFileSyntaxTemplate: HandlebarsTemplateDelegate<TypesFileTemplateInput> | null = null;
+let enumSyntaxTemplate: HandlebarsTemplateDelegate<EnumTemplateInput> | null = null;
 let expectedOutputFiles: Map<string, TypeFilePath> | null = null;
 
 function setConfig(newConfig: Configuration): void {
@@ -44,6 +46,7 @@ function compileTemplates(): void {
   objectSyntaxTemplate = Handlebars.compile(config.template.objectSyntax);
   exporterModuleSyntaxTemplate = Handlebars.compile(config.template.exporterModuleSyntax);
   typesFileSyntaxTemplate = Handlebars.compile(config.template.typesFileSyntax);
+  enumSyntaxTemplate = Handlebars.compile(config.template.enumSyntax);
 }
 
 function getObjectTemplate(): HandlebarsTemplateDelegate<ObjectTemplateInput> {
@@ -67,6 +70,13 @@ function getTypesFileTemplate(): HandlebarsTemplateDelegate<TypesFileTemplateInp
   return typesFileSyntaxTemplate;
 }
 
+function getEnumTemplate(): HandlebarsTemplateDelegate<EnumTemplateInput> {
+  if (enumSyntaxTemplate === null) {
+    throw new RuntimeError('Enum template not compiled!');
+  }
+  return enumSyntaxTemplate;
+}
+
 function setExpectedOutputFiles(newExpectedOutputFiles: Map<string, TypeFilePath>): void {
   expectedOutputFiles = newExpectedOutputFiles;
 }
@@ -87,6 +97,7 @@ export default {
   getObjectTemplate,
   getExporterModuleTemplate,
   getTypesFileTemplate,
+  getEnumTemplate,
   getExpectedOutputFiles,
   compileTemplates
 };

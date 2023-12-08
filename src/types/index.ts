@@ -26,6 +26,7 @@ export type Template = {
   objectSyntax: string;
   exporterModuleSyntax: string;
   typesFileSyntax: string;
+  enumSyntax: string;
 };
 
 export type LanguageConfig = {
@@ -72,6 +73,7 @@ export type TypeInfo = {
   items: TypeInfo | null;
   properties: TypeProperties | null;
   $ref: string | null;
+  enum: string[] | number[] | null;
 };
 
 type PropertyName = string;
@@ -120,6 +122,12 @@ export type ReferencedModule = {
   modulePath: string;
   moduleRelativePath: string;
   referencedTypes: string[];
+};
+
+export type EnumTemplateInput = {
+  enumName: string;
+  enumType: string;
+  values: string[] | number[];
 };
 
 // #endregion
