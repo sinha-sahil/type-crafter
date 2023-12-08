@@ -1,5 +1,14 @@
 # type-crafter
 
+## 0.3.0
+
+### Minor Changes
+
+- c6abf3a: feat: added support for generating enums
+
+  - now users can generate enums from the spec.
+  - this can be done using directly defined types, ref enums & inline enum declaration
+
 ## 0.2.1
 
 ### Patch Changes
