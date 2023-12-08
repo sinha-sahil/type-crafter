@@ -23,6 +23,12 @@ export async function config(
     directoryPrefix + 'templates/typescript/types-file-syntax.hbs',
     devMode
   );
+
+  const enumSyntax = await readFile(
+    directoryPrefix + 'templates/typescript/enum-syntax.hbs',
+    devMode
+  );
+
   const config: Configuration = {
     input: inputFilePath,
     output: {
@@ -37,7 +43,8 @@ export async function config(
     template: {
       objectSyntax,
       exporterModuleSyntax,
-      typesFileSyntax
+      typesFileSyntax,
+      enumSyntax
     },
     language: {
       exporterModuleName: 'index',

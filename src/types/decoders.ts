@@ -1,4 +1,5 @@
 import type {
+  EnumTemplateInput,
   GroupedTypes,
   GroupedTypesWriterMode,
   ObjectTemplateInputProperties,
@@ -15,6 +16,7 @@ import {
   __decodeString,
   decodeArray,
   decodeBoolean,
+  decodeNumber,
   decodeString,
   isJSON,
   noErrorOrNullValues
@@ -109,13 +111,20 @@ function decodeTypes(rawInput: unknown): Types | null {
 
 function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
   if (isJSON(rawInput)) {
+    const _type = decodeTypeDataType(rawInput.type);
     const result: TypeInfo = {
-      type: decodeTypeDataType(rawInput.type),
+      type: _type,
       required: decodeArray(rawInput.required, decodeString),
       properties: decodeTypeProperties(rawInput.properties),
       items: decodeTypeInfo(rawInput.items),
       format: decodeString(rawInput.format),
-      $ref: decodeString(rawInput.$ref)
+      $ref: decodeString(rawInput.$ref),
+      enum:
+        _type === 'string'
+          ? decodeArray(rawInput.enum, decodeString)
+          : _type === 'number'
+            ? decodeArray(rawInput.enum, decodeNumber)
+            : null
     };
     return result;
   }
@@ -190,6 +199,22 @@ export function decodeObjectTemplateInputProperties(
       }
     }
     return Object.keys(result).length > 0 ? result : null;
+  }
+  return null;
+}
+
+export function decodeEnumTemplateInput(rawInput: unknown): EnumTemplateInput | null {
+  if (isJSON(rawInput)) {
+    const enumName = decodeString(rawInput.enumName);
+    const enumType = decodeString(rawInput.enumType);
+    const values = decodeArray(rawInput.values, decodeString);
+    if (enumName !== null && values !== null && enumType !== null) {
+      return {
+        enumName,
+        enumType,
+        values
+      };
+    }
   }
   return null;
 }
