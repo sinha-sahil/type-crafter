@@ -74,6 +74,8 @@ export type TypeInfo = {
   properties: TypeProperties | null;
   $ref: string | null;
   enum: string[] | number[] | null;
+  description: string | null;
+  example: string | number | null;
 };
 
 type PropertyName = string;
@@ -94,6 +96,8 @@ export type TypeDataType =
 
 export type ObjectTemplateInput = {
   typeName: string;
+  example: string | number | null;
+  description: string | null;
   properties: ObjectTemplateInputProperties;
 };
 
@@ -105,6 +109,8 @@ export type ObjectTemplateInputProperty = {
   referenced: boolean;
   primitiveType: string;
   composerType: string | null;
+  example: string | number | null;
+  description: string | null;
 };
 
 export type ExporterModuleTemplateInput = {
@@ -128,6 +134,8 @@ export type EnumTemplateInput = {
   enumName: string;
   enumType: string;
   values: string[] | number[];
+  example: string | number | null;
+  description: string | null;
 };
 
 // #endregion

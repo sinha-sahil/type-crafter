@@ -1,5 +1,24 @@
+/**
+ * @type { {{typeName}} }
+ {{#if description}}
+ * @description {{{description}}}
+ {{/if}}
+ {{#if example}}
+ * @example {{{example}}}
+ {{/if}}
+ */
 export type {{typeName}} = {
   {{#each properties}}
+  /**
+  {{#if this.description}}
+   * @description {{{this.description}}}
+  {{/if}}
+   * @type { {{this.type}} }
+   * @memberof {{../typeName}}
+  {{#if this.example}}
+   * @example {{{this.example}}}
+  {{/if}}
+   */
   {{@key}}: {{{this.type}}}{{#unless this.required}} | null{{/unless}};
   {{/each}}
 };
