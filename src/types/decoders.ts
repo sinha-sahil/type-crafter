@@ -119,6 +119,8 @@ function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
       items: decodeTypeInfo(rawInput.items),
       format: decodeString(rawInput.format),
       $ref: decodeString(rawInput.$ref),
+      description: decodeString(rawInput.description),
+      example: decodeString(rawInput.example) ?? decodeNumber(rawInput.example),
       enum:
         _type === 'string'
           ? decodeArray(rawInput.enum, decodeString)
@@ -171,13 +173,17 @@ function decodeObjectTemplateInputProperty(rawInput: unknown): ObjectTemplateInp
     const referenced = decodeBoolean(rawInput.referenced);
     const primitiveType = decodeString(rawInput.primitiveType);
     const composerType = decodeString(rawInput.composerType);
+    const example = decodeString(rawInput.example) ?? decodeNumber(rawInput.example);
+    const description = decodeString(rawInput.description);
     if (required !== null && _type !== null && referenced !== null && primitiveType !== null) {
       return {
         type: _type,
         required,
         referenced,
         primitiveType,
-        composerType
+        composerType,
+        example,
+        description
       };
     }
   }
@@ -208,11 +214,15 @@ export function decodeEnumTemplateInput(rawInput: unknown): EnumTemplateInput | 
     const enumName = decodeString(rawInput.enumName);
     const enumType = decodeString(rawInput.enumType);
     const values = decodeArray(rawInput.values, decodeString);
+    const example = decodeString(rawInput.example);
+    const description = decodeString(rawInput.description);
     if (enumName !== null && values !== null && enumType !== null) {
       return {
         enumName,
         enumType,
-        values
+        values,
+        example,
+        description
       };
     }
   }

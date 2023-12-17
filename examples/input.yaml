@@ -19,12 +19,16 @@ groupedTypes:
           $ref: '#/types/SampleEnum'
     GroupObjectTwo:
       type: object
+      example: "{ id: 'randomId123', name: 'randomName123'}"
+      description: Sample testing object
       required:
         - id
         - name
       properties:
         id:
           type: string
+          description: A unique identifier for the object
+          example: randomId123
         name:
           type: string
   GroupTwo:
@@ -76,6 +80,8 @@ types:
         $ref: '#/types/TypeObjectThree'
       sampleEnum:
         type: string
+        description: Sample ENUm type
+        example: one
         enum:
           - one
           - two
@@ -99,6 +105,8 @@ types:
 
   SampleEnum:
     type: number
+    description: Sample Numeric Enum type
+    example: 1
     enum:
       - 1
       - 2

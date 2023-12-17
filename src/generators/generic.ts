@@ -75,6 +75,8 @@ function generateObjectType(typeName: string, typeInfo: TypeInfo): GeneratedType
   };
   const templateInput: ObjectTemplateInput = {
     typeName,
+    description: typeInfo.description,
+    example: typeInfo.example,
     properties: {}
   };
 
@@ -144,7 +146,9 @@ function generateObjectType(typeName: string, typeInfo: TypeInfo): GeneratedType
         required: typeInfo.required?.includes(propertyName) ?? false,
         referenced: isReferenced,
         primitiveType,
-        composerType
+        composerType,
+        example: propertyDetails.example,
+        description: propertyDetails.description
       }
     };
   }
@@ -168,7 +172,9 @@ function generateEnumType(typeName: string, typeInfo: TypeInfo): GeneratedType {
   const templateInput: EnumTemplateInput = {
     enumName: typeName,
     enumType: typeInfo.type,
-    values: typeInfo.enum
+    values: typeInfo.enum,
+    example: typeInfo.example,
+    description: typeInfo.description
   };
 
   result.content = Runtime.getEnumTemplate()(templateInput);
