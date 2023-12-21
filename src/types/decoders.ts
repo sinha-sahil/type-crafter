@@ -121,6 +121,7 @@ function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
       $ref: decodeString(rawInput.$ref),
       description: decodeString(rawInput.description),
       example: decodeString(rawInput.example) ?? decodeNumber(rawInput.example),
+      oneOf: decodeArray(rawInput.oneOf, decodeTypeInfo),
       enum:
         _type === 'string'
           ? decodeArray(rawInput.enum, decodeString)
@@ -211,14 +212,14 @@ export function decodeObjectTemplateInputProperties(
 
 export function decodeEnumTemplateInput(rawInput: unknown): EnumTemplateInput | null {
   if (isJSON(rawInput)) {
-    const enumName = decodeString(rawInput.enumName);
+    const typeName = decodeString(rawInput.typeName);
     const enumType = decodeString(rawInput.enumType);
     const values = decodeArray(rawInput.values, decodeString);
     const example = decodeString(rawInput.example);
     const description = decodeString(rawInput.description);
-    if (enumName !== null && values !== null && enumType !== null) {
+    if (typeName !== null && values !== null && enumType !== null) {
       return {
-        enumName,
+        typeName,
         enumType,
         values,
         example,

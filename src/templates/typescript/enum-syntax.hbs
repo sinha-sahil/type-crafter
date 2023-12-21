@@ -1,5 +1,5 @@
 /**
- * @type { {{enumName}} }
+ * @type { {{typeName}} }
  {{#if description}}
  * @description {{{description}}}
  {{/if}}
@@ -7,7 +7,7 @@
  * @example {{{example}}}
  {{/if}}
  */
-export type {{enumName}} =
+export type {{typeName}} =
 {{#each values}}
   | {{#if (eq ../enumType 'string') }}'{{/if}}{{{this}}}{{#if (eq ../enumType 'string')}}'{{/if}}
 {{/each}};
