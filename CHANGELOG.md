@@ -1,5 +1,14 @@
 # type-crafter
 
+## 0.4.0
+
+### Minor Changes
+
+- e347421: feat: added support for oneOf operator in spec generation
+
+  - now you use oneOf operator in spec yaml
+  - supported language: typescript & typescript-with-decoders
+
 ## 0.3.0
 
 ### Minor Changes
