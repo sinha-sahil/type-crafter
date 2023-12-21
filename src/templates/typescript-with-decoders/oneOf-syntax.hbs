@@ -1,0 +1,74 @@
+export type {{typeName}} =
+  {{#each compositions}}
+  | {{#if (eq this.source 'referenced')}}C{{referencedType}}
+  {{else if (eq this.source 'inline')}}
+    {{#if this.templateInput.values}}
+      {{this.templateInput.typeName}}
+    {{else if (eq this.dataType 'object')}}
+      C{{this.templateInput.typeName}}
+    {{else}}
+      {{this.templateInput.dataType}}
+    {{/if}}
+  {{/if}}
+{{/each}};
+
+export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
+  const result: {{typeName}} | null =
+  {{#each compositions}}
+  {{#if (eq this.source 'referenced')}}
+    decodeC{{referencedType}}(rawInput)
+  {{else if (eq this.dataType 'object')}}
+    decodeC{{this.templateInput.typeName}}(rawInput)
+  {{else if (eq this.templateInput.primitiveType 'array')}}
+    decodeArray(rawInput, decode{{{toPascalCase this.templateInput.itemType}}})
+  {{else if this.templateInput.values}}
+    decode{{this.templateInput.typeName}}(rawInput)
+  {{else}}
+    decode{{{toPascalCase this.templateInput.dataType}}}(rawInput)
+  {{/if}}{{#unless @last}}??{{/unless}}
+  {{/each}};
+  return result;
+}
+
+
+{{#each compositions}}
+
+{{#if this.templateInput.values}}
+{{{this.content}}}
+{{else if (eq this.source 'referenced')}}
+export class C{{referencedType}} {
+  data: {{referencedType}};
+  constructor(data: {{referencedType}}) {
+    this.data = data;
+  }
+}
+
+export function decodeC{{referencedType}}(rawInput: unknown): C{{referencedType}} | null {
+  const result = decode{{referencedType}}(rawInput);
+  if (result === null) {
+    return null;
+  }
+  return new C{{referencedType}}(result);
+}
+
+{{else if (eq this.dataType 'object')}}
+
+{{{this.content}}}
+
+export class C{{this.templateInput.typeName}} {
+  data: {{this.templateInput.typeName}};
+  constructor(data: {{this.templateInput.typeName}}) {
+    this.data = data;
+  }
+}
+
+export function decodeC{{this.templateInput.typeName}}(rawInput: unknown) {
+  const result = decode{{this.templateInput.typeName}}(rawInput);
+  if (result === null) {
+    return null;
+  }
+  return new C{{this.templateInput.typeName}}(result);
+}
+
+{{/if}}
+{{/each}}

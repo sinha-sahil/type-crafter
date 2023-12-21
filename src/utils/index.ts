@@ -106,6 +106,14 @@ export function toPascalCase(input: string): string {
     .join('');
 }
 
+export function toPascalCaseHelper(input: unknown): string | unknown {
+  const inputString = decodeString(input);
+  if (inputString === null) {
+    return input;
+  }
+  return toPascalCase(inputString);
+}
+
 export function registerTemplateHelpers(): void {
   Handlebars.registerHelper('getOptionalKeys', getOptionalKeys);
   Handlebars.registerHelper('getRequiredKeys', getRequiredKeys);
@@ -115,7 +123,7 @@ export function registerTemplateHelpers(): void {
   );
   Handlebars.registerHelper('getReferencedTypes', getReferencedTypes);
   Handlebars.registerHelper('getReferencedTypeModules', getReferencedTypeModules);
-  Handlebars.registerHelper('toPascalCase', toPascalCase);
+  Handlebars.registerHelper('toPascalCase', toPascalCaseHelper);
   Handlebars.registerHelper(
     'isNonEmptyArray',
     (value) => Array.isArray(value) && value.length === 0

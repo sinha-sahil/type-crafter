@@ -1,0 +1,19 @@
+export type {{typeName}} =
+  {{#each compositions}}
+  | {{#if (eq this.source 'referenced')}}{{referencedType}}
+  {{else if (eq this.source 'inline')}}
+    {{#if this.templateInput.values}}
+      {{#each this.templateInput.values}}
+        {{#unless @first}}|{{/unless}} {{#if (eq ../this.templateInput.enumType 'string') }}'{{/if}}{{{this}}}{{#if (eq ../this.templateInput/enumType 'string')}}'{{/if}}
+      {{/each}}
+    {{else if (eq this.dataType 'object')}}
+      {
+        {{#each this.templateInput.properties}}
+        {{@key}}: {{{this.type}}}{{#unless this.required}} | null{{/unless}};
+        {{/each}}
+      }
+    {{else}}
+      {{this.templateInput.dataType}}
+    {{/if}}
+  {{/if}}
+{{/each}};

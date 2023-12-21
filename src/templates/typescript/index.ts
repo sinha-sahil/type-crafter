@@ -29,6 +29,11 @@ export async function config(
     devMode
   );
 
+  const oneOfSyntax = await readFile(
+    directoryPrefix + 'templates/typescript/oneOf-syntax.hbs',
+    devMode
+  );
+
   const config: Configuration = {
     input: inputFilePath,
     output: {
@@ -44,7 +49,8 @@ export async function config(
       objectSyntax,
       exporterModuleSyntax,
       typesFileSyntax,
-      enumSyntax
+      enumSyntax,
+      oneOfSyntax
     },
     language: {
       exporterModuleName: 'index',

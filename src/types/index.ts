@@ -27,6 +27,7 @@ export type Template = {
   exporterModuleSyntax: string;
   typesFileSyntax: string;
   enumSyntax: string;
+  oneOfSyntax: string;
 };
 
 export type LanguageConfig = {
@@ -73,6 +74,7 @@ export type TypeInfo = {
   items: TypeInfo | null;
   properties: TypeProperties | null;
   $ref: string | null;
+  oneOf: TypeInfo[] | null;
   enum: string[] | number[] | null;
   description: string | null;
   example: string | number | null;
@@ -131,12 +133,34 @@ export type ReferencedModule = {
 };
 
 export type EnumTemplateInput = {
-  enumName: string;
+  typeName: string;
   enumType: string;
   values: string[] | number[];
   example: string | number | null;
   description: string | null;
 };
+
+export type OneOfTemplateInput = {
+  typeName: string;
+  compositions: OneOfTemplateInputComposition[];
+};
+
+export type OneOfTemplateInputComposition = {
+  dataType?: TypeDataType | null;
+  templateInput?: TemplateInput;
+  source: 'inline' | 'referenced';
+  referencedType?: string;
+  content?: string;
+};
+
+export type VariableTemplateInput = {
+  typeName: string;
+  dataType: string;
+  primitiveType: string;
+  itemType?: string;
+};
+
+export type TemplateInput = ObjectTemplateInput | EnumTemplateInput | VariableTemplateInput;
 
 // #endregion
 
@@ -146,7 +170,14 @@ export type GenerationResult = {
   groupedTypes: GroupedTypesOutput;
   types: GeneratedTypes;
 };
-export type GeneratedType = { content: string; references: Set<string>; primitives: Set<string> };
+
+export type GeneratedType = {
+  content: string;
+  references: Set<string>;
+  primitives: Set<string>;
+  templateInput?: TemplateInput;
+};
+
 export type GroupedTypesOutput = Record<GroupName, GeneratedTypes>;
 export type GeneratedTypes = Record<TypeName, GeneratedType>;
 

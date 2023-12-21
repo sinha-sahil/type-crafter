@@ -2,6 +2,27 @@ info:
   version: 0.0.0
   title: Sample Typing Spec
 groupedTypes:
+  LivingBeings:
+    Human:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    Animal:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
   GroupOne:
     GroupObjectOne:
       type: object
@@ -53,6 +74,46 @@ groupedTypes:
         name:
           type: string
 types:
+  Student:
+    type: object
+    required:
+      - id
+      - name
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+  Mammal:
+    oneOf:
+      - $ref: '#/groupedTypes/LivingBeings/Human'
+      - $ref: '#/groupedTypes/LivingBeings/Animal'
+      - type: string
+      - type: number
+      - type: string
+        format: date
+      - type: string
+        enum:
+          - sampleEnumValue1
+          - sampleEnumValue2
+      - type: object
+        required:
+          - id
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+      - type: object
+        properties:
+          randomProperty:
+            type: string
+      - type: array
+        items:
+          type: string
+      - type: array
+        items:
+          $ref: '#/groupedTypes/LivingBeings/Human'
   TypeObjectTwo:
     type: object
     required:

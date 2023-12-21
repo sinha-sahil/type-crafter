@@ -1,5 +1,5 @@
 /**
- * @type { {{enumName}} }
+ * @type { {{typeName}} }
  {{#if description}}
  * @description {{{description}}}
  {{/if}}
@@ -7,12 +7,12 @@
  * @example {{{example}}}
  {{/if}}
  */
-export type {{enumName}} =
+export type {{typeName}} =
 {{#each values}}
   | {{#if (eq ../enumType 'string') }}'{{/if}}{{{this}}}{{#if (eq ../enumType 'string')}}'{{/if}}
 {{/each}};
 
-export function decode{{enumName}}(rawInput: unknown): {{enumName}} | null {
+export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   switch (rawInput) {
     {{#each values}}
     case {{#if (eq ../enumType 'string') }}'{{/if}}{{this}}{{#if (eq ../enumType 'string')}}'{{/if}}:
