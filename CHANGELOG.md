@@ -1,5 +1,14 @@
 # type-crafter
 
+## 0.5.0
+
+### Minor Changes
+
+- ffe6dc1: feat: added support for remote file reference
+
+  - added support for remote file references
+  - fixed issues array items decoders in typescript-with-decoders model
+
 ## 0.4.0
 
 ### Minor Changes
