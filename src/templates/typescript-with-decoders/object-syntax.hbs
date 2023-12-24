@@ -19,20 +19,20 @@ export type {{typeName}} = {
    * @example {{{this.example}}}
   {{/if}}
    */
-  {{@key}}: {{{this.type}}}{{#unless this.required}} | null{{/unless}};
+  {{{jsonKey @key}}}: {{{this.type}}}{{#unless this.required}} | null{{/unless}};
   {{/each}}
 };
 
 export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   if (isJSON(rawInput)) {
     {{#each properties}}
-    const {{@key}} = {{#if (eq this.primitiveType 'array') }} decodeArray(rawInput.{{@key}}, decode{{{toPascalCase this.composerType}}}){{else}} decode{{{toPascalCase this.type}}}(rawInput.{{@key}}){{/if}};
+    const decoded{{variableName @key}} = {{#if (eq this.primitiveType 'array') }} decodeArray(rawInput[{{{indexKey @key}}}], decode{{{toPascalCase this.composerType}}}){{else}} decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}]){{/if}};
     {{/each}}
 
     {{#if (areRequiredKeysPresent properties)}}
     if (
       {{#each (getRequiredKeys properties)}}
-      {{this}} === null{{#unless @last}} ||{{/unless}}
+      decoded{{toPascalCase this}} === null{{#unless @last}} ||{{/unless}}
       {{/each}}
     ) {
       return null;
@@ -41,7 +41,7 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
 
     return {
       {{#each properties}}
-      {{@key}},
+      {{{jsonKey @key}}}: decoded{{{variableName @key}}},
       {{/each}}
     };
   }

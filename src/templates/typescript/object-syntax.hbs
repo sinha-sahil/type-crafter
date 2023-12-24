@@ -19,6 +19,6 @@ export type {{typeName}} = {
    * @example {{{this.example}}}
   {{/if}}
    */
-  {{@key}}: {{{this.type}}}{{#unless this.required}} | null{{/unless}};
+  {{{jsonKey @key}}}: {{{this.type}}}{{#unless this.required}} | null{{/unless}};
   {{/each}}
 };
