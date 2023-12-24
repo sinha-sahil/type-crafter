@@ -114,6 +114,27 @@ export function toPascalCaseHelper(input: unknown): string | unknown {
   return toPascalCase(inputString);
 }
 
+export function refineJSONKey(input: unknown): unknown {
+  if (typeof input === 'string' && input.includes('-')) {
+    return `'${input}'`;
+  }
+  return input;
+}
+
+export function refineVariableName(input: unknown): unknown {
+  if (typeof input === 'string') {
+    return toPascalCase(input);
+  }
+  return input;
+}
+
+export function refineIndexKey(input: unknown): unknown {
+  if (typeof input === 'string') {
+    return `'${input}'`;
+  }
+  return input;
+}
+
 export function registerTemplateHelpers(): void {
   Handlebars.registerHelper('getOptionalKeys', getOptionalKeys);
   Handlebars.registerHelper('getRequiredKeys', getRequiredKeys);
@@ -130,6 +151,9 @@ export function registerTemplateHelpers(): void {
     (value: unknown) => Array.isArray(value) && value.length === 0
   );
   Handlebars.registerHelper('eq', (value1: unknown, value2: unknown) => value1 === value2);
+  Handlebars.registerHelper('jsonKey', refineJSONKey);
+  Handlebars.registerHelper('variableName', refineVariableName);
+  Handlebars.registerHelper('indexKey', refineIndexKey);
 }
 
 export function readNestedValue(json: unknown, keyPath: string[]): JSONObject {
