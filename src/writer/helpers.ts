@@ -1,5 +1,6 @@
 import Runtime from '$runtime';
-import type { TypeFilePath, Types } from '$types';
+import type { GroupedTypes, TypeFilePath, Types } from '$types';
+import { toPascalCase } from '$utils';
 
 export function generateTypesOutputFiles(
   types: Types | null,
@@ -32,6 +33,7 @@ export function generateTypesOutputFiles(
       });
     }
   }
+
   return result;
 }
 
@@ -44,6 +46,27 @@ export function generateExpectedOutputFile(): Map<string, TypeFilePath> {
 
   for (const groupName in specData.groupedTypes) {
     const group = specData.groupedTypes[groupName];
+    result = new Map([...result, ...generateTypesOutputFiles(group, groupName)]);
+  }
+
+  // Generating expect writing types for referenced types
+  let referredGroups: GroupedTypes = {};
+
+  for (const generatedRefData of Runtime.getCachedReferencedTypes().values()) {
+    if (typeof generatedRefData.sourceFile !== 'undefined') {
+      const groupName = toPascalCase(generatedRefData.sourceFile.replace('.yaml', ''));
+      referredGroups = {
+        ...referredGroups,
+        [groupName]: {
+          ...referredGroups[groupName],
+          [generatedRefData.referenceName]: generatedRefData.typeInfo
+        }
+      };
+    }
+  }
+
+  for (const groupName in referredGroups) {
+    const group = referredGroups[groupName];
     result = new Map([...result, ...generateTypesOutputFiles(group, groupName)]);
   }
 

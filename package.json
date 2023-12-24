@@ -68,7 +68,7 @@
     "rollup": "^4.5.1",
     "rollup-plugin-copy": "^3.5.0",
     "tslib": "^2.6.2",
-    "type-decoder": "^1.2.0",
+    "type-decoder": "^2.0.1",
     "typescript": "^5.2.2",
     "yaml": "^2.3.2"
   }

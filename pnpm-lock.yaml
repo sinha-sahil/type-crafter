@@ -69,8 +69,8 @@ devDependencies:
     specifier: ^2.6.2
     version: 2.6.2
   type-decoder:
-    specifier: ^1.2.0
-    version: 1.2.0
+    specifier: ^2.0.1
+    version: 2.0.1
   typescript:
     specifier: ^5.2.2
     version: 5.3.2
@@ -4221,10 +4221,10 @@ packages:
       prelude-ls: 1.2.1
     dev: true
 
-  /type-decoder@1.2.0:
+  /type-decoder@2.0.1:
     resolution:
       {
-        integrity: sha512-hBeqgSqL0ZOruOZVh7kIoP6+aRSdQaYf07ZE5lNTv9GWiJGLqoOT0U1oIpJCcM5xDERV6x/AAmOTv80AuXW3yg==
+        integrity: sha512-Z0sjr8RZAUSPh7+C5PSFKnRgxN4Qn1GOMUJZTF8Z1BZNULBk+UhagcryuGfAVf5RPKvu4MATAplwPD9feitknw==
       }
     dev: true
 

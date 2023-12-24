@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import yaml from 'yaml';
 import {
   type Configuration,
   decodeSpecFileData,
   decodeTypesWriterMode,
   decodeGroupedTypesWriterMode
 } from '$types';
-import { readFile, registerTemplateHelpers, greeting, logSuccess } from '$utils';
+import { registerTemplateHelpers, greeting, logSuccess, readYaml } from '$utils';
 import {
   handleErrors,
   LanguageNotSupportedError,
@@ -23,9 +22,8 @@ import { typescript, typescriptWithDecoders } from '$templates';
 
 export async function generate(config: Configuration): Promise<void> {
   Runtime.setConfig(config);
-  const specFileData = await readFile(config.input);
-  const specJSONData = yaml.parse(specFileData);
-  const decodedSpecData = decodeSpecFileData(specJSONData);
+  const specFileData = await readYaml(config.input);
+  const decodedSpecData = decodeSpecFileData(specFileData);
   if (
     decodedSpecData === null ||
     (decodedSpecData.types === null && decodedSpecData.groupedTypes === null)
@@ -35,7 +33,7 @@ export async function generate(config: Configuration): Promise<void> {
   Runtime.setSpecFileData(decodedSpecData);
   Runtime.compileTemplates();
   registerTemplateHelpers();
-  const result = generator(decodedSpecData);
+  const result = await generator(decodedSpecData);
   await writeOutput(result);
 }
 
