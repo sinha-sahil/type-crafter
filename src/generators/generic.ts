@@ -6,143 +6,85 @@ import type {
   TypeInfo,
   Types,
   GroupedTypesOutput,
-  TypeDataType,
   GeneratedType,
   EnumTemplateInput,
   OneOfTemplateInput,
-  OneOfTemplateInputComposition
+  OneOfTemplateInputComposition,
+  VariableTemplateInput,
+  TemplateInput
 } from '$types';
 import Runtime from '$runtime';
 import { toPascalCase } from '$utils';
 import { InvalidSpecFileError } from '$utils/error-handler';
-import { resolveReference } from './helpers';
-import { isJSON } from 'type-decoder';
+import { fillPatterns, resolveReference } from './helpers';
 
-function fillPatterns(input: string, patterns: Array<{ regex: RegExp; value: string }>): string {
-  let result = input;
-  patterns.forEach((pattern) => {
-    result = result.replace(pattern.regex, pattern.value);
-  });
-  return result;
-}
-
-function getReferenceName(reference: string): string {
-  const referenceParts = reference.split('/');
-  return referenceParts[referenceParts.length - 1];
-}
-
-function resolveAndGetReferenceName(reference: string): string {
-  resolveReference(reference);
-  return getReferenceName(reference);
-}
-type LanguageDataType = {
-  dataType: string;
-  itemType?: string;
-  references: Set<string>;
-  primitives: Set<string>;
-};
-
-function getLanguageDataType(
-  dataType: TypeDataType,
-  format: string | null,
-  items: TypeInfo | null
-): LanguageDataType {
-  const result: LanguageDataType = {
-    dataType,
-    references: new Set(),
-    primitives: new Set()
-  };
-  const typeMapper = Runtime.getConfig().language.typeMapper ?? null;
-  const mappedType = typeMapper !== null ? typeMapper[dataType] : null;
-  const itemReference =
-    // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
-    items !== null && items.$ref !== null ? resolveAndGetReferenceName(items.$ref) : null;
-  const itemsType: LanguageDataType | null =
-    // eslint-disable-next-line
-    items !== null
-      ? items.type !== null
-        ? getLanguageDataType(items.type, items.format, items.items)
-        : itemReference !== null
-          ? {
-              dataType: itemReference,
-              references: new Set([itemReference]),
-              primitives: new Set()
-            }
-          : null
-      : null;
-
-  const fillerPatterns = [];
-  if (itemsType !== null) {
-    fillerPatterns.push({ regex: /~ItemType~/g, value: itemsType.dataType });
+function getPrimitiveType(
+  typeName: string,
+  typeInfo: TypeInfo
+): GeneratedType<VariableTemplateInput> {
+  if (typeInfo.type === null) {
+    throw new InvalidSpecFileError('Invalid type for: ' + typeName);
   }
 
-  let mappedTypeWithFormat: string | null = null;
-  let defaultType: string | null = null;
-
-  if (typeof mappedType === 'string') {
-    result.dataType = fillPatterns(mappedType, fillerPatterns);
-  } else if (isJSON(mappedType)) {
-    defaultType = mappedType.default;
-    mappedTypeWithFormat = mappedType[format ?? ''] ?? defaultType;
-    if (typeof mappedTypeWithFormat === 'string') {
-      result.dataType = fillPatterns(mappedTypeWithFormat, fillerPatterns);
-    }
-  }
-
-  /**
-   * @todo: Segregate array & variable type generation
-   */
-  const primitiveElementType =
-    items?.$ref !== null
-      ? null
-      : mappedTypeWithFormat === null
-        ? itemsType !== null
-          ? itemsType.dataType
-          : result.dataType
-        : typeof mappedType === 'string' && items?.$ref !== null
-          ? mappedType
-          : null;
-
-  if (itemsType !== null && primitiveElementType !== null) {
-    result.itemType = primitiveElementType;
-  } else if (itemsType !== null && itemReference !== null) {
-    result.itemType = itemReference;
-  }
-
-  if (itemsType !== null) {
-    result.references = new Set([...result.references, ...itemsType.references]);
-    result.primitives =
-      primitiveElementType !== null
-        ? new Set([...result.primitives, primitiveElementType])
-        : result.primitives;
-  }
-
-  return result;
-}
-
-function generateObjectType(typeName: string, typeInfo: TypeInfo): GeneratedType {
-  const templateInput: ObjectTemplateInput = {
+  const templateInput: VariableTemplateInput = {
     typeName,
     description: typeInfo.description,
     example: typeInfo.example,
-    properties: {}
+    summary: typeInfo.summary,
+    type: typeInfo.type
   };
 
-  const result: GeneratedType = {
+  const result: GeneratedType<VariableTemplateInput> = {
     content: '',
     references: new Set(),
     primitives: new Set(),
     templateInput
   };
 
-  let recursiveTypeGenOutput: GeneratedType | null = null;
+  const typeMapper = Runtime.getConfig().language.typeMapper;
+  const mappedType = typeMapper[typeInfo.type];
+  let languageDataType: string | null = null;
+
+  if (typeof mappedType !== 'string') {
+    const defaultType = mappedType.default;
+    const mappedTypeWithFormat = mappedType[typeInfo.format ?? ''] ?? defaultType;
+    languageDataType = mappedTypeWithFormat;
+  } else {
+    languageDataType = mappedType;
+  }
+
+  if (languageDataType === null) {
+    throw new InvalidSpecFileError('Invalid type for: ' + typeName);
+  }
+
+  templateInput.type = languageDataType;
+  result.primitives.add(languageDataType);
+
+  return result;
+}
+
+async function generateObjectType(
+  typeName: string,
+  typeInfo: TypeInfo
+): Promise<GeneratedType<ObjectTemplateInput>> {
+  const templateInput: ObjectTemplateInput = {
+    typeName,
+    type: typeName,
+    description: typeInfo.description,
+    example: typeInfo.example,
+    summary: typeInfo.summary,
+    properties: {}
+  };
+
+  let recursiveTypeGenOutput: GeneratedType<TemplateInput> | null = null;
   let dynamicGeneratedType: string = '';
+
+  const primitives: string[] = [];
+  const references: string[] = [];
 
   for (const propertyName in typeInfo.properties) {
     const propertyDetails = typeInfo.properties[propertyName];
     const propertyType = propertyDetails.type;
-    const propertyFormat = propertyDetails.format;
-    const propertyItems = propertyDetails.items ?? null;
     const reference = propertyDetails.$ref ?? null;
     const enumValues = propertyDetails.enum ?? null;
 
@@ -158,36 +100,36 @@ function generateObjectType(typeName: string, typeInfo: TypeInfo): GeneratedType
     let isReferenced = false;
 
     if (reference !== null) {
-      resolveReference(reference);
-      recursivePropertyName = getReferenceName(reference);
+      const referencedType = await generateReferencedType(propertyName, propertyDetails);
+      recursivePropertyName = referencedType.templateInput.typeName;
       languageDataType = recursivePropertyName;
+      references.push(...referencedType.references);
+      primitives.push(...referencedType.primitives);
       isReferenced = true;
-      result.references.add(recursivePropertyName);
     } else if (enumValues !== null) {
       const enumName = toPascalCase(propertyName) + 'Enum';
       dynamicGeneratedType = generateEnumType(enumName, propertyDetails).content;
       languageDataType = enumName;
+    } else if (propertyType === 'array') {
+      const arrayDataGenOutput = await generateArrayType(propertyName, propertyDetails);
+      primitives.push(...arrayDataGenOutput.primitives);
+      references.push(...arrayDataGenOutput.references);
+      languageDataType = arrayDataGenOutput.templateInput.type;
+      composerType = arrayDataGenOutput.templateInput.composerType ?? null;
     } else if (propertyType === 'object') {
       recursivePropertyName = toPascalCase(propertyName);
-      recursiveTypeGenOutput = generateObjectType(
+      recursiveTypeGenOutput = await generateObjectType(
         recursivePropertyName,
         typeInfo.properties[propertyName]
       );
       languageDataType = recursivePropertyName;
-      for (const reference of recursiveTypeGenOutput.references.values()) {
-        result.references.add(reference);
-      }
-      for (const primitive of recursiveTypeGenOutput.primitives.values()) {
-        result.primitives.add(primitive);
-      }
-    } else if (propertyType !== null) {
-      languageDataType = getLanguageDataType(propertyType, propertyFormat, propertyItems).dataType;
-      result.primitives.add(propertyItems !== null ? 'Array' : languageDataType);
-      if (propertyItems !== null) {
-        const itemsType = propertyItems.type ?? getReferenceName(propertyItems.$ref ?? '');
-        result.references.add(itemsType);
-        composerType = itemsType;
-      }
+      references.push(...recursiveTypeGenOutput.references);
+      primitives.push(...recursiveTypeGenOutput.primitives);
+    } else {
+      const primitiveTypeGenOutput = getPrimitiveType(propertyName, propertyDetails);
+      languageDataType = primitiveTypeGenOutput.templateInput.type;
+      primitives.push(...primitiveTypeGenOutput.primitives);
+      references.push(...primitiveTypeGenOutput.references);
     }
 
     if (languageDataType === null) {
@@ -203,31 +145,39 @@ function generateObjectType(typeName: string, typeInfo: TypeInfo): GeneratedType
         primitiveType,
         composerType,
         example: propertyDetails.example,
-        description: propertyDetails.description
+        description: propertyDetails.description,
+        summary: propertyDetails.summary
       }
     };
   }
 
-  result.content =
-    Runtime.getObjectTemplate()(templateInput) +
-    (recursiveTypeGenOutput?.content ?? '') +
-    dynamicGeneratedType;
+  const result: GeneratedType<ObjectTemplateInput> = {
+    content:
+      Runtime.getObjectTemplate()(templateInput) +
+      (recursiveTypeGenOutput?.content ?? '') +
+      dynamicGeneratedType,
+    primitives: new Set(primitives),
+    references: new Set(references),
+    templateInput
+  };
+
   return result;
 }
 
-function generateEnumType(typeName: string, typeInfo: TypeInfo): GeneratedType {
+function generateEnumType(typeName: string, typeInfo: TypeInfo): GeneratedType<EnumTemplateInput> {
   if (typeInfo.enum === null || typeInfo.enum.length === 0 || typeInfo.type === null) {
     throw new InvalidSpecFileError('Invalid enum type for: ' + typeName);
   }
   const templateInput: EnumTemplateInput = {
     typeName,
-    enumType: typeInfo.type,
+    type: typeInfo.type,
     values: typeInfo.enum,
     example: typeInfo.example,
-    description: typeInfo.description
+    description: typeInfo.description,
+    summary: typeInfo.summary
   };
 
-  const result: GeneratedType = {
+  const result: GeneratedType<EnumTemplateInput> = {
     content: '',
     references: new Set(),
     primitives: new Set(),
@@ -238,32 +188,138 @@ function generateEnumType(typeName: string, typeInfo: TypeInfo): GeneratedType {
   return result;
 }
 
-function generateOneOfTypes(typeName: string, typeInfo: TypeInfo): GeneratedType {
-  const result: GeneratedType = {
+async function generateArrayType(
+  typeName: string,
+  typeInfo: TypeInfo
+): Promise<GeneratedType<VariableTemplateInput>> {
+  if (typeInfo.items === null) {
+    throw new InvalidSpecFileError('Invalid array type for: ' + typeName);
+  }
+
+  const arrayItemsType = await generateType(typeName, typeInfo.items);
+
+  if (typeof arrayItemsType.templateInput?.type === 'undefined') {
+    throw new InvalidSpecFileError('Invalid array type for: ' + typeName);
+  }
+
+  const fillerPatterns = [{ regex: /~ItemType~/g, value: arrayItemsType.templateInput.type }];
+  const arrayTypeMap = Runtime.getConfig().language.typeMapper.array;
+
+  if (typeof arrayTypeMap !== 'string') {
+    throw new InvalidSpecFileError('Invalid array type for: ' + typeName);
+  }
+
+  const dataType = fillPatterns(arrayTypeMap, fillerPatterns);
+
+  const result: GeneratedType<VariableTemplateInput> = {
     content: '',
-    references: new Set(),
-    primitives: new Set()
+    references: arrayItemsType.references,
+    primitives: new Set([...arrayItemsType.primitives, 'Array']),
+    templateInput: {
+      typeName,
+      type: dataType,
+      composerType: arrayItemsType.templateInput.type,
+      description: typeInfo.description,
+      example: typeInfo.example,
+      summary: typeInfo.summary
+    }
   };
+
+  return result;
+}
+
+function generateVariableType(
+  typeName: string,
+  typeInfo: TypeInfo
+): GeneratedType<VariableTemplateInput> {
+  if (typeInfo.type === null) {
+    throw new InvalidSpecFileError('Invalid variable type for: ' + typeName);
+  }
+
+  const variableGenOutput = getPrimitiveType(typeName, typeInfo);
+
+  const templateInput: VariableTemplateInput = {
+    typeName,
+    type: variableGenOutput.templateInput.type,
+    composerType: variableGenOutput.templateInput.type,
+    description: typeInfo.description,
+    example: typeInfo.example,
+    summary: typeInfo.summary
+  };
+
+  return {
+    content: '',
+    references: variableGenOutput.references,
+    primitives: variableGenOutput.primitives,
+    templateInput
+  };
+}
+
+async function generateReferencedType(
+  typeName: string,
+  typeInfo: TypeInfo
+): Promise<GeneratedType<TemplateInput>> {
+  if (typeInfo.$ref === null) {
+    throw new InvalidSpecFileError('Invalid referenced type for: ' + typeName);
+  }
+
+  const cachedReferencedType = Runtime.getCachedReferenceType(typeInfo.$ref);
+  if (cachedReferencedType !== null) {
+    return cachedReferencedType.templateData;
+  }
+
+  const referencedTypeInfo = await resolveReference(typeInfo.$ref);
+  const referencedGeneratedType = await generateType(
+    referencedTypeInfo.referenceName,
+    referencedTypeInfo.typeInfo
+  );
+
+  const result = {
+    content: referencedGeneratedType.content,
+    references: new Set([...referencedGeneratedType.references, referencedTypeInfo.referenceName]),
+    primitives: referencedGeneratedType.primitives,
+    templateInput: referencedGeneratedType.templateInput
+  };
+
+  Runtime.cacheReferenceType(typeInfo.$ref, { ...referencedTypeInfo, templateData: result });
+  return result;
+}
+
+async function generateOneOfTypes(
+  typeName: string,
+  typeInfo: TypeInfo
+): Promise<GeneratedType<OneOfTemplateInput>> {
   if (typeInfo.oneOf === null || typeInfo.oneOf.length === 0) {
     throw new InvalidSpecFileError('Invalid oneOf type for: ' + typeName);
   }
   const templateInput: OneOfTemplateInput = {
     typeName,
-    compositions: []
+    type: typeName,
+    compositions: [],
+    description: typeInfo.description,
+    example: typeInfo.example,
+    summary: typeInfo.summary
+  };
+
+  const result: GeneratedType<OneOfTemplateInput> = {
+    content: '',
+    references: new Set(),
+    primitives: new Set(),
+    templateInput
   };
 
   for (let index = 0; index < typeInfo.oneOf.length; index++) {
     const oneOfItem = typeInfo.oneOf[index];
     if (oneOfItem.$ref !== null) {
-      const referenceName = resolveAndGetReferenceName(oneOfItem.$ref);
+      const referenceData = await resolveReference(oneOfItem.$ref);
       const composition: OneOfTemplateInputComposition = {
         source: 'referenced',
-        referencedType: referenceName
+        referencedType: referenceData.referenceName
       };
       templateInput.compositions.push(composition);
-      result.references.add(referenceName);
+      result.references.add(referenceData.referenceName);
     } else {
-      const generatedType = generateType(typeName + (index + 1), oneOfItem);
+      const generatedType = await generateType(typeName + (index + 1), oneOfItem);
 
       if (generatedType === null) {
         throw new InvalidSpecFileError('Invalid oneOf type for: ' + typeName);
@@ -290,58 +346,39 @@ function generateOneOfTypes(typeName: string, typeInfo: TypeInfo): GeneratedType
   return result;
 }
 
-function generateVariableType(typeName: string, typeInfo: TypeInfo): GeneratedType | null {
-  if (typeInfo.type === null) {
-    return null;
-  }
-  const dataType = getLanguageDataType(typeInfo.type, typeInfo.format, typeInfo.items);
-  const _primitives = [...dataType.primitives];
-  if (typeInfo.type === 'array' && dataType.references.size !== 0) {
-    _primitives.push('Array');
-  } else if (typeInfo.type !== 'array' && typeInfo.$ref === null) {
-    _primitives.push(dataType.dataType);
-  }
-
-  return {
-    content: '',
-    references: dataType.references,
-    primitives: new Set(_primitives),
-    templateInput: {
-      typeName,
-      dataType: dataType.dataType,
-      itemType: dataType.itemType,
-      primitiveType: typeInfo.type
-    }
-  };
-}
-
-function generateType(typeName: string, typeInfo: TypeInfo): GeneratedType | null {
+async function generateType(
+  typeName: string,
+  typeInfo: TypeInfo
+): Promise<GeneratedType<TemplateInput>> {
   if (typeInfo.type === 'object') {
-    return generateObjectType(typeName, typeInfo);
+    return await generateObjectType(typeName, typeInfo);
   }
   if (typeInfo.enum !== null) {
     return generateEnumType(typeName, typeInfo);
   }
   if (typeInfo.oneOf !== null) {
-    return generateOneOfTypes(typeName, typeInfo);
+    return await generateOneOfTypes(typeName, typeInfo);
+  }
+  if (typeInfo.type === 'array') {
+    return await generateArrayType(typeName, typeInfo);
+  }
+  if (typeInfo.$ref !== null) {
+    return await generateReferencedType(typeName, typeInfo);
   }
   return generateVariableType(typeName, typeInfo);
 }
 
-function generateTypes(types: Types): GeneratedTypes {
+async function generateTypes(types: Types): Promise<GeneratedTypes> {
   const result: GeneratedTypes = {};
   for (const type in types) {
     const typeInfo: TypeInfo = types[type];
-    const genType = generateType(type, typeInfo);
-    if (genType !== null) {
-      result[type] = genType;
-    }
+    result[type] = await generateType(type, typeInfo);
   }
 
   return result;
 }
 
-export function generator(specFileData: SpecFileData): GenerationResult {
+export async function generator(specFileData: SpecFileData): Promise<GenerationResult> {
   const result: GenerationResult = {
     groupedTypes: {},
     types: {}
@@ -349,14 +386,26 @@ export function generator(specFileData: SpecFileData): GenerationResult {
 
   // generating types
   if (specFileData.types !== null) {
-    result.types = generateTypes(specFileData.types);
+    result.types = await generateTypes(specFileData.types);
   }
 
   // generating grouped types
   const groupedTypes: GroupedTypesOutput = {};
   for (const groupName in specFileData.groupedTypes) {
-    groupedTypes[groupName] = generateTypes(specFileData.groupedTypes[groupName]);
+    groupedTypes[groupName] = await generateTypes(specFileData.groupedTypes[groupName]);
   }
+
+  // storing remote referenced to output
+  for (const generatedRefData of Runtime.getCachedReferencedTypes().values()) {
+    if (typeof generatedRefData.sourceFile === 'string') {
+      const refGroupName = toPascalCase(generatedRefData.sourceFile.replace('.yaml', ''));
+      groupedTypes[refGroupName] = {
+        ...groupedTypes[refGroupName],
+        [generatedRefData.referenceName]: generatedRefData.templateData
+      };
+    }
+  }
+
   result.groupedTypes = groupedTypes;
 
   return result;

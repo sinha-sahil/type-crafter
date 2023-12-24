@@ -2,6 +2,7 @@ import type {
   Configuration,
   EnumTemplateInput,
   ExporterModuleTemplateInput,
+  GeneratedReferencedType,
   ObjectTemplateInput,
   OneOfTemplateInput,
   SpecFileData,
@@ -13,12 +14,15 @@ import Handlebars from 'handlebars';
 
 let config: Configuration | null = null;
 let specFileData: SpecFileData | null = null;
+
 let objectSyntaxTemplate: HandlebarsTemplateDelegate<ObjectTemplateInput> | null = null;
 let exporterModuleSyntaxTemplate: HandlebarsTemplateDelegate<ExporterModuleTemplateInput> | null =
   null;
 let typesFileSyntaxTemplate: HandlebarsTemplateDelegate<TypesFileTemplateInput> | null = null;
 let oneOfSyntaxTemplate: HandlebarsTemplateDelegate<OneOfTemplateInput> | null = null;
 let enumSyntaxTemplate: HandlebarsTemplateDelegate<EnumTemplateInput> | null = null;
+
+const cachedReferencedTypes = new Map<string, GeneratedReferencedType>();
 let expectedOutputFiles: Map<string, TypeFilePath> | null = null;
 
 function setConfig(newConfig: Configuration): void {
@@ -98,6 +102,18 @@ function getExpectedOutputFiles(): Map<string, TypeFilePath> {
   return expectedOutputFiles;
 }
 
+function getCachedReferencedTypes(): Map<string, GeneratedReferencedType> {
+  return cachedReferencedTypes;
+}
+
+function getCachedReferenceType(referencePath: string): GeneratedReferencedType | null {
+  return cachedReferencedTypes.get(referencePath) ?? null;
+}
+
+function cacheReferenceType(referencePath: string, generatedData: GeneratedReferencedType): void {
+  cachedReferencedTypes.set(referencePath, generatedData);
+}
+
 export default {
   getConfig,
   setConfig,
@@ -110,5 +126,8 @@ export default {
   getEnumTemplate,
   getExpectedOutputFiles,
   compileTemplates,
-  getOneOfTemplate
+  getOneOfTemplate,
+  getCachedReferencedTypes,
+  getCachedReferenceType,
+  cacheReferenceType
 };

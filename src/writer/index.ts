@@ -114,11 +114,14 @@ export async function writeOutput(generationResult: GenerationResult): Promise<v
 
   let typesFilesWritten = null;
 
-  if (config.output.writerMode.types === 'Files') {
-    typesFilesWritten = await writeTypesToFiles(config, generationResult.types);
-  } else if (config.output.writerMode.types === 'SingleFile') {
-    typesFilesWritten = await writeTypesToFile(config, generationResult.types);
+  if (Object.keys(generationResult.types).length > 0) {
+    if (config.output.writerMode.types === 'Files') {
+      typesFilesWritten = await writeTypesToFiles(config, generationResult.types);
+    } else if (config.output.writerMode.types === 'SingleFile') {
+      typesFilesWritten = await writeTypesToFile(config, generationResult.types);
+    }
   }
+
   if (typesFilesWritten !== null) {
     addValuesToMappedSet(
       writtenFiles,

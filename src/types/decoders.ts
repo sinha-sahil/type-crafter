@@ -109,7 +109,7 @@ function decodeTypes(rawInput: unknown): Types | null {
   return null;
 }
 
-function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
+export function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
   if (isJSON(rawInput)) {
     const _type = decodeTypeDataType(rawInput.type);
     const result: TypeInfo = {
@@ -119,6 +119,7 @@ function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
       items: decodeTypeInfo(rawInput.items),
       format: decodeString(rawInput.format),
       $ref: decodeString(rawInput.$ref),
+      summary: decodeString(rawInput.summary),
       description: decodeString(rawInput.description),
       example: decodeString(rawInput.example) ?? decodeNumber(rawInput.example),
       oneOf: decodeArray(rawInput.oneOf, decodeTypeInfo),
@@ -174,6 +175,7 @@ function decodeObjectTemplateInputProperty(rawInput: unknown): ObjectTemplateInp
     const referenced = decodeBoolean(rawInput.referenced);
     const primitiveType = decodeString(rawInput.primitiveType);
     const composerType = decodeString(rawInput.composerType);
+    const summary = decodeString(rawInput.summary);
     const example = decodeString(rawInput.example) ?? decodeNumber(rawInput.example);
     const description = decodeString(rawInput.description);
     if (required !== null && _type !== null && referenced !== null && primitiveType !== null) {
@@ -183,6 +185,7 @@ function decodeObjectTemplateInputProperty(rawInput: unknown): ObjectTemplateInp
         referenced,
         primitiveType,
         composerType,
+        summary,
         example,
         description
       };
@@ -213,15 +216,17 @@ export function decodeObjectTemplateInputProperties(
 export function decodeEnumTemplateInput(rawInput: unknown): EnumTemplateInput | null {
   if (isJSON(rawInput)) {
     const typeName = decodeString(rawInput.typeName);
-    const enumType = decodeString(rawInput.enumType);
+    const type = decodeString(rawInput.type);
     const values = decodeArray(rawInput.values, decodeString);
+    const summary = decodeString(rawInput.summary);
     const example = decodeString(rawInput.example);
     const description = decodeString(rawInput.description);
-    if (typeName !== null && values !== null && enumType !== null) {
+    if (typeName !== null && values !== null && type !== null) {
       return {
         typeName,
-        enumType,
+        type,
         values,
+        summary,
         example,
         description
       };

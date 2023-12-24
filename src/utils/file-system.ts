@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import yaml from 'yaml';
 
 function getSourceFileDirectory(): string {
   const fileName = fileURLToPath(import.meta.url);
@@ -74,4 +75,9 @@ export async function writeFile(
     ? path.join(basePath, fileName)
     : path.join(process.cwd(), basePath, fileName);
   await fs.writeFile(filePath, content);
+}
+
+export async function readYaml(filePath: string): Promise<unknown> {
+  const fileData = await readFile(filePath);
+  return yaml.parse(fileData);
 }

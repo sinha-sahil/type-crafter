@@ -48,6 +48,20 @@ export type FormatType = {
 
 // #endregion
 
+// #region Runtime Type
+
+export type ResolveReferenceData = {
+  typeInfo: TypeInfo;
+  referenceName: string;
+  sourceFile?: string;
+};
+
+export type GeneratedReferencedType = ResolveReferenceData & {
+  templateData: GeneratedType<TemplateInput>;
+};
+
+// #endregion
+
 // #region Spec File Data
 
 export type SpecFileData = {
@@ -67,7 +81,7 @@ export type GroupedTypes = Record<GroupName, Types>;
 type TypeName = string;
 export type Types = Record<TypeName, TypeInfo>;
 
-export type TypeInfo = {
+export type TypeInfo = TypeDescriptors & {
   required: string[] | null;
   type: TypeDataType | null;
   format: string | null;
@@ -76,8 +90,6 @@ export type TypeInfo = {
   $ref: string | null;
   oneOf: TypeInfo[] | null;
   enum: string[] | number[] | null;
-  description: string | null;
-  example: string | number | null;
 };
 
 type PropertyName = string;
@@ -92,27 +104,30 @@ export type TypeDataType =
   | 'object'
   | 'unknown';
 
+export type TypeDescriptors = {
+  summary: string | null;
+  example: string | number | null;
+  description: string | null;
+};
+
 // #endregion
 
 // #region Writer Data
 
-export type ObjectTemplateInput = {
+export type ObjectTemplateInput = TypeDescriptors & {
   typeName: string;
-  example: string | number | null;
-  description: string | null;
+  type: string;
   properties: ObjectTemplateInputProperties;
 };
 
 export type ObjectTemplateInputProperties = Record<PropertyName, ObjectTemplateInputProperty>;
 
-export type ObjectTemplateInputProperty = {
+export type ObjectTemplateInputProperty = TypeDescriptors & {
   type: string;
   required: boolean;
   referenced: boolean;
   primitiveType: string;
   composerType: string | null;
-  example: string | number | null;
-  description: string | null;
 };
 
 export type ExporterModuleTemplateInput = {
@@ -132,16 +147,15 @@ export type ReferencedModule = {
   referencedTypes: string[];
 };
 
-export type EnumTemplateInput = {
+export type EnumTemplateInput = TypeDescriptors & {
   typeName: string;
-  enumType: string;
+  type: string;
   values: string[] | number[];
-  example: string | number | null;
-  description: string | null;
 };
 
-export type OneOfTemplateInput = {
+export type OneOfTemplateInput = TypeDescriptors & {
   typeName: string;
+  type: string;
   compositions: OneOfTemplateInputComposition[];
 };
 
@@ -153,14 +167,17 @@ export type OneOfTemplateInputComposition = {
   content?: string;
 };
 
-export type VariableTemplateInput = {
+export type VariableTemplateInput = TypeDescriptors & {
   typeName: string;
-  dataType: string;
-  primitiveType: string;
-  itemType?: string;
+  type: string;
+  composerType?: string;
 };
 
-export type TemplateInput = ObjectTemplateInput | EnumTemplateInput | VariableTemplateInput;
+export type TemplateInput =
+  | ObjectTemplateInput
+  | EnumTemplateInput
+  | OneOfTemplateInput
+  | VariableTemplateInput;
 
 // #endregion
 
@@ -171,15 +188,15 @@ export type GenerationResult = {
   types: GeneratedTypes;
 };
 
-export type GeneratedType = {
+export type GeneratedType<TemplateType extends TemplateInput> = {
   content: string;
   references: Set<string>;
   primitives: Set<string>;
-  templateInput?: TemplateInput;
+  templateInput: TemplateType;
 };
 
 export type GroupedTypesOutput = Record<GroupName, GeneratedTypes>;
-export type GeneratedTypes = Record<TypeName, GeneratedType>;
+export type GeneratedTypes = Record<TypeName, GeneratedType<TemplateInput>>;
 
 export type TypeFilePath = {
   modulePath: string;

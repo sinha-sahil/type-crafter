@@ -119,19 +119,23 @@ export function registerTemplateHelpers(): void {
   Handlebars.registerHelper('getRequiredKeys', getRequiredKeys);
   Handlebars.registerHelper(
     'areRequiredKeysPresent',
-    (object) => getRequiredKeys(object).length > 0
+    (object: unknown) => getRequiredKeys(object).length > 0
   );
+
   Handlebars.registerHelper('getReferencedTypes', getReferencedTypes);
   Handlebars.registerHelper('getReferencedTypeModules', getReferencedTypeModules);
   Handlebars.registerHelper('toPascalCase', toPascalCaseHelper);
   Handlebars.registerHelper(
     'isNonEmptyArray',
-    (value) => Array.isArray(value) && value.length === 0
+    (value: unknown) => Array.isArray(value) && value.length === 0
   );
-  Handlebars.registerHelper('eq', (value1, value2) => value1 === value2);
+  Handlebars.registerHelper('eq', (value1: unknown, value2: unknown) => value1 === value2);
 }
 
-export function readNestedValue(json: JSONObject, keyPath: string[]): JSONObject {
+export function readNestedValue(json: unknown, keyPath: string[]): JSONObject {
+  if (!isJSON(json)) {
+    throw new InvalidSpecFileError('Invalid JSON for keyPath ' + keyPath.join('.'));
+  }
   let result: JSONValue = json;
   keyPath.forEach((key) => {
     if (isJSON(result)) {
