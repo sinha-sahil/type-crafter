@@ -7,7 +7,7 @@ export type {{typeName}} =
     {{else if (eq this.dataType 'object')}}
       C{{this.templateInput.typeName}}
     {{else}}
-      {{this.templateInput.dataType}}
+      {{this.templateInput.type}}
     {{/if}}
   {{/if}}
 {{/each}};
@@ -19,12 +19,12 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
     decodeC{{referencedType}}(rawInput)
   {{else if (eq this.dataType 'object')}}
     decodeC{{this.templateInput.typeName}}(rawInput)
-  {{else if (eq this.templateInput.primitiveType 'array')}}
-    decodeArray(rawInput, decode{{{toPascalCase this.templateInput.itemType}}})
+  {{else if (eq this.dataType 'array')}}
+    decodeArray(rawInput, decode{{{toPascalCase this.templateInput.composerType}}})
   {{else if this.templateInput.values}}
     decode{{this.templateInput.typeName}}(rawInput)
   {{else}}
-    decode{{{toPascalCase this.templateInput.dataType}}}(rawInput)
+    decode{{{toPascalCase this.templateInput.type}}}(rawInput)
   {{/if}}{{#unless @last}}??{{/unless}}
   {{/each}};
   return result;

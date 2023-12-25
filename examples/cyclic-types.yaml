@@ -1,0 +1,69 @@
+info:
+  version: 0.0.0
+  title: Sample Typing Spec
+groupedTypes:
+  GroupOne:
+    GroupObjectOne:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        refT:
+          $ref: '#/types/TypeObjectTwo'
+
+types:
+  TypeObjectTwo:
+    type: object
+    required:
+      - id
+      - name
+      - groupProperty
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      random:
+        type: unknown
+      recType:
+        type: object
+        properties:
+          recId:
+            type: string
+          recName:
+            type: number
+          recDate:
+            type: string
+            format: date
+      refType:
+        $ref: '#/types/TypeObjectThree'
+      sampleEnum:
+        type: string
+        description: Sample ENUm type
+        example: one
+        enum:
+          - one
+          - two
+          - three
+  TypeObjectThree:
+    type: object
+    required:
+      - id
+      - name
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      refType2:
+        $ref: '#/groupedTypes/GroupOne/GroupObjectOne'
+  Recursive:
+    type: object
+    properties:
+      rec:
+        $ref: '#/types/Recursive'
