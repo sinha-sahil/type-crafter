@@ -57,7 +57,7 @@ export async function config(
       typeMapper: {
         string: { default: 'string', date: 'Date' },
         number: { default: 'number' },
-        integer: { default: 'integer' },
+        integer: { default: 'number' },
         boolean: 'boolean',
         array: '~ItemType~[]',
         object: 'type',
