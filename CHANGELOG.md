@@ -1,5 +1,14 @@
 # type-crafter
 
+## 0.6.0
+
+### Minor Changes
+
+- 1e9e39f: feat: added support for referencing types & groups from a remote file
+
+  - now you can reference groups & types from remote files
+  - fixed issues with referenced type generation
+
 ## 0.5.0
 
 ### Minor Changes
