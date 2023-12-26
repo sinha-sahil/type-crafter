@@ -1,6 +1,6 @@
 {
   "name": "type-crafter",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "A tool to generate types from a yaml schema for any language",
   "main": "./dist/index.js",
   "type": "module",
