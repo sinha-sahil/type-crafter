@@ -1,5 +1,5 @@
 import Runtime from '$runtime';
-import type { GroupedTypes, TypeFilePath, Types } from '$types';
+import { valueIsGroupRef, type GroupedTypes, type TypeFilePath, type Types } from '$types';
 import { toPascalCase } from '$utils';
 
 export function generateTypesOutputFiles(
@@ -46,20 +46,26 @@ export function generateExpectedOutputFile(): Map<string, TypeFilePath> {
 
   for (const groupName in specData.groupedTypes) {
     const group = specData.groupedTypes[groupName];
-    result = new Map([...result, ...generateTypesOutputFiles(group, groupName)]);
+    // No File/Folder will be created for referenced groups
+    if (!valueIsGroupRef(group)) {
+      result = new Map([...result, ...generateTypesOutputFiles(group, groupName)]);
+    }
   }
 
   // Generating expect writing types for referenced types
   let referredGroups: GroupedTypes = {};
 
   for (const generatedRefData of Runtime.getCachedReferencedTypes().values()) {
-    if (typeof generatedRefData.sourceFile !== 'undefined') {
+    if (
+      typeof generatedRefData.sourceFile !== 'undefined' &&
+      generatedRefData.completeSource !== Runtime.getInputFilePath() // Preventing new file creation for remote references from base file
+    ) {
       const groupName = toPascalCase(generatedRefData.sourceFile.replace('.yaml', ''));
       referredGroups = {
         ...referredGroups,
         [groupName]: {
           ...referredGroups[groupName],
-          [generatedRefData.referenceName]: generatedRefData.typeInfo
+          [generatedRefData.name]: generatedRefData.typeInfo
         }
       };
     }
@@ -67,7 +73,10 @@ export function generateExpectedOutputFile(): Map<string, TypeFilePath> {
 
   for (const groupName in referredGroups) {
     const group = referredGroups[groupName];
-    result = new Map([...result, ...generateTypesOutputFiles(group, groupName)]);
+    // No File/Folder will be created for referenced groups
+    if (!valueIsGroupRef(group)) {
+      result = new Map([...result, ...generateTypesOutputFiles(group, groupName)]);
+    }
   }
 
   return result;

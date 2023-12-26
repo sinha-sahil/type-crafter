@@ -1,0 +1,29 @@
+SecondaryType:
+  type: object
+  properties:
+    randomProperty:
+      type: string
+    randomProperty2:
+      type: string
+SecondaryTypeGroupOne:
+  SampleGroupedType:
+    type: object
+    properties:
+      randomProperty:
+        type: string
+      randomProperty2:
+        type: string
+RandomObjectType:
+  type: object
+  properties:
+    randomProperty:
+      type: string
+    randomProperty2:
+      type: string
+UnusedRefType:
+  type: object
+  properties:
+    uuName:
+      type: string
+    uuIdea:
+      type: string
