@@ -11,13 +11,21 @@ import type {
   OneOfTemplateInput,
   OneOfTemplateInputComposition,
   VariableTemplateInput,
-  TemplateInput
+  TemplateInput,
+  ResolvedGroupReferenceData
 } from '$types';
+import { valueIsGroupRef } from '$types';
 import Runtime from '$runtime';
 import { toPascalCase } from '$utils';
 import { InvalidSpecFileError } from '$utils/error-handler';
-import { fillPatterns, resolveReference } from './helpers';
+import { fillPatterns, resolveGroupReference, resolveTypeReference } from './helpers';
 
+/**
+ * @description Generates the primitive type for the unit attribute in the spec.
+ * @param typeName { string }
+ * @param typeInfo { TypeInfo }
+ * @returns {GeneratedType<VariableTemplateInput>}
+ */
 function getPrimitiveType(
   typeName: string,
   typeInfo: TypeInfo
@@ -180,6 +188,12 @@ async function generateObjectType(
   return result;
 }
 
+/**
+ * @description Generated ENUM type for the unit attribute in the spec.
+ * @param typeName
+ * @param typeInfo
+ * @returns {GeneratedType<EnumTemplateInput>}
+ */
 function generateEnumType(typeName: string, typeInfo: TypeInfo): GeneratedType<EnumTemplateInput> {
   if (typeInfo.enum === null || typeInfo.enum.length === 0 || typeInfo.type === null) {
     throw new InvalidSpecFileError('Invalid enum type for: ' + typeName);
@@ -286,16 +300,16 @@ async function generateReferencedType(
     return cachedReferencedType.templateData;
   }
 
-  const referencedTypeInfo = await resolveReference(typeInfo.$ref);
+  const referencedTypeInfo = await resolveTypeReference(typeInfo.$ref);
   const referencedGeneratedType = await generateType(
-    referencedTypeInfo.referenceName,
+    referencedTypeInfo.name,
     referencedTypeInfo.typeInfo,
     parentTypes
   );
 
   const result = {
     content: referencedGeneratedType.content,
-    references: new Set([...referencedGeneratedType.references, referencedTypeInfo.referenceName]),
+    references: new Set([...referencedGeneratedType.references, referencedTypeInfo.name]),
     primitives: referencedGeneratedType.primitives,
     templateInput: referencedGeneratedType.templateInput
   };
@@ -331,13 +345,13 @@ async function generateOneOfTypes(
   for (let index = 0; index < typeInfo.oneOf.length; index++) {
     const oneOfItem = typeInfo.oneOf[index];
     if (oneOfItem.$ref !== null) {
-      const referenceData = await resolveReference(oneOfItem.$ref);
+      const referenceData = await resolveTypeReference(oneOfItem.$ref);
       const composition: OneOfTemplateInputComposition = {
         source: 'referenced',
-        referencedType: referenceData.referenceName
+        referencedType: referenceData.name
       };
       templateInput.compositions.push(composition);
-      result.references.add(referenceData.referenceName);
+      result.references.add(referenceData.name);
     } else {
       const generatedType = await generateType(typeName + (index + 1), oneOfItem, parentTypes);
 
@@ -417,7 +431,11 @@ async function generateTypes(types: Types): Promise<GeneratedTypes> {
   const result: GeneratedTypes = {};
   for (const type in types) {
     const typeInfo: TypeInfo = types[type];
-    result[type] = await generateType(type, typeInfo, []);
+    const generatedData = await generateType(type, typeInfo, []);
+    // Not storing top level referenced types as they are already generated somewhere else
+    if (typeInfo.$ref === null) {
+      result[type] = generatedData;
+    }
   }
 
   return result;
@@ -434,19 +452,36 @@ export async function generator(specFileData: SpecFileData): Promise<GenerationR
     result.types = await generateTypes(specFileData.types);
   }
 
+  // remove self references
+  for (const typeName in result.types) {
+    const typeData = result.types[typeName];
+    typeData.references.delete(typeName);
+  }
+
   // generating grouped types
   const groupedTypes: GroupedTypesOutput = {};
+  const referencedGroups: ResolvedGroupReferenceData[] = [];
   for (const groupName in specFileData.groupedTypes) {
-    groupedTypes[groupName] = await generateTypes(specFileData.groupedTypes[groupName]);
+    const groupData = specFileData.groupedTypes[groupName];
+    if (!valueIsGroupRef(groupData)) {
+      groupedTypes[groupName] = await generateTypes(groupData);
+    } else {
+      const groupRefData = await resolveGroupReference(groupData.$ref);
+      referencedGroups.push(groupRefData);
+    }
+  }
+
+  for (const refGroup of referencedGroups) {
+    groupedTypes[refGroup.name] = await generateTypes(refGroup.groupedTypes);
   }
 
   // storing remote referenced to output
   for (const generatedRefData of Runtime.getCachedReferencedTypes().values()) {
-    if (typeof generatedRefData.sourceFile === 'string') {
+    if (typeof generatedRefData.sourceFile === 'string' && generatedRefData.type !== 'local') {
       const refGroupName = toPascalCase(generatedRefData.sourceFile.replace('.yaml', ''));
       groupedTypes[refGroupName] = {
         ...groupedTypes[refGroupName],
-        [generatedRefData.referenceName]: generatedRefData.templateData
+        [generatedRefData.name]: generatedRefData.templateData
       };
     }
   }

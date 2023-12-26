@@ -2,6 +2,8 @@ info:
   version: 0.0.0
   title: Sample Typing Spec
 groupedTypes:
+  ReferencedGroup:
+    $ref: './ref-group.yaml#/ReferencedGroup'
   LivingBeings:
     Human:
       type: object
@@ -74,16 +76,23 @@ groupedTypes:
         name:
           type: string
 types:
+  RandomRemoteRefType:
+    $ref: './secondary-types.yaml#/RandomObjectType'
   Student:
     type: object
     required:
       - id
       - name
+      - randomProperty
     properties:
       id:
         type: string
       name:
         type: string
+      randomProperty:
+        $ref: './secondary-types.yaml#/SecondaryType'
+      randomProperty2:
+        $ref: './secondary-types.yaml#/SecondaryTypeGroupOne/SampleGroupedType'
   Mammal:
     oneOf:
       - $ref: '#/groupedTypes/LivingBeings/Human'

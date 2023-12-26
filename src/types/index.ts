@@ -50,13 +50,25 @@ export type FormatType = {
 
 // #region Runtime Type
 
-export type ResolveReferenceData = {
-  typeInfo: TypeInfo;
-  referenceName: string;
-  sourceFile?: string;
+export type ReferenceType = 'local' | 'remote' | 'url';
+
+export type ReferenceMeta = {
+  completeSource: string;
+  sourceFile: string;
+  path: string;
+  type: ReferenceType;
+  name: string;
 };
 
-export type GeneratedReferencedType = ResolveReferenceData & {
+export type ResolvedTypeReferenceData = ReferenceMeta & {
+  typeInfo: TypeInfo;
+};
+
+export type ResolvedGroupReferenceData = ReferenceMeta & {
+  groupedTypes: Types;
+};
+
+export type GeneratedReferencedType = ResolvedTypeReferenceData & {
   templateData: GeneratedType<TemplateInput>;
 };
 
@@ -76,7 +88,12 @@ export type SpecInfo = {
 };
 
 type GroupName = string;
-export type GroupedTypes = Record<GroupName, Types>;
+export type GroupedTypes = Record<GroupName, GroupTypesData>;
+export type GroupTypesData = Types | GroupRef;
+
+export type GroupRef = {
+  $ref: string;
+};
 
 type TypeName = string;
 export type Types = Record<TypeName, TypeInfo>;

@@ -9,6 +9,7 @@ import type {
   TypeFilePath,
   TypesFileTemplateInput
 } from '$types';
+import { resolveFilePath } from '$utils';
 import { RuntimeError } from '$utils/error-handler';
 import Handlebars from 'handlebars';
 
@@ -114,6 +115,13 @@ function cacheReferenceType(referencePath: string, generatedData: GeneratedRefer
   cachedReferencedTypes.set(referencePath, generatedData);
 }
 
+function getInputFilePath(absolutePath: boolean = true): string {
+  if (config === null) {
+    throw new RuntimeError('Spec file path not set!');
+  }
+  return absolutePath ? resolveFilePath(config.input) : config.input;
+}
+
 export default {
   getConfig,
   setConfig,
@@ -129,5 +137,6 @@ export default {
   getOneOfTemplate,
   getCachedReferencedTypes,
   getCachedReferenceType,
-  cacheReferenceType
+  cacheReferenceType,
+  getInputFilePath
 };

@@ -97,8 +97,8 @@ program
   .argument('<outputLanguage>', 'Language to generate types for')
   .argument('<inputFilePath>', 'Path to the input spec file')
   .argument('<outputDirectory>', 'Path to the output file')
-  .argument('[typesWriterMode]', 'Writer mode for types', 'SingleFile')
-  .argument('[groupedTypesWriterMode]', 'Writer mode for grouped types', 'SingleFile')
+  .argument('[typesWriterMode]', 'Writer mode for types', 'Files')
+  .argument('[groupedTypesWriterMode]', 'Writer mode for grouped types', 'FolderWithFiles')
   .action(runner);
 
 program.parse();

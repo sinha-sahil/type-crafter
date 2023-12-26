@@ -1,4 +1,5 @@
 import type {
+  GroupRef,
   EnumTemplateInput,
   GroupedTypes,
   GroupedTypesWriterMode,
@@ -10,7 +11,8 @@ import type {
   TypeInfo,
   TypeProperties,
   Types,
-  TypesWriterMode
+  TypesWriterMode,
+  GroupTypesData
 } from '.';
 import {
   __decodeString,
@@ -80,7 +82,9 @@ function decodeGroupedTypes(rawInput: unknown): GroupedTypes | null {
     const result: GroupedTypes = {};
     for (const key in rawInput) {
       const value = rawInput[key];
-      const decodedValue = decodeTypes(value);
+      const decodedRefValue = decodeGroupRef(value);
+      const decodedTypes = decodeTypes(value);
+      const decodedValue = decodedRefValue ?? decodedTypes;
       if (decodedValue !== null) {
         result[key] = decodedValue;
       } else {
@@ -92,7 +96,23 @@ function decodeGroupedTypes(rawInput: unknown): GroupedTypes | null {
   return null;
 }
 
-function decodeTypes(rawInput: unknown): Types | null {
+export function valueIsGroupRef(value: GroupTypesData): value is GroupRef {
+  return isJSON(value) && typeof value.$ref === 'string';
+}
+
+function decodeGroupRef(rawInput: unknown): GroupRef | null {
+  if (isJSON(rawInput)) {
+    const ref = decodeString(rawInput.$ref);
+    if (ref !== null) {
+      return {
+        $ref: ref
+      };
+    }
+  }
+  return null;
+}
+
+export function decodeTypes(rawInput: unknown): Types | null {
   if (isJSON(rawInput)) {
     const result: Types = {};
     for (const key in rawInput) {

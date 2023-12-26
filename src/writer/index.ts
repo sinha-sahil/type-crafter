@@ -34,11 +34,24 @@ async function writeTypesToFiles(
     folderName: config.output.directory + '/' + folderName,
     files: []
   };
+
+  // Filtering references for writing types to files; Done for types.writerMode: Files
+  // Maybe a hack. But it works for now
+  // Fix this later
+  const filterReferences = folderName !== '';
+
+  const typeNames = Object.keys(types);
+
   for (const typeName in types) {
     const typeData = types[typeName];
     const file = typeName + config.output.fileExtension;
+
+    const references = filterReferences
+      ? [...types[typeName].references].filter((x) => !typeNames.includes(x))
+      : [...types[typeName].references];
+
     const templateInput: TypesFileTemplateInput = {
-      referencedTypes: [...typeData.references],
+      referencedTypes: references,
       primitives: [...typeData.primitives],
       typesContent: typeData.content,
       writtenAt: await getExpectedWrittenPath(result.folderName, file)
@@ -66,9 +79,14 @@ async function writeTypesToFile(
     typesContent: '',
     writtenAt: ''
   };
+
+  const typeNames = Object.keys(types);
+
   for (const typeName in types) {
     templateInput.primitives.push(...types[typeName].primitives);
-    templateInput.referencedTypes.push(...types[typeName].references);
+    // Removing references that are already written to file
+    const _references = [...types[typeName].references].filter((x) => !typeNames.includes(x));
+    templateInput.referencedTypes.push(..._references);
     templateInput.typesContent += types[typeName].content + '\n';
   }
 
