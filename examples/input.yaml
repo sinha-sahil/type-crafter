@@ -28,6 +28,16 @@ groupedTypes:
           type: string
         name:
           type: string
+
+    HybridBeing:
+      allOf:
+        - $ref: '#/groupedTypes/LivingBeings/Human'
+        - $ref: '#/groupedTypes/LivingBeings/Animal'
+        - type: object
+          properties:
+            randomProperty:
+              type: string
+
   GroupOne:
     GroupObjectOne:
       type: object
@@ -81,7 +91,7 @@ groupedTypes:
 
 types:
   RandomRemoteRefType:
-    $ref: './secondaryecondary-types.yaml#/RandomObjectType'
+    $ref: './secondary-types.yaml#/RandomObjectType'
 
   HashmapObjectOne:
     type: object

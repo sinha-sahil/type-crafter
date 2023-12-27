@@ -1,4 +1,5 @@
 import type {
+  AllOfTemplateInput,
   Configuration,
   EnumTemplateInput,
   ExporterModuleTemplateInput,
@@ -22,6 +23,7 @@ let exporterModuleSyntaxTemplate: HandlebarsTemplateDelegate<ExporterModuleTempl
 let typesFileSyntaxTemplate: HandlebarsTemplateDelegate<TypesFileTemplateInput> | null = null;
 let oneOfSyntaxTemplate: HandlebarsTemplateDelegate<OneOfTemplateInput> | null = null;
 let enumSyntaxTemplate: HandlebarsTemplateDelegate<EnumTemplateInput> | null = null;
+let allOfSyntaxTemplate: HandlebarsTemplateDelegate<AllOfTemplateInput> | null = null;
 
 const cachedReferencedTypes = new Map<string, GeneratedReferencedType>();
 let expectedOutputFiles: Map<string, TypeFilePath> | null = null;
@@ -55,6 +57,7 @@ function compileTemplates(): void {
   typesFileSyntaxTemplate = Handlebars.compile(config.template.typesFileSyntax);
   enumSyntaxTemplate = Handlebars.compile(config.template.enumSyntax);
   oneOfSyntaxTemplate = Handlebars.compile(config.template.oneOfSyntax);
+  allOfSyntaxTemplate = Handlebars.compile(config.template.allOfSyntax);
 }
 
 function getObjectTemplate(): HandlebarsTemplateDelegate<ObjectTemplateInput> {
@@ -122,6 +125,13 @@ function getInputFilePath(absolutePath: boolean = true): string {
   return absolutePath ? resolveFilePath(config.input) : config.input;
 }
 
+function getAllOfTemplate(): HandlebarsTemplateDelegate<AllOfTemplateInput> {
+  if (allOfSyntaxTemplate === null) {
+    throw new RuntimeError('AllOf template not compiled!');
+  }
+  return allOfSyntaxTemplate;
+}
+
 export default {
   getConfig,
   setConfig,
@@ -138,5 +148,6 @@ export default {
   getCachedReferencedTypes,
   getCachedReferenceType,
   cacheReferenceType,
-  getInputFilePath
+  getInputFilePath,
+  getAllOfTemplate
 };

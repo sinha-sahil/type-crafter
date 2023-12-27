@@ -13,7 +13,9 @@ import type {
   VariableTemplateInput,
   TemplateInput,
   ResolvedGroupReferenceData,
-  AdditionalPropertiesTemplateInput
+  AdditionalPropertiesTemplateInput,
+  AllOfTemplateInput,
+  AllOfTemplateInputComposition
 } from '$types';
 import { valueIsGroupRef, valueIsTypeInfo, valueIsKeyedAdditionalProperties } from '$types';
 import Runtime from '$runtime';
@@ -29,6 +31,7 @@ const placeholderTypeInfo: TypeInfo = {
   properties: null,
   $ref: null,
   oneOf: null,
+  allOf: null,
   enum: null,
   additionalProperties: null,
   summary: null,
@@ -457,6 +460,68 @@ async function generateOneOfTypes(
   return result;
 }
 
+async function generateAllOfTypes(
+  typeName: string,
+  typeInfo: TypeInfo,
+  parentTypes: string[]
+): Promise<GeneratedType<AllOfTemplateInput>> {
+  if (typeInfo.allOf === null || typeInfo.allOf.length === 0) {
+    throw new InvalidSpecFileError('Invalid allOf type for: ' + typeName);
+  }
+  const templateInput: AllOfTemplateInput = {
+    typeName,
+    type: typeName,
+    compositions: [],
+    description: typeInfo.description,
+    example: typeInfo.example,
+    summary: typeInfo.summary
+  };
+
+  const result: GeneratedType<AllOfTemplateInput> = {
+    content: '',
+    references: new Set(),
+    primitives: new Set(),
+    templateInput
+  };
+
+  for (let index = 0; index < typeInfo.allOf.length; index++) {
+    const allOfItem = typeInfo.allOf[index];
+    if (allOfItem.$ref !== null) {
+      const referenceData = await resolveTypeReference(allOfItem.$ref);
+      const composition: OneOfTemplateInputComposition = {
+        source: 'referenced',
+        referencedType: referenceData.name
+      };
+      templateInput.compositions.push(composition);
+      result.references.add(referenceData.name);
+    } else {
+      const generatedType = await generateType(typeName + (index + 1), allOfItem, parentTypes);
+
+      if (generatedType === null) {
+        throw new InvalidSpecFileError('Invalid allOf type for: ' + typeName);
+      }
+
+      const composition: AllOfTemplateInputComposition = {
+        dataType: allOfItem.type,
+        templateInput: generatedType.templateInput,
+        source: 'inline',
+        content: generatedType.content
+      };
+
+      templateInput.compositions.push(composition);
+      for (const reference of generatedType.references.values()) {
+        result.references.add(reference);
+      }
+      for (const primitive of generatedType.primitives.values()) {
+        result.primitives.add(primitive);
+      }
+    }
+  }
+  result.content = Runtime.getAllOfTemplate()(templateInput);
+
+  return result;
+}
+
 function returnCyclicReference(typeName: string): GeneratedType<TemplateInput> {
   const templateInput: VariableTemplateInput = {
     typeName,
@@ -494,6 +559,9 @@ async function generateType(
   }
   if (typeInfo.oneOf !== null) {
     return await generateOneOfTypes(typeName, typeInfo, parentTypes);
+  }
+  if (typeInfo.allOf !== null) {
+    return await generateAllOfTypes(typeName, typeInfo, parentTypes);
   }
   if (typeInfo.type === 'array') {
     return await generateArrayType(typeName, typeInfo, parentTypes);

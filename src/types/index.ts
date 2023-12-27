@@ -28,6 +28,7 @@ export type Template = {
   typesFileSyntax: string;
   enumSyntax: string;
   oneOfSyntax: string;
+  allOfSyntax: string;
 };
 
 export type LanguageConfig = {
@@ -106,6 +107,7 @@ export type TypeInfo = TypeDescriptors & {
   properties: TypeProperties | null;
   $ref: string | null;
   oneOf: TypeInfo[] | null;
+  allOf: TypeInfo[] | null;
   enum: string[] | number[] | null;
   additionalProperties: AdditionalProperties | null;
 };
@@ -200,6 +202,20 @@ export type OneOfTemplateInputComposition = {
   content?: string;
 };
 
+export type AllOfTemplateInput = TypeDescriptors & {
+  typeName: string;
+  type: string;
+  compositions: AllOfTemplateInputComposition[];
+};
+
+export type AllOfTemplateInputComposition = {
+  dataType?: TypeDataType | null;
+  templateInput?: TemplateInput;
+  source: 'inline' | 'referenced';
+  referencedType?: string;
+  content?: string;
+};
+
 export type VariableTemplateInput = TypeDescriptors & {
   typeName: string;
   type: string;
@@ -210,6 +226,7 @@ export type TemplateInput =
   | ObjectTemplateInput
   | EnumTemplateInput
   | OneOfTemplateInput
+  | AllOfTemplateInput
   | VariableTemplateInput;
 
 // #endregion
