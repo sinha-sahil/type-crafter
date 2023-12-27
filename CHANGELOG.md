@@ -1,5 +1,13 @@
 # type-crafter
 
+## 0.6.1
+
+### Patch Changes
+
+- 2220f71: fix: reference generation for FolderWithFiles writer mode for GroupedTypes
+
+  - Issues with missing type imports in case of FolderWithFiles Group writer mode is now fixed
+
 ## 0.6.0
 
 ### Minor Changes
