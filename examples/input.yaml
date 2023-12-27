@@ -15,6 +15,9 @@ groupedTypes:
           type: string
         name:
           type: string
+        attributes:
+          type: object
+          additionalProperties: true
     Animal:
       type: object
       required:
@@ -75,9 +78,30 @@ groupedTypes:
           type: string
         name:
           type: string
+
 types:
   RandomRemoteRefType:
-    $ref: './secondary-types.yaml#/RandomObjectType'
+    $ref: './secondaryecondary-types.yaml#/RandomObjectType'
+
+  HashmapObjectOne:
+    type: object
+    additionalProperties:
+      keyType: string
+      valueType:
+        $ref: '#/types/Student'
+
+  VanillaHashmap:
+    type: object
+    additionalProperties: true
+
+  HashmapObjectTwo:
+    type: object
+    properties:
+      id:
+        type: string
+    additionalProperties:
+      $ref: '#/types/Student'
+
   Student:
     type: object
     required:
@@ -134,8 +158,8 @@ types:
         type: string
       name:
         type: string
-      random:
-        type: unknown
+      # random:
+      #   type: unknown
       recType:
         type: object
         properties:
@@ -156,6 +180,7 @@ types:
           - one
           - two
           - three
+
   TypeObjectThree:
     type: object
     required:

@@ -107,7 +107,17 @@ export type TypeInfo = TypeDescriptors & {
   $ref: string | null;
   oneOf: TypeInfo[] | null;
   enum: string[] | number[] | null;
+  additionalProperties: AdditionalProperties | null;
 };
+
+export type AdditionalProperties = KeyedAdditionalProperties | TypeInfo | boolean;
+
+export type KeyedAdditionalProperties = {
+  keyType: AdditionalPropertiesKeyType;
+  valueType: TypeInfo;
+};
+
+export type AdditionalPropertiesKeyType = 'string' | 'number';
 
 type PropertyName = string;
 export type TypeProperties = Record<PropertyName, TypeInfo>;
@@ -135,6 +145,7 @@ export type ObjectTemplateInput = TypeDescriptors & {
   typeName: string;
   type: string;
   properties: ObjectTemplateInputProperties;
+  additionalProperties?: AdditionalPropertiesTemplateInput;
 };
 
 export type ObjectTemplateInputProperties = Record<PropertyName, ObjectTemplateInputProperty>;
@@ -145,6 +156,11 @@ export type ObjectTemplateInputProperty = TypeDescriptors & {
   referenced: boolean;
   primitiveType: string;
   composerType: string | null;
+};
+
+export type AdditionalPropertiesTemplateInput = {
+  keyType: string;
+  valueType: string;
 };
 
 export type ExporterModuleTemplateInput = {
