@@ -1,0 +1,19 @@
+export type {{typeName}} =
+  {{#each compositions}}
+  {{#if (eq this.source 'referenced')}}{{referencedType}}
+  {{else if (eq this.source 'inline')}}
+    {{#if this.templateInput.values}}
+      {{this.templateInput.typeName}}
+    {{else if (eq this.dataType 'object')}}
+      {{this.templateInput.typeName}}
+    {{else}}
+      {{this.templateInput.type}}
+    {{/if}}
+  {{/if}} {{#unless @last}} & {{/unless}}
+{{/each}};
+
+{{#each compositions}}
+{{#if (eq this.dataType 'object')}}
+{{{this.content}}}
+{{/if}}
+{{/each}}

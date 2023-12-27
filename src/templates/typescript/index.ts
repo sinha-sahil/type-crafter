@@ -34,6 +34,11 @@ export async function config(
     devMode
   );
 
+  const allOfSyntax = await readFile(
+    directoryPrefix + 'templates/typescript/allOf-syntax.hbs',
+    devMode
+  );
+
   const config: Configuration = {
     input: inputFilePath,
     output: {
@@ -50,7 +55,8 @@ export async function config(
       exporterModuleSyntax,
       typesFileSyntax,
       enumSyntax,
-      oneOfSyntax
+      oneOfSyntax,
+      allOfSyntax
     },
     language: {
       exporterModuleName: 'index',

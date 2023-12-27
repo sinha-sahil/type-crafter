@@ -160,6 +160,7 @@ export function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
       description: decodeString(rawInput.description),
       example: decodeString(rawInput.example) ?? decodeNumber(rawInput.example),
       oneOf: decodeArray(rawInput.oneOf, decodeTypeInfo),
+      allOf: decodeArray(rawInput.allOf, decodeTypeInfo),
       additionalProperties,
       enum:
         _type === 'string'

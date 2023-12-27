@@ -1,0 +1,42 @@
+export type {{typeName}} =
+  {{#each compositions}}
+  {{#if (eq this.source 'referenced')}}{{referencedType}}
+  {{else if (eq this.source 'inline')}}
+    {{#if this.templateInput.values}}
+      {{this.templateInput.typeName}}
+    {{else if (eq this.dataType 'object')}}
+      {{this.templateInput.typeName}}
+    {{else}}
+      {{this.templateInput.type}}
+    {{/if}}
+  {{/if}} {{#unless @last}} & {{/unless}}
+{{/each}};
+
+{{#each compositions}}
+{{#if (eq this.dataType 'object')}}
+{{{this.content}}}
+{{/if}}
+{{/each}}
+
+export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
+  {{#each compositions}}
+  {{#if (eq this.source 'referenced')}}
+  const decoded{{referencedType}} = decode{{referencedType}}(rawInput);
+  {{else if (eq this.source 'inline')}}
+  const decoded{{toPascalCase this.templateInput.typeName}} = decode{{this.templateInput.typeName}}(rawInput);
+  {{/if}}
+  {{/each}}
+
+  if (
+    {{#each compositions}}decoded{{#if (eq this.source 'referenced')}}{{referencedType}}{{else}}{{toPascalCase this.templateInput.typeName}}{{/if}} !== null {{#unless @last}} && {{/unless}} {{/each}}
+    ) {
+      return {
+        {{#each compositions}}
+        {{#if (eq this.source 'referenced')}}...decoded{{referencedType}},
+        {{else}}...decoded{{toPascalCase this.templateInput.typeName}},
+        {{/if}}
+        {{/each}}
+      };
+    }
+  return null;
+}
