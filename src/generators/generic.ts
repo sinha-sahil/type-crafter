@@ -122,7 +122,7 @@ async function generateObjectType(
       isReferenced = true;
     } else if (enumValues !== null) {
       const enumName = toPascalCase(propertyName) + 'Enum';
-      dynamicGeneratedType = generateEnumType(enumName, propertyDetails).content;
+      dynamicGeneratedType += generateEnumType(enumName, propertyDetails).content;
       languageDataType = enumName;
     } else if (propertyType === 'array') {
       const arrayDataGenOutput = await generateArrayType(
@@ -153,7 +153,7 @@ async function generateObjectType(
       languageDataType = primitiveTypeGenOutput.templateInput.type;
       primitives.push(...primitiveTypeGenOutput.primitives);
       references.push(...primitiveTypeGenOutput.references);
-      dynamicGeneratedType = primitiveTypeGenOutput.content;
+      dynamicGeneratedType += primitiveTypeGenOutput.content;
     }
 
     if (languageDataType === null) {

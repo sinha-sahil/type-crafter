@@ -38,7 +38,8 @@ async function writeTypesToFiles(
   // Filtering references for writing types to files; Done for types.writerMode: Files
   // Maybe a hack. But it works for now
   // Fix this later
-  const filterReferences = folderName !== '';
+  const filterReferences =
+    folderName !== '' && Runtime.getConfig().output.writerMode.groupedTypes !== 'FolderWithFiles';
 
   const typeNames = Object.keys(types);
 
