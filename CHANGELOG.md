@@ -1,5 +1,13 @@
 # type-crafter
 
+## 0.7.0
+
+### Minor Changes
+
+- bea1b41: feat: support for generating hashmaps
+
+  - now generate object hashmaps using additionalProperties param
+
 ## 0.6.1
 
 ### Patch Changes
