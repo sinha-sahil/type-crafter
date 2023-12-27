@@ -12,13 +12,29 @@ import type {
   OneOfTemplateInputComposition,
   VariableTemplateInput,
   TemplateInput,
-  ResolvedGroupReferenceData
+  ResolvedGroupReferenceData,
+  AdditionalPropertiesTemplateInput
 } from '$types';
-import { valueIsGroupRef } from '$types';
+import { valueIsGroupRef, valueIsTypeInfo, valueIsKeyedAdditionalProperties } from '$types';
 import Runtime from '$runtime';
 import { toPascalCase } from '$utils';
 import { InvalidSpecFileError } from '$utils/error-handler';
 import { fillPatterns, resolveGroupReference, resolveTypeReference } from './helpers';
+
+const placeholderTypeInfo: TypeInfo = {
+  required: null,
+  type: null,
+  format: null,
+  items: null,
+  properties: null,
+  $ref: null,
+  oneOf: null,
+  enum: null,
+  additionalProperties: null,
+  summary: null,
+  description: null,
+  example: null
+};
 
 /**
  * @description Generates the primitive type for the unit attribute in the spec.
@@ -71,6 +87,52 @@ function getPrimitiveType(
   return result;
 }
 
+async function generateAdditionalPropertiesType(
+  typeName: string,
+  typeInfo: TypeInfo,
+  parentTypes: string[]
+): Promise<AdditionalPropertiesTemplateInput | null> {
+  let result: AdditionalPropertiesTemplateInput | null = null;
+  const stringKeyType = getPrimitiveType(typeName, {
+    ...placeholderTypeInfo,
+    type: 'string'
+  }).templateInput.type;
+  if (typeof typeInfo.additionalProperties === 'boolean') {
+    result = {
+      keyType: stringKeyType,
+      valueType: getPrimitiveType(typeName, {
+        ...placeholderTypeInfo,
+        type: 'unknown'
+      }).templateInput.type
+    };
+  } else if (valueIsKeyedAdditionalProperties(typeInfo.additionalProperties)) {
+    result = {
+      keyType: getPrimitiveType(typeName, {
+        ...placeholderTypeInfo,
+        type: typeInfo.additionalProperties.keyType
+      }).templateInput.type,
+      valueType: (
+        await generateType(
+          typeName + 'ValueType',
+          typeInfo.additionalProperties.valueType,
+          parentTypes
+        )
+      ).templateInput.type
+    };
+  } else if (valueIsTypeInfo(typeInfo.additionalProperties)) {
+    const valueType = await generateType(
+      typeName + 'ValueType',
+      typeInfo.additionalProperties,
+      parentTypes
+    );
+    result = {
+      keyType: stringKeyType,
+      valueType: valueType.templateInput.type
+    };
+  }
+  return result;
+}
+
 async function generateObjectType(
   typeName: string,
   typeInfo: TypeInfo,
@@ -99,7 +161,12 @@ async function generateObjectType(
     const enumValues = propertyDetails.enum ?? null;
 
     // Throwing error in case neither property type nor reference to a different type is present
-    if (propertyType === null && reference === null && propertyDetails.oneOf === null) {
+    if (
+      propertyType === null &&
+      reference === null &&
+      propertyDetails.oneOf === null &&
+      propertyDetails.additionalProperties === null
+    ) {
       throw new InvalidSpecFileError('Invalid property type for: ' + typeName + '.' + propertyName);
     }
 
@@ -173,6 +240,16 @@ async function generateObjectType(
         summary: propertyDetails.summary
       }
     };
+  }
+
+  // Generating additional property types
+  const additionalProperties = await generateAdditionalPropertiesType(
+    typeName + 'AdditionalProperty',
+    typeInfo,
+    parentTypes
+  );
+  if (additionalProperties !== null) {
+    templateInput.additionalProperties = additionalProperties;
   }
 
   const result: GeneratedType<ObjectTemplateInput> = {

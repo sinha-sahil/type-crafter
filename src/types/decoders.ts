@@ -12,7 +12,10 @@ import type {
   TypeProperties,
   Types,
   TypesWriterMode,
-  GroupTypesData
+  GroupTypesData,
+  KeyedAdditionalProperties,
+  AdditionalPropertiesKeyType,
+  AdditionalProperties
 } from '.';
 import {
   __decodeString,
@@ -129,9 +132,23 @@ export function decodeTypes(rawInput: unknown): Types | null {
   return null;
 }
 
+export function decodeAdditionalPropertiesKeyType(
+  rawInput: unknown
+): AdditionalPropertiesKeyType | null {
+  if (typeof rawInput === 'string') {
+    switch (rawInput) {
+      case 'string':
+      case 'number':
+        return rawInput;
+    }
+  }
+  return null;
+}
+
 export function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
   if (isJSON(rawInput)) {
     const _type = decodeTypeDataType(rawInput.type);
+    const additionalProperties = decodeAdditionalProperties(rawInput.additionalProperties);
     const result: TypeInfo = {
       type: _type,
       required: decodeArray(rawInput.required, decodeString),
@@ -143,6 +160,7 @@ export function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
       description: decodeString(rawInput.description),
       example: decodeString(rawInput.example) ?? decodeNumber(rawInput.example),
       oneOf: decodeArray(rawInput.oneOf, decodeTypeInfo),
+      additionalProperties,
       enum:
         _type === 'string'
           ? decodeArray(rawInput.enum, decodeString)
@@ -153,6 +171,36 @@ export function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
     return result;
   }
   return null;
+}
+
+function decodeAdditionalProperties(rawInput: unknown): AdditionalProperties | null {
+  return (
+    decodeKeyedAdditionalProperties(rawInput) ?? decodeTypeInfo(rawInput) ?? decodeBoolean(rawInput)
+  );
+}
+
+function decodeKeyedAdditionalProperties(rawInput: unknown): KeyedAdditionalProperties | null {
+  if (isJSON(rawInput)) {
+    const keyType = decodeAdditionalPropertiesKeyType(rawInput.keyType);
+    const valueType = decodeTypeInfo(rawInput.valueType);
+    if (keyType !== null && valueType !== null) {
+      return {
+        keyType,
+        valueType
+      };
+    }
+  }
+  return null;
+}
+
+export function valueIsKeyedAdditionalProperties(
+  value: unknown
+): value is KeyedAdditionalProperties {
+  return decodeKeyedAdditionalProperties(value) !== null;
+}
+
+export function valueIsTypeInfo(value: unknown): value is TypeInfo {
+  return decodeTypeInfo(value) !== null;
 }
 
 function decodeTypeProperties(rawInput: unknown): TypeProperties | null {

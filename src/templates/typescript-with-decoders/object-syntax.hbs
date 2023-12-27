@@ -21,6 +21,9 @@ export type {{typeName}} = {
    */
   {{{jsonKey @key}}}: {{{this.type}}}{{#unless this.required}} | null{{/unless}};
   {{/each}}
+  {{#if additionalProperties}}
+  [keys: {{jsonKey additionalProperties.keyType}}]: {{additionalProperties.valueType}};
+  {{/if}}
 };
 
 export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
@@ -40,6 +43,9 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
     {{/if}}
 
     return {
+      {{#if additionalProperties}}
+      ...rawInput,
+      {{/if}}
       {{#each properties}}
       {{{jsonKey @key}}}: decoded{{{variableName @key}}},
       {{/each}}
