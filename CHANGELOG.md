@@ -1,5 +1,13 @@
 # type-crafter
 
+## 0.8.0
+
+### Minor Changes
+
+- 0635e62: feat: added support for generating types with allOf operator
+
+  - now use allOf operator for union of types
+
 ## 0.7.0
 
 ### Minor Changes
