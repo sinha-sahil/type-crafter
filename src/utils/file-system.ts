@@ -16,10 +16,21 @@ export function resolveFilePath(filePath: string, useCurrentDirectory: boolean =
   return path.resolve(normalizedPath);
 }
 
+async function checkFileNameCase(filePath: string): Promise<boolean> {
+  const directory = path.dirname(filePath);
+  const fileName = path.basename(filePath);
+
+  const files = await fs.readdir(directory);
+  return files.includes(fileName);
+}
+
 export async function readFile(
   filePath: string,
   useCurrentWorkingDirectory: boolean = true
 ): Promise<string> {
+  if (!(await checkFileNameCase(filePath))) {
+    throw new Error(`File not found: ${filePath}`);
+  }
   const data = await fs.readFile(resolveFilePath(filePath, useCurrentWorkingDirectory), 'utf-8');
   return data;
 }

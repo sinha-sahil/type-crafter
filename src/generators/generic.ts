@@ -150,7 +150,7 @@ async function generateObjectType(
     properties: {}
   };
 
-  let recursiveTypeGenOutput: GeneratedType<TemplateInput> | null = null;
+  const compositions: Array<GeneratedType<TemplateInput>> = [];
   let dynamicGeneratedType: string = '';
 
   const primitives: string[] = [];
@@ -205,12 +205,13 @@ async function generateObjectType(
       languageDataType = arrayDataGenOutput.templateInput.type;
       composerType = arrayDataGenOutput.templateInput.composerType ?? null;
     } else if (propertyType === 'object') {
-      recursivePropertyName = toPascalCase(propertyName);
-      recursiveTypeGenOutput = await generateObjectType(
+      recursivePropertyName = typeName + toPascalCase(propertyName);
+      const recursiveTypeGenOutput = await generateObjectType(
         recursivePropertyName,
         typeInfo.properties[propertyName],
         parentTypes
       );
+      compositions.push(recursiveTypeGenOutput);
       languageDataType = recursivePropertyName;
       references.push(...recursiveTypeGenOutput.references);
       primitives.push(...recursiveTypeGenOutput.primitives);
@@ -258,7 +259,9 @@ async function generateObjectType(
   const result: GeneratedType<ObjectTemplateInput> = {
     content:
       Runtime.getObjectTemplate()(templateInput) +
-      (recursiveTypeGenOutput?.content ?? '') +
+      compositions.reduce((acc, curr) => {
+        return acc + curr.content;
+      }, '') +
       dynamicGeneratedType,
     primitives: new Set(primitives),
     references: new Set(references),
@@ -425,13 +428,17 @@ async function generateOneOfTypes(
   for (let index = 0; index < typeInfo.oneOf.length; index++) {
     const oneOfItem = typeInfo.oneOf[index];
     if (oneOfItem.$ref !== null) {
-      const referenceData = await resolveTypeReference(oneOfItem.$ref);
+      const referenceData = await generateReferencedType(
+        typeName + (index + 1),
+        oneOfItem,
+        parentTypes
+      );
       const composition: OneOfTemplateInputComposition = {
         source: 'referenced',
-        referencedType: referenceData.name
+        referencedType: referenceData.templateInput.typeName
       };
       templateInput.compositions.push(composition);
-      result.references.add(referenceData.name);
+      result.references.add(referenceData.templateInput.typeName);
     } else {
       const generatedType = await generateType(typeName + (index + 1), oneOfItem, parentTypes);
 
@@ -487,13 +494,17 @@ async function generateAllOfTypes(
   for (let index = 0; index < typeInfo.allOf.length; index++) {
     const allOfItem = typeInfo.allOf[index];
     if (allOfItem.$ref !== null) {
-      const referenceData = await resolveTypeReference(allOfItem.$ref);
+      const referenceData = await generateReferencedType(
+        typeName + 'AllOf' + index,
+        allOfItem,
+        parentTypes
+      );
       const composition: OneOfTemplateInputComposition = {
         source: 'referenced',
-        referencedType: referenceData.name
+        referencedType: referenceData.templateInput.typeName
       };
       templateInput.compositions.push(composition);
-      result.references.add(referenceData.name);
+      result.references.add(referenceData.templateInput.typeName);
     } else {
       const generatedType = await generateType(typeName + (index + 1), allOfItem, parentTypes);
 
