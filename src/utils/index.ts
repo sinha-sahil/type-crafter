@@ -151,9 +151,25 @@ export function registerTemplateHelpers(): void {
     (value: unknown) => Array.isArray(value) && value.length === 0
   );
   Handlebars.registerHelper('eq', (value1: unknown, value2: unknown) => value1 === value2);
+  Handlebars.registerHelper('notEq', (value1: unknown, value2: unknown) => value1 !== value2);
+  Handlebars.registerHelper(
+    'isEmptyObject',
+    (value: unknown) =>
+      typeof value === 'object' && value !== null && Object.keys(value).length === 0
+  );
   Handlebars.registerHelper('jsonKey', refineJSONKey);
   Handlebars.registerHelper('variableName', refineVariableName);
   Handlebars.registerHelper('indexKey', refineIndexKey);
+  Handlebars.registerHelper('not', (value: unknown) => {
+    if (typeof value === 'boolean') {
+      return !value;
+    }
+  });
+  Handlebars.registerHelper('or', (value1: unknown, value2: unknown) => {
+    if (typeof value1 === 'boolean' && typeof value2 === 'boolean') {
+      return value1 || value2;
+    }
+  });
 }
 
 export function readNestedValue(json: unknown, keyPath: string[]): JSONObject {

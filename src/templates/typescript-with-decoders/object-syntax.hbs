@@ -7,7 +7,7 @@
  * @example {{{example}}}
  {{/if}}
  */
-export type {{typeName}} = {
+export type {{typeName}} = {{#if (not (isEmptyObject properties))}}  {
   {{#each properties}}
   /**
   {{#if this.description}}
@@ -25,6 +25,9 @@ export type {{typeName}} = {
   [keys: {{jsonKey additionalProperties.keyType}}]: {{additionalProperties.valueType}};
   {{/if}}
 };
+{{else if (or (notEq length additionalProperties 0) (not (isEmptyObject additionalProperties)))}}
+Record<{{jsonKey additionalProperties.keyType}}, {{additionalProperties.valueType}}>;
+{{/if}}
 
 export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   if (isJSON(rawInput)) {
