@@ -1,5 +1,13 @@
 # type-crafter
 
+## 0.8.2
+
+### Patch Changes
+
+- 004d45b: fix: issue with template file path in reading
+
+  - fixed template directory not found issue
+
 ## 0.8.1
 
 ### Patch Changes
