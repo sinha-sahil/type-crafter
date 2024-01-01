@@ -26,9 +26,10 @@ async function checkFileNameCase(filePath: string): Promise<boolean> {
 
 export async function readFile(
   filePath: string,
-  useCurrentWorkingDirectory: boolean = true
+  useCurrentWorkingDirectory: boolean = true,
+  caseSensitive: boolean = false
 ): Promise<string> {
-  if (!(await checkFileNameCase(filePath))) {
+  if (caseSensitive && !(await checkFileNameCase(filePath))) {
     throw new Error(`File not found: ${filePath}`);
   }
   const data = await fs.readFile(resolveFilePath(filePath, useCurrentWorkingDirectory), 'utf-8');
@@ -89,6 +90,6 @@ export async function writeFile(
 }
 
 export async function readYaml(filePath: string): Promise<unknown> {
-  const fileData = await readFile(filePath);
+  const fileData = await readFile(filePath, true, true);
   return yaml.parse(fileData);
 }
