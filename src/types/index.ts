@@ -101,6 +101,7 @@ export type Types = Record<TypeName, TypeInfo>;
 
 export type TypeInfo = TypeDescriptors & {
   required: string[] | null;
+  optional: string[] | null;
   type: TypeDataType | null;
   format: string | null;
   items: TypeInfo | null;
@@ -158,6 +159,7 @@ export type ObjectTemplateInputProperty = TypeDescriptors & {
   referenced: boolean;
   primitiveType: string;
   composerType: string | null;
+  optional: boolean;
 };
 
 export type AdditionalPropertiesTemplateInput = {

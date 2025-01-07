@@ -7,7 +7,7 @@
  * @example {{{example}}}
  {{/if}}
  */
-export type {{typeName}} = {{#if (not (isEmptyObject properties))}}  {
+export type {{typeName}} = {{#if (not (isEmptyObject properties))}}{
   {{#each properties}}
   /**
   {{#if this.description}}
@@ -18,8 +18,14 @@ export type {{typeName}} = {{#if (not (isEmptyObject properties))}}  {
   {{#if this.example}}
    * @example {{{this.example}}}
   {{/if}}
-   */
-  {{{jsonKey @key}}}: {{{this.type}}}{{#unless this.required}} | null{{/unless}};
+  */
+  {{#if this.required}}
+  {{{jsonKey @key}}}: {{{this.type}}};
+  {{else if this.optional}}
+  {{{jsonKey @key}}}?: {{{this.type}}};
+  {{else}}
+  {{{jsonKey @key}}}: {{{this.type}}} | null;
+  {{/if}}
   {{/each}}
   {{#if additionalProperties}}
   [keys: {{jsonKey additionalProperties.keyType}}]: {{additionalProperties.valueType}};
@@ -32,7 +38,16 @@ Record<{{jsonKey additionalProperties.keyType}}, {{additionalProperties.valueTyp
 export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   if (isJSON(rawInput)) {
     {{#each properties}}
-    const decoded{{variableName @key}} = {{#if (eq this.primitiveType 'array') }} decodeArray(rawInput[{{{indexKey @key}}}], decode{{{toPascalCase this.composerType}}}){{else}} decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}]){{/if}};
+    const decoded{{variableName @key}} = {{#if this.referenced ~}}
+      decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}]);
+    {{~else~}}
+      {{~#if (eq this.primitiveType 'array')~}} 
+      decodeArray(rawInput[{{{indexKey @key}}}], decode{{{toPascalCase this.composerType}}})
+      {{~else~}}
+       {{#if this.optional}}_{{/if}}decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}])
+      {{~/if~}};
+    {{~/if}}
+
     {{/each}}
 
     {{#if (areRequiredKeysPresent properties)}}
@@ -50,7 +65,7 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
       ...rawInput,
       {{/if}}
       {{#each properties}}
-      {{{jsonKey @key}}}: decoded{{{variableName @key}}},
+      {{{jsonKey @key}}}: decoded{{{variableName @key}}}{{#unless @last}},{{/unless}}
       {{/each}}
     };
   }

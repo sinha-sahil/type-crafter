@@ -25,6 +25,7 @@ import { fillPatterns, resolveGroupReference, resolveTypeReference } from './hel
 
 const placeholderTypeInfo: TypeInfo = {
   required: null,
+  optional: null,
   type: null,
   format: null,
   items: null,
@@ -241,7 +242,8 @@ async function generateObjectType(
         composerType,
         example: propertyDetails.example,
         description: propertyDetails.description,
-        summary: propertyDetails.summary
+        summary: propertyDetails.summary,
+        optional: typeInfo.optional?.includes(propertyName) ?? false
       }
     };
   }
