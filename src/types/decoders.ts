@@ -152,6 +152,7 @@ export function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
     const result: TypeInfo = {
       type: _type,
       required: decodeArray(rawInput.required, decodeString),
+      optional: decodeArray(rawInput.optional, decodeString),
       properties: decodeTypeProperties(rawInput.properties),
       items: decodeTypeInfo(rawInput.items),
       format: decodeString(rawInput.format),
@@ -240,6 +241,7 @@ function decodeTypeDataType(rawInput: unknown): TypeDataType | null {
 function decodeObjectTemplateInputProperty(rawInput: unknown): ObjectTemplateInputProperty | null {
   if (isJSON(rawInput)) {
     const required = decodeBoolean(rawInput.required);
+    const optional = decodeBoolean(rawInput.optional);
     const _type = decodeString(rawInput.type);
     const referenced = decodeBoolean(rawInput.referenced);
     const primitiveType = decodeString(rawInput.primitiveType);
@@ -247,10 +249,11 @@ function decodeObjectTemplateInputProperty(rawInput: unknown): ObjectTemplateInp
     const summary = decodeString(rawInput.summary);
     const example = decodeString(rawInput.example) ?? decodeNumber(rawInput.example);
     const description = decodeString(rawInput.description);
-    if (required !== null && _type !== null && referenced !== null && primitiveType !== null) {
+    if (required !== null && _type !== null && referenced !== null && primitiveType !== null && optional !== null) {
       return {
         type: _type,
         required,
+        optional,
         referenced,
         primitiveType,
         composerType,
