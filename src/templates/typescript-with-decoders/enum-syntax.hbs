@@ -21,3 +21,13 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   }
   return null;
 }
+
+export function _decode{{typeName}}(rawInput: unknown): {{typeName}} | undefined {
+  switch (rawInput) {
+    {{#each values}}
+    case {{#if (eq ../type 'string') }}'{{/if}}{{this}}{{#if (eq ../type 'string')}}'{{/if}}:
+    {{/each}}
+    return rawInput;
+  }
+  return;
+}

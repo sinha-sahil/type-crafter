@@ -39,7 +39,7 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   if (isJSON(rawInput)) {
     {{#each properties}}
     const decoded{{variableName @key}} = {{#if this.referenced ~}}
-      decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}]);
+      {{#if this.optional}}_{{/if}}decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}]);
     {{~else~}}
       {{~#if (eq this.primitiveType 'array')~}} 
       decodeArray(rawInput[{{{indexKey @key}}}], decode{{{toPascalCase this.composerType}}})
@@ -70,4 +70,41 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
     };
   }
   return null;
+}
+
+export function _decode{{typeName}}(rawInput: unknown): {{typeName}} | undefined {
+  if (isJSON(rawInput)) {
+    {{#each properties}}
+    const decoded{{variableName @key}} = {{#if this.referenced ~}}
+      {{#if this.optional}}_{{/if}}decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}]);
+    {{~else~}}
+      {{~#if (eq this.primitiveType 'array')~}}
+      decodeArray(rawInput[{{{indexKey @key}}}], decode{{{toPascalCase this.composerType}}})
+      {{~else~}}
+        {{#if this.optional}}_{{/if}}decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}])
+      {{~/if~}};
+    {{~/if}}
+
+    {{/each}}
+
+    {{#if (areRequiredKeysPresent properties)}}
+    if (
+      {{#each (getRequiredKeys properties)}}
+      decoded{{toPascalCase this}} === null{{#unless @last}} ||{{/unless}}
+      {{/each}}
+    ) {
+      return;
+    }
+    {{/if}}
+
+    return {
+      {{#if additionalProperties}}
+      ...rawInput,
+      {{/if}}
+      {{#each properties}}
+      {{{jsonKey @key}}}: decoded{{{variableName @key}}}{{#unless @last}},{{/unless}}
+      {{/each}}
+    };
+  }
+  return;
 }
