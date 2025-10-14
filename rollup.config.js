@@ -3,35 +3,9 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import replace from '@rollup/plugin-replace';
 import copy from 'rollup-plugin-copy';
+import packageJson from './package.json' with { type: 'json' };
 
-function getVersion(args) {
-  const environment = args.environment;
-  let version = null;
-  if (typeof environment === 'string') {
-    environment.split(' ').forEach((arg) => {
-      const [key, value] = arg.split('=');
-      if (key === 'version') {
-        version = value;
-      }
-    });
-  }
-
-  if (
-    version === null &&
-    typeof args.input === 'object' &&
-    !Array.isArray(args.input) &&
-    typeof args.input.version === 'string'
-  ) {
-    version = args.input.version;
-  }
-
-  if (version === null) {
-    throw new Error('Build Version is not specified');
-  }
-  return version;
-}
-
-function config(args) {
+function config() {
   return [
     {
       input: 'src/index.ts',
@@ -43,7 +17,7 @@ function config(args) {
       plugins: [
         nodeResolve(),
         replace({
-          __VERSION__: getVersion(args),
+          __VERSION__: packageJson.version,
           __DEVELOPMENT__: 'PRODUCTION'
         }),
         commonjs({
