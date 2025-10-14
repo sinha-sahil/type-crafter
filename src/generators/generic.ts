@@ -19,7 +19,7 @@ import type {
 } from '$types';
 import { valueIsGroupRef, valueIsTypeInfo, valueIsKeyedAdditionalProperties } from '$types';
 import Runtime from '$runtime';
-import { toPascalCase } from '$utils';
+import { toPascalCase, isPrimitiveType } from '$utils';
 import { InvalidSpecFileError } from '$utils/error-handler';
 import { fillPatterns, resolveGroupReference, resolveTypeReference } from './helpers';
 
@@ -148,7 +148,8 @@ async function generateObjectType(
     description: typeInfo.description,
     example: typeInfo.example,
     summary: typeInfo.summary,
-    properties: {}
+    properties: {},
+    customAttributes: typeInfo.customAttributes
   };
 
   const compositions: Array<GeneratedType<TemplateInput>> = [];
@@ -205,6 +206,7 @@ async function generateObjectType(
       references.push(...arrayDataGenOutput.references);
       languageDataType = arrayDataGenOutput.templateInput.type;
       composerType = arrayDataGenOutput.templateInput.composerType ?? null;
+      dynamicGeneratedType += arrayDataGenOutput.content;
     } else if (propertyType === 'object') {
       recursivePropertyName = typeName + toPascalCase(propertyName);
       const recursiveTypeGenOutput = await generateObjectType(
@@ -312,7 +314,23 @@ async function generateArrayType(
     throw new InvalidSpecFileError('Invalid array type for: ' + typeName);
   }
 
-  const arrayItemsType = await generateType(typeName + 'Item', typeInfo.items, parentTypes);
+  const isPrimitiveItemType = isPrimitiveType(typeInfo.items);
+  const isEnumItemType = typeInfo.items.enum !== null;
+
+  let arrayItemsType: GeneratedType<TemplateInput>;
+  let itemTypeName: string | null = null;
+  let dynamicGeneratedType: string = '';
+
+  if (isPrimitiveItemType) {
+    arrayItemsType = getPrimitiveType(typeName + 'Item', typeInfo.items);
+  } else if (isEnumItemType) {
+    itemTypeName = toPascalCase(typeName) + 'Item';
+    arrayItemsType = generateEnumType(itemTypeName, typeInfo.items);
+    dynamicGeneratedType += arrayItemsType.content;
+    arrayItemsType.templateInput.type = itemTypeName;
+  } else {
+    arrayItemsType = await generateType(typeName + 'Item', typeInfo.items, parentTypes);
+  }
 
   if (typeof arrayItemsType.templateInput?.type === 'undefined') {
     throw new InvalidSpecFileError('Invalid array type for: ' + typeName);
@@ -328,7 +346,7 @@ async function generateArrayType(
   const dataType = fillPatterns(arrayTypeMap, fillerPatterns);
 
   const result: GeneratedType<VariableTemplateInput> = {
-    content: '',
+    content: dynamicGeneratedType,
     references: arrayItemsType.references,
     primitives: new Set([...arrayItemsType.primitives, 'Array']),
     templateInput: {
@@ -340,6 +358,10 @@ async function generateArrayType(
       summary: typeInfo.summary
     }
   };
+
+  if (isEnumItemType && itemTypeName) {
+    result.references.add(itemTypeName);
+  }
 
   return result;
 }

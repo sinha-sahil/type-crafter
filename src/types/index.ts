@@ -111,6 +111,7 @@ export type TypeInfo = TypeDescriptors & {
   allOf: TypeInfo[] | null;
   enum: string[] | number[] | null;
   additionalProperties: AdditionalProperties | null;
+  customAttributes?: Record<string, unknown> | null;
 };
 
 export type AdditionalProperties = KeyedAdditionalProperties | TypeInfo | boolean;
@@ -149,6 +150,7 @@ export type ObjectTemplateInput = TypeDescriptors & {
   type: string;
   properties: ObjectTemplateInputProperties;
   additionalProperties?: AdditionalPropertiesTemplateInput;
+  customAttributes?: Record<string, unknown> | null;
 };
 
 export type ObjectTemplateInputProperties = Record<PropertyName, ObjectTemplateInputProperty>;

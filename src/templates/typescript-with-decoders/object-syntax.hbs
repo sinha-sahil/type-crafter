@@ -72,6 +72,7 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   return null;
 }
 
+{{#if customAttributes.generateOptionalDecoder}}
 export function _decode{{typeName}}(rawInput: unknown): {{typeName}} | undefined {
   if (isJSON(rawInput)) {
     {{#each properties}}
@@ -108,3 +109,4 @@ export function _decode{{typeName}}(rawInput: unknown): {{typeName}} | undefined
   }
   return;
 }
+{{/if}}

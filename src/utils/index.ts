@@ -1,4 +1,9 @@
-import { type ReferencedModule, decodeObjectTemplateInputProperties } from '$types';
+import {
+  type ReferencedModule,
+  decodeObjectTemplateInputProperties,
+  type TypeInfo,
+  type TypeDataType
+} from '$types';
 import Handlebars from 'handlebars';
 import { type JSONObject, type JSONValue, decodeArray, decodeString, isJSON } from 'type-decoder';
 import Runtime from '$runtime';
@@ -212,6 +217,25 @@ export function generateRelativePath(fromPath: string, toPath: string): string {
 
 export function stripPrefix(value: string, prefix: string): string {
   return value.startsWith(prefix) ? value.slice(prefix.length) : value;
+}
+// #endregion
+
+// #region type utils
+
+export function isPrimitiveType(typeInfo: TypeInfo): boolean {
+  return (
+    typeInfo.type !== null &&
+    typeInfo.type !== 'object' &&
+    typeInfo.type !== 'array' &&
+    typeInfo.$ref === null &&
+    typeInfo.oneOf === null &&
+    typeInfo.allOf === null &&
+    typeInfo.enum === null
+  );
+}
+
+export function isSimplePrimitiveType(type: TypeDataType | null): boolean {
+  return type === 'string' || type === 'number' || type === 'integer' || type === 'boolean';
 }
 
 // #endregion
