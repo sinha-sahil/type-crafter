@@ -35,7 +35,7 @@ export type {{typeName}} = {{#if (not (isEmptyObject properties))}}{
 Record<{{jsonKey additionalProperties.keyType}}, {{additionalProperties.valueType}}>;
 {{/if}}
 
-{{#if (not customAttributes.skipDecoderGeneration)}}
+{{#unless customAttributes.skipDecoderGeneration}}
 export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   if (isJSON(rawInput)) {
     {{#each properties}}
@@ -72,7 +72,7 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   }
   return null;
 }
-{{/if}}
+{{/unless}}
 
 {{#if customAttributes.generateOptionalDecoder}}
 export function _decode{{typeName}}(rawInput: unknown): {{typeName}} | undefined {
