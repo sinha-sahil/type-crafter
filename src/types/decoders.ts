@@ -163,6 +163,7 @@ export function decodeTypeInfo(rawInput: unknown): TypeInfo | null {
       oneOf: decodeArray(rawInput.oneOf, decodeTypeInfo),
       allOf: decodeArray(rawInput.allOf, decodeTypeInfo),
       additionalProperties,
+      customAttributes: isJSON(rawInput.customAttributes) ? rawInput.customAttributes : null,
       enum:
         _type === 'string'
           ? decodeArray(rawInput.enum, decodeString)
@@ -249,7 +250,13 @@ function decodeObjectTemplateInputProperty(rawInput: unknown): ObjectTemplateInp
     const summary = decodeString(rawInput.summary);
     const example = decodeString(rawInput.example) ?? decodeNumber(rawInput.example);
     const description = decodeString(rawInput.description);
-    if (required !== null && _type !== null && referenced !== null && primitiveType !== null && optional !== null) {
+    if (
+      required !== null &&
+      _type !== null &&
+      referenced !== null &&
+      primitiveType !== null &&
+      optional !== null
+    ) {
       return {
         type: _type,
         required,

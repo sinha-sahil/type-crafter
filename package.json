@@ -1,6 +1,6 @@
 {
   "name": "type-crafter",
-  "version": "0.9.7",
+  "version": "0.10.0",
   "description": "A tool to generate types from a yaml schema for any language",
   "main": "./dist/index.js",
   "type": "module",
@@ -19,6 +19,7 @@
     "lint:all": "eslint . --ext .ts",
     "clean:output": "rm -rf dist",
     "build": "npm run clean:output && rollup --config rollup.config.js",
+    "build:version": "npm run clean:output && rollup --config rollup.config.js --environment",
     "publish": "node scripts/publish.js",
     "changeset:version": "changeset version && git add --all"
   },

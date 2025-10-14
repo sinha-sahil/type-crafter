@@ -15,6 +15,16 @@ function getVersion(args) {
       }
     });
   }
+
+  if (
+    version === null &&
+    typeof args.input === 'object' &&
+    !Array.isArray(args.input) &&
+    typeof args.input.version === 'string'
+  ) {
+    version = args.input.version;
+  }
+
   if (version === null) {
     throw new Error('Build Version is not specified');
   }

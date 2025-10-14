@@ -10,7 +10,7 @@ import type {
   TypeFilePath,
   TypesFileTemplateInput
 } from '$types';
-import { resolveFilePath } from '$utils';
+import { resolveFilePath } from '$utils/file-system';
 import { RuntimeError } from '$utils/error-handler';
 import Handlebars from 'handlebars';
 
