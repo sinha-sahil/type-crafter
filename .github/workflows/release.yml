@@ -81,8 +81,28 @@ jobs:
           echo "Building project with new version..."
           pnpm run build
 
+      - name: Check if version already published
+        id: version-check
+        run: |
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+
+          echo "Checking if $PACKAGE_NAME@$NEW_VERSION is already published..."
+
+          # Check if version exists on NPM
+          if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
+            echo "Version $NEW_VERSION is already published on NPM"
+            echo "already_published=true" >> $GITHUB_OUTPUT
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          else
+            echo "Version $NEW_VERSION is not published yet"
+            echo "already_published=false" >> $GITHUB_OUTPUT
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Publish to NPM
         id: npm-publish
+        if: steps.version-check.outputs.should_publish == 'true'
         run: |
           echo "Publishing to NPM..."
           npm publish
@@ -90,10 +110,18 @@ jobs:
           echo "publish_success=true" >> $GITHUB_OUTPUT
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Skip publish (already exists)
+        id: skip-publish
+        if: steps.version-check.outputs.already_published == 'true'
+        run: |
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+          echo "Skipping NPM publish - version $NEW_VERSION already exists"
+          echo "Setting publish_success=true for already published version"
+          echo "publish_success=true" >> $GITHUB_OUTPUT
 
       - name: Commit and tag release
-        if: steps.npm-publish.outputs.publish_success == 'true'
+        if: steps.npm-publish.outputs.publish_success == 'true' || steps.skip-publish.outputs.publish_success == 'true'
         run: |
           NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
           BUMP_TYPE="${{ steps.commit-info.outputs.bump }}"
