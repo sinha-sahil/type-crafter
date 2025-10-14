@@ -1,0 +1,117 @@
+name: Release and Deploy
+
+on:
+  push:
+    branches: [release]
+  pull_request:
+    branches: [release]
+    types: [closed]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
+
+    environment: publish-env
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.0
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Get latest commit info
+        id: commit-info
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=format:"%s")
+          echo "message=$COMMIT_MSG" >> $GITHUB_OUTPUT
+
+          # Determine semantic version bump based on commit message
+          if [[ "$COMMIT_MSG" =~ ^feat(\(.+\))?!: ]] || [[ "$COMMIT_MSG" =~ BREAKING[[:space:]]CHANGE ]]; then
+            echo "bump=major" >> $GITHUB_OUTPUT
+            echo "Detected BREAKING CHANGE - will perform major version bump"
+          elif [[ "$COMMIT_MSG" =~ ^feat(\(.+\))?: ]]; then
+            echo "bump=minor" >> $GITHUB_OUTPUT
+            echo "Detected feature commit - will perform minor version bump"
+          elif [[ "$COMMIT_MSG" =~ ^fix(\(.+\))?: ]] || [[ "$COMMIT_MSG" =~ ^perf(\(.+\))?: ]]; then
+            echo "bump=patch" >> $GITHUB_OUTPUT
+            echo "Detected fix/perf commit - will perform patch version bump"
+          else
+            echo "bump=patch" >> $GITHUB_OUTPUT
+            echo "No specific commit type detected - defaulting to patch version bump"
+          fi
+
+      - name: Bump version using npm
+        id: version-bump
+        run: |
+          BUMP_TYPE="${{ steps.commit-info.outputs.bump }}"
+          echo "Bumping version with type: $BUMP_TYPE"
+
+          # Use npm version to bump and create commit/tag
+          NEW_VERSION=$(npm version $BUMP_TYPE --no-git-tag-version)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Version bumped to: $NEW_VERSION"
+
+      - name: Build project
+        run: |
+          echo "Building project with new version..."
+          pnpm run build
+
+      - name: Publish to NPM
+        id: npm-publish
+        run: |
+          echo "Publishing to NPM..."
+          npm publish
+          echo "NPM publish successful!"
+          echo "publish_success=true" >> $GITHUB_OUTPUT
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Commit and tag release
+        if: steps.npm-publish.outputs.publish_success == 'true'
+        run: |
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+          BUMP_TYPE="${{ steps.commit-info.outputs.bump }}"
+
+          # Commit the version bump and build artifacts
+          git add package.json dist/
+          git commit -m "chore: release $NEW_VERSION"
+
+          # Create and push tag
+          git tag -a "$NEW_VERSION" -m "Release $NEW_VERSION"
+          git push origin release
+          git push origin --tags
+
+          echo "Released version $NEW_VERSION with $BUMP_TYPE bump"
+
+      - name: Rollback on publish failure
+        if: failure() && steps.npm-publish.conclusion == 'failure'
+        run: |
+          echo "NPM publish failed, rolling back version change..."
+          git checkout -- package.json
+          echo "Version rollback completed"
