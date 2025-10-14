@@ -126,8 +126,7 @@ jobs:
           NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
           BUMP_TYPE="${{ steps.commit-info.outputs.bump }}"
 
-          # Commit the version bump and build artifacts
-          git add package.json dist/
+          git add package.json
           git commit -m "chore: release $NEW_VERSION"
 
           # Create and push tag
