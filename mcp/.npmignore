@@ -1,0 +1,27 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+
+# Config files
+tsconfig.json
+.eslintrc.json
+
+# Development files
+node_modules/
+.DS_Store
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Documentation
+example-config.json
+SETUP.md
+
+# Test files
+test/
+tests/
+*.test.js
+*.spec.js
