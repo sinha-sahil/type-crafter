@@ -6,7 +6,58 @@ on:
     types: [closed]
 
 jobs:
-  publish:
+  detect-changes:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    outputs:
+      root_changed: ${{ steps.changes.outputs.root_changed }}
+      mcp_changed: ${{ steps.changes.outputs.mcp_changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Detect package changes
+        id: changes
+        run: |
+          # Get the merge base and compare
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          echo "Comparing $BASE_SHA to $HEAD_SHA"
+
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # Check for root package changes (files not in mcp/ folder, excluding workflow files)
+          ROOT_CHANGES=$(echo "$CHANGED_FILES" | grep -v "^mcp/" | grep -v "^\.github/" || true)
+          if [ -n "$ROOT_CHANGES" ]; then
+            echo "root_changed=true" >> $GITHUB_OUTPUT
+            echo "Root package has changes:"
+            echo "$ROOT_CHANGES"
+          else
+            echo "root_changed=false" >> $GITHUB_OUTPUT
+            echo "No root package changes detected"
+          fi
+
+          # Check for mcp package changes
+          MCP_CHANGES=$(echo "$CHANGED_FILES" | grep "^mcp/" || true)
+          if [ -n "$MCP_CHANGES" ]; then
+            echo "mcp_changed=true" >> $GITHUB_OUTPUT
+            echo "MCP package has changes:"
+            echo "$MCP_CHANGES"
+          else
+            echo "mcp_changed=false" >> $GITHUB_OUTPUT
+            echo "No MCP package changes detected"
+          fi
+
+  publish-root:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.root_changed == 'true'
     runs-on: ubuntu-latest
 
     permissions:
@@ -136,6 +187,162 @@ jobs:
 
       - name: Rollback on publish failure
         if: failure() && steps.npm-publish.conclusion == 'failure'
+        run: |
+          echo "NPM publish failed, rolling back version change..."
+          git checkout -- package.json
+          echo "Version rollback completed"
+
+  publish-mcp:
+    needs: [detect-changes, publish-root]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.mcp_changed == 'true' &&
+      (needs.publish-root.result == 'success' || needs.publish-root.result == 'skipped')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
+
+    environment: publish-env
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.0
+
+      - name: Install root dependencies
+        run: pnpm install
+
+      - name: Install MCP dependencies
+        working-directory: mcp
+        run: pnpm install
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Pull latest changes
+        run: |
+          echo "Pulling latest changes in case root package was published..."
+          git pull origin release --rebase
+
+      - name: Get latest commit info
+        id: commit-info
+        run: |
+          # Get the original PR merge commit message (not the release commit)
+          COMMIT_MSG=$(git log --oneline --grep="^chore: release" --invert-grep -1 --pretty=format:"%s")
+          echo "message=$COMMIT_MSG" >> $GITHUB_OUTPUT
+          echo "Using commit message: $COMMIT_MSG"
+
+          # Determine semantic version bump based on commit message
+          if [[ "$COMMIT_MSG" =~ ^feat(\(.+\))?!: ]] || [[ "$COMMIT_MSG" =~ BREAKING[[:space:]]CHANGE ]]; then
+            echo "bump=major" >> $GITHUB_OUTPUT
+            echo "Detected BREAKING CHANGE - will perform major version bump"
+          elif [[ "$COMMIT_MSG" =~ ^feat(\(.+\))?: ]]; then
+            echo "bump=minor" >> $GITHUB_OUTPUT
+            echo "Detected feature commit - will perform minor version bump"
+          elif [[ "$COMMIT_MSG" =~ ^fix(\(.+\))?: ]] || [[ "$COMMIT_MSG" =~ ^perf(\(.+\))?: ]]; then
+            echo "bump=patch" >> $GITHUB_OUTPUT
+            echo "Detected fix/perf commit - will perform patch version bump"
+          else
+            echo "bump=patch" >> $GITHUB_OUTPUT
+            echo "No specific commit type detected - defaulting to patch version bump"
+          fi
+
+      - name: Bump MCP version using npm
+        id: version-bump
+        working-directory: mcp
+        run: |
+          BUMP_TYPE="${{ steps.commit-info.outputs.bump }}"
+          echo "Bumping MCP version with type: $BUMP_TYPE"
+
+          # Use npm version to bump
+          NEW_VERSION=$(npm version $BUMP_TYPE --no-git-tag-version)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "MCP Version bumped to: $NEW_VERSION"
+
+      - name: Build MCP project
+        working-directory: mcp
+        run: |
+          echo "Building MCP project with new version..."
+          pnpm run build
+
+      - name: Check if MCP version already published
+        id: version-check
+        working-directory: mcp
+        run: |
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+
+          echo "Checking if $PACKAGE_NAME@$NEW_VERSION is already published..."
+
+          # Check if version exists on NPM
+          if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
+            echo "Version $NEW_VERSION is already published on NPM"
+            echo "already_published=true" >> $GITHUB_OUTPUT
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          else
+            echo "Version $NEW_VERSION is not published yet"
+            echo "already_published=false" >> $GITHUB_OUTPUT
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish MCP to NPM
+        id: npm-publish
+        if: steps.version-check.outputs.should_publish == 'true'
+        working-directory: mcp
+        run: |
+          echo "Publishing MCP to NPM..."
+          npm publish --access public
+          echo "NPM publish successful!"
+          echo "publish_success=true" >> $GITHUB_OUTPUT
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Skip publish (already exists)
+        id: skip-publish
+        if: steps.version-check.outputs.already_published == 'true'
+        run: |
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+          echo "Skipping NPM publish - MCP version $NEW_VERSION already exists"
+          echo "Setting publish_success=true for already published version"
+          echo "publish_success=true" >> $GITHUB_OUTPUT
+
+      - name: Commit and tag MCP release
+        if: steps.npm-publish.outputs.publish_success == 'true' || steps.skip-publish.outputs.publish_success == 'true'
+        run: |
+          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+          BUMP_TYPE="${{ steps.commit-info.outputs.bump }}"
+
+          git add mcp/package.json
+          git commit -m "chore: release @type-crafter/mcp $NEW_VERSION"
+
+          # Create and push tag with mcp prefix
+          git tag -a "mcp-$NEW_VERSION" -m "Release @type-crafter/mcp $NEW_VERSION"
+          git push origin release
+          git push origin --tags
+
+          echo "Released @type-crafter/mcp version $NEW_VERSION with $BUMP_TYPE bump"
+
+      - name: Rollback on publish failure
+        if: failure() && steps.npm-publish.conclusion == 'failure'
+        working-directory: mcp
         run: |
           echo "NPM publish failed, rolling back version change..."
           git checkout -- package.json

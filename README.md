@@ -57,10 +57,53 @@ The input specification yaml file must be of following syntax:
 
 The syntax for writing different types can be referred from the [OpenAPI Data Types Guide](https://swagger.io/docs/specification/data-models/data-types/).
 
-## Supported languages
+## Supported Languages
 
 - [✔️] TypeScript
-- More languages will be added soon.
+- [✔️] TypeScript with Decoders (runtime validation)
+- More languages coming soon
+
+## MCP Server (AI Assistant Integration)
+
+Type Crafter includes an MCP (Model Context Protocol) server that helps AI assistants write correct YAML specifications.
+
+### Installation
+
+```bash
+npm install -g @type-crafter/mcp-server
+```
+
+### Configuration (Claude Desktop)
+
+Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "type-crafter": {
+      "command": "type-crafter-mcp"
+    }
+  }
+}
+```
+
+### Available Tools
+
+| Tool                | Description                         |
+| ------------------- | ----------------------------------- |
+| `get-writing-guide` | Learn YAML spec format (call first) |
+| `get-rules-section` | Deep-dive into specific topics      |
+| `validate-spec`     | Check specs for errors              |
+| `get-spec-info`     | View types in existing spec         |
+| `list-languages`    | Show supported languages            |
+
+### Key Features
+
+- **Session-based workflow** - Guides LLMs to read documentation first
+- **Educational errors** - Explains what's wrong and how to fix it
+- **Common mistake detection** - Catches `nullable: true`, `optional: true`, wrong paths
+
+See [mcp/README.md](./mcp/README.md) for full documentation.
 
 ## Contributing & Extending
 

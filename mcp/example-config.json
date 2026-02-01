@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "type-crafter-global": {
+      "comment": "Global npm installation: npm install -g @type-crafter/mcp-server",
+      "command": "type-crafter-mcp"
+    },
+    "type-crafter-npx": {
+      "comment": "Local npm installation: npm install @type-crafter/mcp-server",
+      "command": "npx",
+      "args": ["type-crafter-mcp"],
+      "cwd": "/path/to/your/project"
+    },
+    "type-crafter-dev": {
+      "comment": "Development setup (from source)",
+      "command": "node",
+      "args": ["/absolute/path/to/type-crafter/mcp-server/dist/index.js"]
+    }
+  }
+}
