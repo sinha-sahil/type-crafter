@@ -22,10 +22,14 @@ jobs:
       - name: Detect package changes
         id: changes
         run: |
-          # Get the merge base and compare
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          # For rebase + fast-forward merges, use the PR commit count
+          # to determine how far back to compare
+          PR_COMMITS=${{ github.event.pull_request.commits }}
 
+          BASE_SHA=$(git rev-parse HEAD~${PR_COMMITS})
+          HEAD_SHA=$(git rev-parse HEAD)
+
+          echo "PR had $PR_COMMITS commit(s)"
           echo "Comparing $BASE_SHA to $HEAD_SHA"
 
           # Get list of changed files
