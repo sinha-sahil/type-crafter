@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import yaml from 'yaml';
+import { logDebug } from './logger';
 
 function getSourceFileDirectory(): string {
   const fileName = fileURLToPath(import.meta.url);
@@ -55,7 +56,7 @@ export async function deleteFolder(folderPath: string): Promise<void> {
   try {
     await fs.rm(folderPath, { recursive: true });
   } catch (e) {
-    console.log("Couldn't delete folder: ", folderPath);
+    logDebug(`Couldn't delete folder: ${folderPath}`);
   }
 }
 

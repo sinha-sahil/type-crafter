@@ -7,7 +7,15 @@ import {
   decodeTypesWriterMode,
   decodeGroupedTypesWriterMode
 } from '$types';
-import { registerTemplateHelpers, greeting, logSuccess, readYaml } from '$utils';
+import {
+  registerTemplateHelpers,
+  greeting,
+  logSuccessBox,
+  createSpinner,
+  colors,
+  symbols,
+  readYaml
+} from '$utils';
 import {
   handleErrors,
   LanguageNotSupportedError,
@@ -19,6 +27,8 @@ import { generator } from '$generators/generic';
 import { writeOutput } from '$writer';
 import Runtime from '$runtime';
 import { typescript, typescriptWithDecoders } from '$templates';
+
+const { colorize, BRAND } = colors;
 
 export async function generate(config: Configuration): Promise<void> {
   Runtime.setConfig(config);
@@ -44,6 +54,8 @@ async function runner(
   _typesWriterMode: string,
   _groupedTypesWriterMode: string
 ): Promise<void> {
+  const spinner = createSpinner('Initializing type generation...');
+
   try {
     const typesWriterMode = decodeTypesWriterMode(_typesWriterMode);
     const groupedTypesWriterMode = decodeGroupedTypesWriterMode(_groupedTypesWriterMode);
@@ -55,6 +67,9 @@ async function runner(
     if (groupedTypesWriterMode === null) {
       throw new InvalidParamError('Grouped types writer mode', _groupedTypesWriterMode);
     }
+
+    spinner.start();
+    spinner.update(`Configuring ${language} generator...`);
 
     let generatorConfig = null;
     switch (language.toLowerCase()) {
@@ -75,15 +90,34 @@ async function runner(
         );
         break;
       default:
+        spinner.stop();
         throw new LanguageNotSupportedError(language);
     }
+
     if (generatorConfig === null) {
+      spinner.stop();
       throw new UnsupportedFeatureError(`Failed to get generator config for ${language}`);
     }
+
+    spinner.update('Generating types...');
     await generate(generatorConfig);
-    logSuccess('Done & Dusted!', `Output saved at ${outputDirectory}`);
+
+    spinner.success('Type generation complete!');
+    console.log();
+    logSuccessBox(
+      [
+        colorize('Types have been crafted successfully!', BRAND.success),
+        '',
+        `${symbols.pointer} Language: ${colorize(language, BRAND.primary)}`,
+        `${symbols.pointer} Output: ${colorize(outputDirectory, BRAND.primary)}`
+      ],
+      'Done & Dusted!'
+    );
+    console.log();
   } catch (e) {
+    spinner.stop();
     handleErrors(e);
+    process.exitCode = 1;
   }
 }
 
