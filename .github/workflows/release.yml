@@ -199,7 +199,6 @@ jobs:
       needs.detect-changes.outputs.mcp_changed == 'true' &&
       (needs.publish-root.result == 'success' || needs.publish-root.result == 'skipped')
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
       packages: write

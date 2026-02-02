@@ -17,6 +17,7 @@ function config() {
       plugins: [
         nodeResolve(),
         replace({
+          preventAssignment: true,
           __VERSION__: packageJson.version,
           __DEVELOPMENT__: 'PRODUCTION'
         }),

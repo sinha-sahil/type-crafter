@@ -584,6 +584,10 @@ async function generateType(
     return returnCyclicReference(typeName);
   }
 
+  if (typeInfo.$ref !== null) {
+    return await generateReferencedType(typeName, typeInfo, parentTypes);
+  }
+
   parentTypes = [...parentTypes, typeName];
 
   if (typeInfo.type === 'object') {
@@ -600,9 +604,6 @@ async function generateType(
   }
   if (typeInfo.type === 'array') {
     return await generateArrayType(typeName, typeInfo, parentTypes);
-  }
-  if (typeInfo.$ref !== null) {
-    return await generateReferencedType(typeName, typeInfo, parentTypes);
   }
   return generateVariableType(typeName, typeInfo);
 }
