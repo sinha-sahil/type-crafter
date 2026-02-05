@@ -61,14 +61,67 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
     }
     {{/if}}
 
-    return {
-      {{#if additionalProperties}}
-      ...rawInput,
+    {{#if additionalProperties}}
+    {{#if (isEmptyObject properties)}}
+    const decodedAdditionalProperties: {{typeName}} = {};
+    for (const key in rawInput) {
+      {{#if additionalProperties.valueTypeReferenced}}
+      const decodedValue = {{#if (eq additionalProperties.valuePrimitiveType 'array')~}}
+        decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+      {{~else~}}
+        decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
+      {{~/if}}
+      {{else}}
+      {{#if (eq additionalProperties.valuePrimitiveType 'array')}}
+      const decodedValue = decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+      {{else}}
+      const decodedValue = decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
       {{/if}}
+      {{/if}}
+      if (decodedValue === null) {
+        return null;
+      }
+      decodedAdditionalProperties[key] = decodedValue;
+    }
+    return decodedAdditionalProperties;
+    {{else}}
+    const decodedAdditionalProperties: Record<{{additionalProperties.keyType}}, {{additionalProperties.valueType}}> = {};
+    const knownKeys = new Set([{{#each properties}}{{{indexKey @key}}}{{#unless @last}}, {{/unless}}{{/each}}]);
+    for (const key in rawInput) {
+      if (!knownKeys.has(key)) {
+        {{#if additionalProperties.valueTypeReferenced}}
+        const decodedValue = {{#if (eq additionalProperties.valuePrimitiveType 'array')~}}
+          decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+        {{~else~}}
+          decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
+        {{~/if}}
+        {{else}}
+        {{#if (eq additionalProperties.valuePrimitiveType 'array')}}
+        const decodedValue = decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+        {{else}}
+        const decodedValue = decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
+        {{/if}}
+        {{/if}}
+        if (decodedValue === null) {
+          return null;
+        }
+        decodedAdditionalProperties[key] = decodedValue;
+      }
+    }
+    return {
+      ...decodedAdditionalProperties,
       {{#each properties}}
       {{{jsonKey @key}}}: decoded{{{variableName @key}}}{{#unless @last}},{{/unless}}
       {{/each}}
     };
+    {{/if}}
+    {{else}}
+    return {
+      {{#each properties}}
+      {{{jsonKey @key}}}: decoded{{{variableName @key}}}{{#unless @last}},{{/unless}}
+      {{/each}}
+    };
+    {{/if}}
   }
   return null;
 }
@@ -100,14 +153,67 @@ export function _decode{{typeName}}(rawInput: unknown): {{typeName}} | undefined
     }
     {{/if}}
 
-    return {
-      {{#if additionalProperties}}
-      ...rawInput,
+    {{#if additionalProperties}}
+    {{#if (isEmptyObject properties)}}
+    const decodedAdditionalProperties: {{typeName}} = {};
+    for (const key in rawInput) {
+      {{#if additionalProperties.valueTypeReferenced}}
+      const decodedValue = {{#if (eq additionalProperties.valuePrimitiveType 'array')~}}
+        decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+      {{~else~}}
+        decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
+      {{~/if}}
+      {{else}}
+      {{#if (eq additionalProperties.valuePrimitiveType 'array')}}
+      const decodedValue = decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+      {{else}}
+      const decodedValue = decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
       {{/if}}
+      {{/if}}
+      if (decodedValue === null) {
+        return;
+      }
+      decodedAdditionalProperties[key] = decodedValue;
+    }
+    return decodedAdditionalProperties;
+    {{else}}
+    const decodedAdditionalProperties: Record<{{additionalProperties.keyType}}, {{additionalProperties.valueType}}> = {};
+    const knownKeys = new Set([{{#each properties}}{{{indexKey @key}}}{{#unless @last}}, {{/unless}}{{/each}}]);
+    for (const key in rawInput) {
+      if (!knownKeys.has(key)) {
+        {{#if additionalProperties.valueTypeReferenced}}
+        const decodedValue = {{#if (eq additionalProperties.valuePrimitiveType 'array')~}}
+          decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+        {{~else~}}
+          decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
+        {{~/if}}
+        {{else}}
+        {{#if (eq additionalProperties.valuePrimitiveType 'array')}}
+        const decodedValue = decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+        {{else}}
+        const decodedValue = decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
+        {{/if}}
+        {{/if}}
+        if (decodedValue === null) {
+          return;
+        }
+        decodedAdditionalProperties[key] = decodedValue;
+      }
+    }
+    return {
+      ...decodedAdditionalProperties,
       {{#each properties}}
       {{{jsonKey @key}}}: decoded{{{variableName @key}}}{{#unless @last}},{{/unless}}
       {{/each}}
     };
+    {{/if}}
+    {{else}}
+    return {
+      {{#each properties}}
+      {{{jsonKey @key}}}: decoded{{{variableName @key}}}{{#unless @last}},{{/unless}}
+      {{/each}}
+    };
+    {{/if}}
   }
   return;
 }
