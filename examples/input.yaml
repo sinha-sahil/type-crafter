@@ -112,6 +112,26 @@ types:
     additionalProperties:
       $ref: '#/types/Student'
 
+  HashedMapObjectThree:
+    type: object
+    required:
+      - keyOne
+      - keyTwo
+    properties:
+      keyOne:
+        type: string
+      keyTwo:
+        type: string
+
+  HashmapArrayValue:
+    type: object
+    additionalProperties:
+      keyType: string
+      valueType:
+        type: array
+        items:
+          $ref: '#/types/HashedMapObjectThree'
+
   Student:
     type: object
     required:

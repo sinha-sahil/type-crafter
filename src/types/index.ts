@@ -167,6 +167,9 @@ export type ObjectTemplateInputProperty = TypeDescriptors & {
 export type AdditionalPropertiesTemplateInput = {
   keyType: string;
   valueType: string;
+  valueTypeReferenced: boolean;
+  valuePrimitiveType: string;
+  valueComposerType: string | null;
 };
 
 export type ExporterModuleTemplateInput = {

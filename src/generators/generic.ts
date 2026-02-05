@@ -107,31 +107,51 @@ async function generateAdditionalPropertiesType(
       valueType: getPrimitiveType(typeName, {
         ...placeholderTypeInfo,
         type: 'unknown'
-      }).templateInput.type
+      }).templateInput.type,
+      valueTypeReferenced: false,
+      valuePrimitiveType: 'unknown',
+      valueComposerType: null
     };
   } else if (valueIsKeyedAdditionalProperties(typeInfo.additionalProperties)) {
+    const valueTypeInfo = typeInfo.additionalProperties.valueType;
+    const generatedValueType = await generateType(
+      typeName + 'ValueType',
+      valueTypeInfo,
+      parentTypes
+    );
+    const isReferenced = valueTypeInfo.$ref !== null;
+    const isArray = valueTypeInfo.type === 'array';
     result = {
       keyType: getPrimitiveType(typeName, {
         ...placeholderTypeInfo,
         type: typeInfo.additionalProperties.keyType
       }).templateInput.type,
-      valueType: (
-        await generateType(
-          typeName + 'ValueType',
-          typeInfo.additionalProperties.valueType,
-          parentTypes
-        )
-      ).templateInput.type
+      valueType: generatedValueType.templateInput.type,
+      valueTypeReferenced: isReferenced,
+      valuePrimitiveType: isArray ? 'array' : (valueTypeInfo.type ?? 'object'),
+      valueComposerType:
+        'composerType' in generatedValueType.templateInput
+          ? (generatedValueType.templateInput.composerType ?? null)
+          : null
     };
   } else if (valueIsTypeInfo(typeInfo.additionalProperties)) {
-    const valueType = await generateType(
+    const valueTypeInfo = typeInfo.additionalProperties;
+    const generatedValueType = await generateType(
       typeName + 'ValueType',
-      typeInfo.additionalProperties,
+      valueTypeInfo,
       parentTypes
     );
+    const isReferenced = valueTypeInfo.$ref !== null;
+    const isArray = valueTypeInfo.type === 'array';
     result = {
       keyType: stringKeyType,
-      valueType: valueType.templateInput.type
+      valueType: generatedValueType.templateInput.type,
+      valueTypeReferenced: isReferenced,
+      valuePrimitiveType: isArray ? 'array' : (valueTypeInfo.type ?? 'object'),
+      valueComposerType:
+        'composerType' in generatedValueType.templateInput
+          ? (generatedValueType.templateInput.composerType ?? null)
+          : null
     };
   }
   return result;
