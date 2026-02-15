@@ -16,4 +16,4 @@ ReferencedGroup:
         items:
           type: string
       refKey:
-        $ref: './input.yaml#/types/TypeObjectFour'
+        $ref: './examples/input.yaml#/types/TypeObjectFour'

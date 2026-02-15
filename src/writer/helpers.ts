@@ -57,6 +57,7 @@ export function generateExpectedOutputFile(): Map<string, TypeFilePath> {
 
   for (const generatedRefData of Runtime.getCachedReferencedTypes().values()) {
     if (
+      generatedRefData.type !== 'local' &&
       typeof generatedRefData.sourceFile !== 'undefined' &&
       generatedRefData.completeSource !== Runtime.getInputFilePath() // Preventing new file creation for remote references from base file
     ) {

@@ -1,0 +1,26 @@
+{{#if description}}
+/// {{{description}}}
+{{/if}}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct {{typeName}} {
+{{#each compositions}}
+{{#if (eq this.source 'referenced')}}
+    #[serde(flatten)]
+    pub {{toSnakeCase this.referencedType}}: {{this.referencedType}},
+{{else if (eq this.source 'inline')}}
+{{#if (eq this.dataType 'object')}}
+    #[serde(flatten)]
+    pub {{toSnakeCase this.templateInput.typeName}}: {{this.templateInput.typeName}},
+{{else}}
+    pub {{toSnakeCase this.templateInput.typeName}}: {{{this.templateInput.type}}},
+{{/if}}
+{{/if}}
+{{/each}}
+}
+{{#each compositions}}
+{{#if (eq this.source 'inline')}}
+{{#if (eq this.dataType 'object')}}
+{{{this.content}}}
+{{/if}}
+{{/if}}
+{{/each}}

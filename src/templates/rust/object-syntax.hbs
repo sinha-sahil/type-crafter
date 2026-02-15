@@ -1,0 +1,23 @@
+{{#if description}}
+/// {{{description}}}
+{{/if}}
+{{#if example}}
+/// Example: {{{example}}}
+{{/if}}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct {{typeName}} {
+{{#each properties}}
+{{#if this.description}}
+    /// {{{this.description}}}
+{{/if}}
+    #[serde(rename = "{{@key}}")]
+{{#unless this.required}}
+    #[serde(skip_serializing_if = "Option::is_none")]
+{{/unless}}
+    pub {{toSnakeCase @key}}: {{#unless this.required}}Option<{{/unless}}{{{this.type}}}{{#unless this.required}}>{{/unless}},
+{{/each}}
+{{#if additionalProperties}}
+    #[serde(flatten)]
+    pub additional_properties: std::collections::HashMap<{{{additionalProperties.keyType}}}, {{{additionalProperties.valueType}}}>,
+{{/if}}
+}

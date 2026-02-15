@@ -1,0 +1,25 @@
+{{#if description}}
+/// {{{description}}}
+{{/if}}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum {{typeName}} {
+{{#each compositions}}
+{{#if (eq this.source 'referenced')}}
+    {{this.referencedType}}({{this.referencedType}}),
+{{else if (eq this.source 'inline')}}
+{{#if this.templateInput.values}}
+    {{this.templateInput.typeName}}({{this.templateInput.typeName}}),
+{{else if (eq this.dataType 'object')}}
+    {{this.templateInput.typeName}}({{this.templateInput.typeName}}),
+{{else}}
+    {{this.templateInput.typeName}}({{{this.templateInput.type}}}),
+{{/if}}
+{{/if}}
+{{/each}}
+}
+{{#each compositions}}
+{{#if (eq this.source 'inline')}}
+{{{this.content}}}
+{{/if}}
+{{/each}}

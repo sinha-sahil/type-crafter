@@ -13,6 +13,7 @@ export type OutputConfig = {
   cleanWrite: boolean;
   fileExtension: string;
   directory: string;
+  typesFileName: string;
   writerMode: {
     groupedTypes: GroupedTypesWriterMode;
     types: TypesWriterMode;
@@ -31,9 +32,18 @@ export type Template = {
   allOfSyntax: string;
 };
 
+export type ModulePathConfig = {
+  separator: string;
+  parentRef: string;
+  selfRef: string;
+  moduleFileName: string;
+  fileBasedModules: boolean;
+};
+
 export type LanguageConfig = {
   exporterModuleName: string;
   typeMapper: LanguageTypeMapper;
+  modulePathConfig: ModulePathConfig;
 };
 
 /**
@@ -192,6 +202,7 @@ export type ReferencedModule = {
   modulePath: string;
   moduleRelativePath: string;
   referencedTypes: string[];
+  moduleName: string;
 };
 
 export type EnumTemplateInput = TypeDescriptors & {

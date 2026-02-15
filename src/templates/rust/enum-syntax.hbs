@@ -1,0 +1,17 @@
+{{#if description}}
+/// {{{description}}}
+{{/if}}
+{{#if example}}
+/// Example: {{{example}}}
+{{/if}}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum {{typeName}} {
+{{#each values}}
+{{#if (eq ../type 'string')}}
+    #[serde(rename = "{{this}}")]
+    {{{toPascalCase this}}},
+{{else}}
+    Value{{{this}}},
+{{/if}}
+{{/each}}
+}
