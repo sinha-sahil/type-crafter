@@ -32,18 +32,27 @@ export type Template = {
   allOfSyntax: string;
 };
 
+export type FontCase = 'snake_case' | 'PascalCase' | 'camelCase';
+
 export type ModulePathConfig = {
   separator: string;
   parentRef: string;
   selfRef: string;
   moduleFileName: string;
   fileBasedModules: boolean;
+  moduleNameCase?: FontCase;
+};
+
+export type ReservedKeywordsConfig = {
+  words: string[];
+  prefix: string;
 };
 
 export type LanguageConfig = {
   exporterModuleName: string;
   typeMapper: LanguageTypeMapper;
   modulePathConfig: ModulePathConfig;
+  reservedKeywords?: ReservedKeywordsConfig;
 };
 
 /**
@@ -203,6 +212,7 @@ export type ReferencedModule = {
   moduleRelativePath: string;
   referencedTypes: string[];
   moduleName: string;
+  fileBasedModules: boolean;
 };
 
 export type EnumTemplateInput = TypeDescriptors & {

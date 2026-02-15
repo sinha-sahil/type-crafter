@@ -14,7 +14,7 @@ import {
   writeFile
 } from '$utils';
 import Runtime from '$runtime';
-import { generateExpectedOutputFile } from './helpers';
+import { formatModuleName, generateExpectedOutputFile } from './helpers';
 
 // #region Localized types
 
@@ -45,7 +45,7 @@ async function writeTypesToFiles(
 
   for (const typeName in types) {
     const typeData = types[typeName];
-    const file = typeName + config.output.fileExtension;
+    const file = formatModuleName(typeName) + config.output.fileExtension;
 
     const references = filterReferences
       ? [...types[typeName].references].filter((x) => !typeNames.includes(x))
@@ -166,14 +166,15 @@ export async function writeOutput(generationResult: GenerationResult): Promise<v
   if (config.output.writerMode.groupedTypes === 'FolderWithFiles') {
     for (const groupName in generationResult.groupedTypes) {
       let groupFilesWritten = null;
-      await createFolderWithBasePath(config.output.directory, groupName);
+      const formattedGroupName = formatModuleName(groupName);
+      await createFolderWithBasePath(config.output.directory, formattedGroupName);
       addValuesToMappedSet(writtenFiles, await getCompleteFolderPath(config.output.directory), [
-        groupName
+        formattedGroupName
       ]);
       groupFilesWritten = await writeTypesToFiles(
         config,
         generationResult.groupedTypes[groupName],
-        groupName
+        formattedGroupName
       );
       if (groupFilesWritten !== null) {
         addValuesToMappedSet(
@@ -189,7 +190,7 @@ export async function writeOutput(generationResult: GenerationResult): Promise<v
       groupFilesWritten = await writeTypesToFile(
         config,
         generationResult.groupedTypes[groupName],
-        groupName
+        formatModuleName(groupName)
       );
       if (groupFilesWritten !== null) {
         addValuesToMappedSet(

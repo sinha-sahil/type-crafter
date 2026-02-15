@@ -1,6 +1,11 @@
 import Runtime from '$runtime';
 import { valueIsGroupRef, type GroupedTypes, type TypeFilePath, type Types } from '$types';
-import { toPascalCase } from '$utils';
+import { formatCase, toPascalCase } from '$utils';
+
+export function formatModuleName(name: string): string {
+  const moduleNameCase = Runtime.getConfig().language.modulePathConfig.moduleNameCase;
+  return typeof moduleNameCase !== 'undefined' ? formatCase(name, moduleNameCase) : name;
+}
 
 export function generateTypesOutputFiles(
   types: Types | null,
@@ -13,22 +18,26 @@ export function generateTypesOutputFiles(
   const writerMode =
     groupName === null ? config.output.writerMode.types : config.output.writerMode.groupedTypes;
 
+  const formattedGroupName = groupName !== null ? formatModuleName(groupName) : null;
+
   const result: Map<string, TypeFilePath> = new Map<string, TypeFilePath>();
 
   for (const typeName in types) {
     const typeProperties = types[typeName];
     if (typeof typeProperties !== 'undefined') {
+      const formattedTypeName = formatModuleName(typeName);
       result.set(typeName, {
         modulePath:
           outputDir +
           '/' +
-          (writerMode === 'FolderWithFiles' ? (groupName ?? '') + '/' : '') +
-          moduleFileName,
+          (formattedGroupName
+            ? formattedGroupName + (writerMode === 'FolderWithFiles' ? '/' + moduleFileName : '')
+            : moduleFileName),
         filePath:
           outputDir +
           (writerMode === 'Files' || writerMode === 'FolderWithFiles'
-            ? '/' + (groupName ?? '') + typeName
-            : '/' + (groupName ?? 'types')),
+            ? '/' + (formattedGroupName ?? '') + formattedTypeName
+            : '/' + (formattedGroupName ?? 'types')),
         extension
       });
     }
