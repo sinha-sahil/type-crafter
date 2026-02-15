@@ -1,7 +1,11 @@
 use serde::{Serialize, Deserialize};
 {{#each (getReferencedTypeModules referencedTypes writtenAt)}}
 {{#each this.referencedTypes}}
-use {{{../moduleRelativePath}}}::{{this}}::{{this}};
+{{#if ../fileBasedModules}}
+use {{{../moduleRelativePath}}}::{{toSnakeCase this}}::{{this}};
+{{else}}
+use {{{../moduleRelativePath}}}::{{this}};
+{{/if}}
 {{/each}}
 {{/each}}
 

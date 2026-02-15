@@ -6,13 +6,13 @@ pub struct {{typeName}} {
 {{#each compositions}}
 {{#if (eq this.source 'referenced')}}
     #[serde(flatten)]
-    pub {{toSnakeCase this.referencedType}}: {{this.referencedType}},
+    pub {{escapeReservedWord (toSnakeCase this.referencedType)}}: {{this.referencedType}},
 {{else if (eq this.source 'inline')}}
 {{#if (eq this.dataType 'object')}}
     #[serde(flatten)]
-    pub {{toSnakeCase this.templateInput.typeName}}: {{this.templateInput.typeName}},
+    pub {{escapeReservedWord (toSnakeCase this.templateInput.typeName)}}: {{this.templateInput.typeName}},
 {{else}}
-    pub {{toSnakeCase this.templateInput.typeName}}: {{{this.templateInput.type}}},
+    pub {{escapeReservedWord (toSnakeCase this.templateInput.typeName)}}: {{{this.templateInput.type}}},
 {{/if}}
 {{/if}}
 {{/each}}

@@ -59,7 +59,9 @@ export default [
       'no-console': 'off',
       '@typescript-eslint/require-await': 'off',
       '@typescript-eslint/no-redundant-type-constituents': 'off',
-      '@typescript-eslint/no-unnecessary-template-expression': 'off'
+      '@typescript-eslint/no-unnecessary-template-expression': 'off',
+      '@typescript-eslint/no-deprecated': 'off',
+      '@typescript-eslint/consistent-generic-constructors': 'off'
     }
   },
   eslintConfigPrettier,

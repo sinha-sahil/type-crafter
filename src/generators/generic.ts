@@ -217,8 +217,7 @@ async function generateObjectType(
       );
       recursivePropertyName = referencedType.templateInput.typeName;
       languageDataType = recursivePropertyName;
-      references.push(...referencedType.references);
-      primitives.push(...referencedType.primitives);
+      references.push(recursivePropertyName);
       isReferenced = true;
     } else if (enumValues !== null) {
       const enumName = toPascalCase(propertyName) + 'Enum';
@@ -359,6 +358,18 @@ async function generateArrayType(
     arrayItemsType.templateInput.type = itemTypeName;
   } else {
     arrayItemsType = await generateType(typeName + 'Item', typeInfo.items, parentTypes);
+    // For referenced types (e.g. enums via $ref), use the type name as the item type
+    // identifier, consistent with how inline enums are handled above.
+    // Also only keep the direct reference — the referenced type handles its own imports.
+    // Create new objects to avoid mutating cached data from generateReferencedType.
+    if (typeInfo.items.$ref !== null) {
+      const refItemTypeName = arrayItemsType.templateInput.typeName;
+      arrayItemsType = {
+        ...arrayItemsType,
+        templateInput: { ...arrayItemsType.templateInput, type: refItemTypeName },
+        references: new Set([refItemTypeName])
+      };
+    }
   }
 
   if (typeof arrayItemsType.templateInput?.type === 'undefined') {
@@ -697,6 +708,13 @@ export async function generator(specFileData: SpecFileData): Promise<GenerationR
   }
 
   result.groupedTypes = groupedTypes;
+
+  // remove self references from grouped types
+  for (const groupName in result.groupedTypes) {
+    for (const typeName in result.groupedTypes[groupName]) {
+      result.groupedTypes[groupName][typeName].references.delete(typeName);
+    }
+  }
 
   return result;
 }

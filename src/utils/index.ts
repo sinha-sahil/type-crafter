@@ -1,6 +1,7 @@
 import {
   type ReferencedModule,
   type ModulePathConfig,
+  type FontCase,
   decodeObjectTemplateInputProperties,
   type TypeInfo,
   type TypeDataType
@@ -89,11 +90,13 @@ export function getReferencedTypeModules(_referencedTypes: unknown, _writtenAt: 
     ) {
       if (typeof referencedTypeModules[outputFile.modulePath] === 'undefined') {
         const rawRelativePath = generateRelativePath(writtenAt, outputFile.modulePath);
+        const moduleName = outputFile.modulePath.split('/').pop() ?? '';
         referencedTypeModules[outputFile.modulePath] = {
           modulePath: outputFile.modulePath,
           moduleRelativePath: formatModulePath(rawRelativePath, writtenAt, modulePathConfig),
           referencedTypes: [referenceType],
-          moduleName: outputFile.modulePath.split('/').pop() ?? ''
+          moduleName,
+          fileBasedModules: moduleName === (modulePathConfig?.moduleFileName ?? '')
         };
       } else {
         referencedTypeModules[outputFile.modulePath].referencedTypes.push(referenceType);
@@ -140,6 +143,22 @@ export function toSnakeCaseHelper(input: unknown): string | unknown {
   return toSnakeCase(inputString);
 }
 
+export function toCamelCase(input: string): string {
+  const pascal = toPascalCase(input);
+  return pascal.charAt(0).toLowerCase() + pascal.slice(1);
+}
+
+export function formatCase(input: string, fontCase: FontCase): string {
+  switch (fontCase) {
+    case 'snake_case':
+      return toSnakeCase(input);
+    case 'PascalCase':
+      return toPascalCase(input);
+    case 'camelCase':
+      return toCamelCase(input);
+  }
+}
+
 export function refineJSONKey(input: unknown): unknown {
   if (typeof input === 'string' && input.includes('-')) {
     return `'${input}'`;
@@ -157,6 +176,20 @@ export function refineVariableName(input: unknown): unknown {
 export function refineIndexKey(input: unknown): unknown {
   if (typeof input === 'string') {
     return `'${input}'`;
+  }
+  return input;
+}
+
+export function escapeReservedWord(input: unknown): unknown {
+  if (typeof input !== 'string') {
+    return input;
+  }
+  const config = Runtime.getConfig().language.reservedKeywords;
+  if (typeof config === 'undefined') {
+    return input;
+  }
+  if (config.words.includes(input)) {
+    return config.prefix + input;
   }
   return input;
 }
@@ -187,6 +220,7 @@ export function registerTemplateHelpers(): void {
   Handlebars.registerHelper('jsonKey', refineJSONKey);
   Handlebars.registerHelper('variableName', refineVariableName);
   Handlebars.registerHelper('indexKey', refineIndexKey);
+  Handlebars.registerHelper('escapeReservedWord', escapeReservedWord);
   Handlebars.registerHelper('stringify', (value: unknown) => JSON.stringify(value));
   Handlebars.registerHelper('not', (value: unknown) => {
     if (typeof value === 'boolean') {

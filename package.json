@@ -15,8 +15,8 @@
   ],
   "scripts": {
     "dev": "tsc --watch",
-    "format:all": "npx prettier --write .",
-    "lint:all": "eslint src",
+    "format": "npx prettier --write .",
+    "lint": "eslint src",
     "clean:output": "rm -rf dist",
     "build": "npm run clean:output && rollup --config rollup.config.js"
   },

@@ -14,7 +14,7 @@ pub struct {{typeName}} {
 {{#unless this.required}}
     #[serde(skip_serializing_if = "Option::is_none")]
 {{/unless}}
-    pub {{toSnakeCase @key}}: {{#unless this.required}}Option<{{/unless}}{{{this.type}}}{{#unless this.required}}>{{/unless}},
+    pub {{escapeReservedWord (toSnakeCase @key)}}: {{#unless this.required}}Option<{{/unless}}{{{this.type}}}{{#unless this.required}}>{{/unless}},
 {{/each}}
 {{#if additionalProperties}}
     #[serde(flatten)]
