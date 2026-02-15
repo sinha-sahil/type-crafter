@@ -26,7 +26,7 @@ import {
 import { generator } from '$generators/generic';
 import { writeOutput } from '$writer';
 import Runtime from '$runtime';
-import { typescript, typescriptWithDecoders } from '$templates';
+import { typescript, typescriptWithDecoders, rust } from '$templates';
 
 const { colorize, BRAND } = colors;
 
@@ -83,6 +83,14 @@ async function runner(
         break;
       case 'typescript-with-decoders':
         generatorConfig = await typescriptWithDecoders.config(
+          inputFilePath,
+          outputDirectory,
+          typesWriterMode,
+          groupedTypesWriterMode
+        );
+        break;
+      case 'rust':
+        generatorConfig = await rust.config(
           inputFilePath,
           outputDirectory,
           typesWriterMode,

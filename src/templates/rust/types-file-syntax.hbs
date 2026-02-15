@@ -1,0 +1,8 @@
+use serde::{Serialize, Deserialize};
+{{#each (getReferencedTypeModules referencedTypes writtenAt)}}
+{{#each this.referencedTypes}}
+use {{{../moduleRelativePath}}}::{{this}}::{{this}};
+{{/each}}
+{{/each}}
+
+{{{typesContent}}}

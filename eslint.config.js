@@ -34,6 +34,7 @@ export default [
           }
         }
       ],
+      curly: ['error', 'all'],
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       // Relax some stricter rules to match existing codebase style
       'prefer-template': 'off',
@@ -45,7 +46,7 @@ export default [
       'no-useless-assignment': 'off',
       'no-await-in-loop': 'off',
       'guard-for-in': 'off',
-      'complexity': 'off',
+      complexity: 'off',
       '@typescript-eslint/no-inferrable-types': 'off',
       'arrow-body-style': 'off',
       'max-lines': 'off',
@@ -61,5 +62,11 @@ export default [
       '@typescript-eslint/no-unnecessary-template-expression': 'off'
     }
   },
-  eslintConfigPrettier
+  eslintConfigPrettier,
+  {
+    files: ['**/*.ts'],
+    rules: {
+      curly: ['error', 'all']
+    }
+  }
 ];

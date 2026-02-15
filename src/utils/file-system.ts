@@ -78,16 +78,31 @@ export async function getExpectedWrittenPath(basePath: string, fileName: string)
   return filePath;
 }
 
+async function safeReadContent(filePath: string): Promise<string> {
+  try {
+    return await fs.readFile(filePath, 'utf-8');
+  } catch (e) {
+    return '';
+  }
+}
+
 export async function writeFile(
   basePath: string,
   fileName: string,
-  content: string
+  content: string,
+  append: boolean = false
 ): Promise<void> {
   const isAbsolutePath = path.isAbsolute(basePath);
   const filePath = isAbsolutePath
     ? path.join(basePath, fileName)
     : path.join(process.cwd(), basePath, fileName);
-  await fs.writeFile(filePath, content);
+
+  if (append) {
+    const existingData = await safeReadContent(filePath);
+    await fs.writeFile(filePath, content + existingData);
+  } else {
+    await fs.writeFile(filePath, content);
+  }
 }
 
 export async function readYaml(filePath: string): Promise<unknown> {

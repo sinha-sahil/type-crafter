@@ -3,7 +3,7 @@ info:
   title: Sample Typing Spec
 groupedTypes:
   ReferencedGroup:
-    $ref: './ref-group.yaml#/ReferencedGroup'
+    $ref: './examples/ref-group.yaml#/ReferencedGroup'
   LivingBeings:
     Human:
       type: object
@@ -91,7 +91,7 @@ groupedTypes:
 
 types:
   RandomRemoteRefType:
-    $ref: './secondary-types.yaml#/RandomObjectType'
+    $ref: './examples/secondary-types.yaml#/RandomObjectType'
 
   HashmapObjectOne:
     type: object
@@ -144,9 +144,9 @@ types:
       name:
         type: string
       randomProperty:
-        $ref: './secondary-types.yaml#/SecondaryType'
+        $ref: './examples/secondary-types.yaml#/SecondaryType'
       randomProperty2:
-        $ref: './secondary-types.yaml#/SecondaryTypeGroupOne/SampleGroupedType'
+        $ref: './examples/secondary-types.yaml#/SecondaryTypeGroupOne/SampleGroupedType'
   Mammal:
     oneOf:
       - $ref: '#/groupedTypes/LivingBeings/Human'

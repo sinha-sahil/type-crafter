@@ -43,6 +43,7 @@ export async function config(
       cleanWrite: true,
       fileExtension: '.ts',
       directory: outputDirectory,
+      typesFileName: 'types',
       writerMode: {
         groupedTypes: groupedTypesWriterMode,
         types: typesWriterMode
@@ -66,6 +67,13 @@ export async function config(
         array: '~ItemType~[]',
         object: 'type',
         unknown: 'unknown'
+      },
+      modulePathConfig: {
+        separator: '/',
+        parentRef: '..',
+        selfRef: '.',
+        moduleFileName: 'index',
+        fileBasedModules: false
       }
     }
   };

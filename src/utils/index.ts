@@ -1,5 +1,6 @@
 import {
   type ReferencedModule,
+  type ModulePathConfig,
   decodeObjectTemplateInputProperties,
   type TypeInfo,
   type TypeDataType
@@ -77,6 +78,7 @@ export function getReferencedTypeModules(_referencedTypes: unknown, _writtenAt: 
   }
 
   const expectedOutputFiles = Runtime.getExpectedOutputFiles();
+  const modulePathConfig = Runtime.getConfig().language.modulePathConfig;
   const referencedTypeModules: Record<string, ReferencedModule> = {};
 
   for (const referenceType of referencedTypes) {
@@ -86,10 +88,12 @@ export function getReferencedTypeModules(_referencedTypes: unknown, _writtenAt: 
       resolveFilePath(outputFile.filePath) !== resolveFilePath(writtenAt)
     ) {
       if (typeof referencedTypeModules[outputFile.modulePath] === 'undefined') {
+        const rawRelativePath = generateRelativePath(writtenAt, outputFile.modulePath);
         referencedTypeModules[outputFile.modulePath] = {
           modulePath: outputFile.modulePath,
-          moduleRelativePath: generateRelativePath(writtenAt, outputFile.modulePath),
-          referencedTypes: [referenceType]
+          moduleRelativePath: formatModulePath(rawRelativePath, writtenAt, modulePathConfig),
+          referencedTypes: [referenceType],
+          moduleName: outputFile.modulePath.split('/').pop() ?? ''
         };
       } else {
         referencedTypeModules[outputFile.modulePath].referencedTypes.push(referenceType);
@@ -117,6 +121,23 @@ export function toPascalCaseHelper(input: unknown): string | unknown {
     return input;
   }
   return toPascalCase(inputString);
+}
+
+export function toSnakeCase(input: string): string {
+  return input
+    .replace(/[-]/g, '_')
+    .replace(/(?<upper>[A-Z]+)(?<next>[A-Z][a-z])/g, '$1_$2')
+    .replace(/(?<lower>[a-z\d])(?<cap>[A-Z])/g, '$1_$2')
+    .toLowerCase()
+    .replace(/__+/g, '_');
+}
+
+export function toSnakeCaseHelper(input: unknown): string | unknown {
+  const inputString = decodeString(input);
+  if (inputString === null) {
+    return input;
+  }
+  return toSnakeCase(inputString);
 }
 
 export function refineJSONKey(input: unknown): unknown {
@@ -151,6 +172,7 @@ export function registerTemplateHelpers(): void {
   Handlebars.registerHelper('getReferencedTypes', getReferencedTypes);
   Handlebars.registerHelper('getReferencedTypeModules', getReferencedTypeModules);
   Handlebars.registerHelper('toPascalCase', toPascalCaseHelper);
+  Handlebars.registerHelper('toSnakeCase', toSnakeCaseHelper);
   Handlebars.registerHelper(
     'isNonEmptyArray',
     (value: unknown) => Array.isArray(value) && value.length === 0
@@ -165,6 +187,7 @@ export function registerTemplateHelpers(): void {
   Handlebars.registerHelper('jsonKey', refineJSONKey);
   Handlebars.registerHelper('variableName', refineVariableName);
   Handlebars.registerHelper('indexKey', refineIndexKey);
+  Handlebars.registerHelper('stringify', (value: unknown) => JSON.stringify(value));
   Handlebars.registerHelper('not', (value: unknown) => {
     if (typeof value === 'boolean') {
       return !value;
@@ -211,6 +234,44 @@ export function generateRelativePath(fromPath: string, toPath: string): string {
   pathPrefix = pathPrefix === '' ? './' : pathPrefix;
 
   return pathPrefix + toPathArray.slice(diffIndex).join('/');
+}
+
+export function formatModulePath(
+  relativePath: string,
+  writtenAt: string,
+  config: ModulePathConfig
+): string {
+  let path = relativePath.replace(/^\.\//, '');
+
+  const isModuleFile =
+    writtenAt.endsWith('/' + config.moduleFileName) ||
+    writtenAt.endsWith('\\' + config.moduleFileName);
+
+  let parentCount = config.fileBasedModules && !isModuleFile ? 1 : 0;
+  while (path.startsWith('../')) {
+    parentCount++;
+    path = path.slice(3);
+  }
+
+  const moduleFileRegex = new RegExp(`\\/?${config.moduleFileName}$`);
+  path = path.replace(moduleFileRegex, '').replace(/\/$/, '');
+
+  const parentPart =
+    parentCount > 0 ? Array(parentCount).fill(config.parentRef).join(config.separator) : '';
+
+  if (path === '' && parentPart === '') {
+    return config.selfRef;
+  }
+  if (path === '') {
+    return parentPart;
+  }
+
+  const formattedPath = path.replace(/\//g, config.separator);
+  if (parentPart === '') {
+    return formattedPath;
+  }
+
+  return parentPart + config.separator + formattedPath;
 }
 
 // #region string utils

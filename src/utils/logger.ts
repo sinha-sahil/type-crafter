@@ -1,19 +1,30 @@
 function hasColorSupport(): boolean {
-  if (process.env.NO_COLOR !== undefined) return false;
-  if (process.env.FORCE_COLOR !== undefined) return true;
-  if (process.env.COLORTERM === 'truecolor' || process.env.COLORTERM === '24bit') return true;
-  if (process.env.CI) return true;
+  if (typeof process.env.NO_COLOR !== 'undefined') {
+    return false;
+  }
+  if (typeof process.env.FORCE_COLOR !== 'undefined') {
+    return true;
+  }
+  if (process.env.COLORTERM === 'truecolor' || process.env.COLORTERM === '24bit') {
+    return true;
+  }
+  if (typeof process.env.CI !== 'undefined') {
+    return true;
+  }
 
   const term = process.env.TERM ?? '';
-  if (term === 'dumb') return false;
+  if (term === 'dumb') {
+    return false;
+  }
   if (
     term.includes('256color') ||
     term.includes('color') ||
     term.includes('xterm') ||
     term.includes('screen') ||
     term.includes('vt100')
-  )
+  ) {
     return true;
+  }
 
   return process.stdout.isTTY ?? false;
 }
@@ -73,7 +84,9 @@ function bgRgb(r: number, g: number, b: number): string {
 }
 
 function colorize(text: string, ...codes: string[]): string {
-  if (!isColorSupported) return text;
+  if (!isColorSupported) {
+    return text;
+  }
   return codes.join('') + text + RESET;
 }
 
@@ -141,13 +154,17 @@ function interpolateColor(start: GradientStop, end: GradientStop, t: number): Gr
 }
 
 function gradientText(text: string, startColor: GradientStop, endColor: GradientStop): string {
-  if (!isColorSupported) return text;
+  if (!isColorSupported) {
+    return text;
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-misused-spread -- character-by-character gradient
   const chars = [...text];
   return chars
     .map((char, i) => {
-      if (char === ' ' || char === '\n') return char;
+      if (char === ' ' || char === '\n') {
+        return char;
+      }
       const t = chars.length > 1 ? i / (chars.length - 1) : 0;
       const color = interpolateColor(startColor, endColor, t);
       return rgb(color.r, color.g, color.b) + char;
@@ -157,7 +174,8 @@ function gradientText(text: string, startColor: GradientStop, endColor: Gradient
 
 const gradients = {
   brand: (text: string) => gradientText(text, { r: 99, g: 102, b: 241 }, { r: 236, g: 72, b: 153 }),
-  sunset: (text: string) => gradientText(text, { r: 251, g: 146, b: 60 }, { r: 236, g: 72, b: 153 }),
+  sunset: (text: string) =>
+    gradientText(text, { r: 251, g: 146, b: 60 }, { r: 236, g: 72, b: 153 }),
   ocean: (text: string) => gradientText(text, { r: 34, g: 211, b: 238 }, { r: 99, g: 102, b: 241 }),
   forest: (text: string) => gradientText(text, { r: 34, g: 197, b: 94 }, { r: 16, g: 185, b: 129 }),
   fire: (text: string) => gradientText(text, { r: 239, g: 68, b: 68 }, { r: 234, g: 179, b: 8 })
@@ -197,7 +215,10 @@ function createBox(
     );
   } else {
     lines.push(
-      colorize(SYMBOLS.topLeft + SYMBOLS.horizontal.repeat(boxWidth) + SYMBOLS.topRight, borderColor)
+      colorize(
+        SYMBOLS.topLeft + SYMBOLS.horizontal.repeat(boxWidth) + SYMBOLS.topRight,
+        borderColor
+      )
     );
   }
 
@@ -215,7 +236,10 @@ function createBox(
   }
 
   lines.push(
-    colorize(SYMBOLS.bottomLeft + SYMBOLS.horizontal.repeat(boxWidth) + SYMBOLS.bottomRight, borderColor)
+    colorize(
+      SYMBOLS.bottomLeft + SYMBOLS.horizontal.repeat(boxWidth) + SYMBOLS.bottomRight,
+      borderColor
+    )
   );
 
   return lines.join('\n');
@@ -248,7 +272,9 @@ export function createSpinner(message: string): Spinner {
 
   return {
     start: () => {
-      if (activeSpinner) clearInterval(activeSpinner);
+      if (activeSpinner) {
+        clearInterval(activeSpinner);
+      }
 
       const render = (): void => {
         clearSpinnerLine();
@@ -309,7 +335,9 @@ export function progressBar(current: number, total: number, width = 30): string 
   const filled = Math.round((current / total) * width);
   const empty = width - filled;
 
-  const filledBar = isColorSupported ? colorize('█'.repeat(filled), BRAND.success) : '█'.repeat(filled);
+  const filledBar = isColorSupported
+    ? colorize('█'.repeat(filled), BRAND.success)
+    : '█'.repeat(filled);
   const emptyBar = isColorSupported ? colorize('░'.repeat(empty), BRAND.muted) : '░'.repeat(empty);
 
   const percentText = isColorSupported
@@ -320,7 +348,9 @@ export function progressBar(current: number, total: number, width = 30): string 
 }
 
 function badge(text: string, bgColor: string, fgColor = FG.white): string {
-  if (!isColorSupported) return `[${text}]`;
+  if (!isColorSupported) {
+    return `[${text}]`;
+  }
   return `${bgColor}${fgColor}${BOLD} ${text} ${RESET}`;
 }
 
@@ -338,7 +368,9 @@ export function logError(header: string, message: string | null = null): void {
 
 export function logWarning(header: string, message: string): void {
   console.log();
-  console.log(badge('WARN', BRAND_BG.warning, FG.black) + ' ' + colorize(header, BRAND.warning, BOLD));
+  console.log(
+    badge('WARN', BRAND_BG.warning, FG.black) + ' ' + colorize(header, BRAND.warning, BOLD)
+  );
   const lines = message.split('\n');
   for (const line of lines) {
     console.log(colorize(`  ${SYMBOLS.vertical} `, BRAND.muted) + line);
@@ -348,7 +380,9 @@ export function logWarning(header: string, message: string): void {
 
 export function logSuccess(header: string, message: string): void {
   console.log();
-  console.log(colorize(SYMBOLS.success, BRAND.success, BOLD) + ' ' + colorize(header, BRAND.success, BOLD));
+  console.log(
+    colorize(SYMBOLS.success, BRAND.success, BOLD) + ' ' + colorize(header, BRAND.success, BOLD)
+  );
   const lines = message.split('\n');
   for (const line of lines) {
     console.log(colorize(`  ${SYMBOLS.vertical} `, BRAND.muted) + line);
@@ -376,7 +410,9 @@ export function logStep(step: number, total: number, message: string): void {
 export function logSection(title: string): void {
   console.log();
   console.log(
-    colorize(SYMBOLS.pointer, BRAND.accent, BOLD) + ' ' + colorize(title, BRAND.primary, BOLD, UNDERLINE)
+    colorize(SYMBOLS.pointer, BRAND.accent, BOLD) +
+      ' ' +
+      colorize(title, BRAND.primary, BOLD, UNDERLINE)
   );
 }
 
