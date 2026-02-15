@@ -13,7 +13,7 @@ import type {
   VariableTemplateInput,
   TemplateInput,
   ResolvedGroupReferenceData,
-  AdditionalPropertiesTemplateInput,
+  AdditionalPropertiesGenerationResult,
   AllOfTemplateInput,
   AllOfTemplateInputComposition
 } from '$types';
@@ -95,22 +95,24 @@ async function generateAdditionalPropertiesType(
   typeName: string,
   typeInfo: TypeInfo,
   parentTypes: string[]
-): Promise<AdditionalPropertiesTemplateInput | null> {
-  let result: AdditionalPropertiesTemplateInput | null = null;
+): Promise<AdditionalPropertiesGenerationResult | null> {
   const stringKeyType = getPrimitiveType(typeName, {
     ...placeholderTypeInfo,
     type: 'string'
   }).templateInput.type;
   if (typeof typeInfo.additionalProperties === 'boolean') {
-    result = {
-      keyType: stringKeyType,
-      valueType: getPrimitiveType(typeName, {
-        ...placeholderTypeInfo,
-        type: 'unknown'
-      }).templateInput.type,
-      valueTypeReferenced: false,
-      valuePrimitiveType: 'unknown',
-      valueComposerType: null
+    return {
+      templateInput: {
+        keyType: stringKeyType,
+        valueType: getPrimitiveType(typeName, {
+          ...placeholderTypeInfo,
+          type: 'unknown'
+        }).templateInput.type,
+        valueTypeReferenced: false,
+        valuePrimitiveType: 'unknown',
+        valueComposerType: null
+      },
+      primitives: new Set<string>()
     };
   } else if (valueIsKeyedAdditionalProperties(typeInfo.additionalProperties)) {
     const valueTypeInfo = typeInfo.additionalProperties.valueType;
@@ -121,18 +123,21 @@ async function generateAdditionalPropertiesType(
     );
     const isReferenced = valueTypeInfo.$ref !== null;
     const isArray = valueTypeInfo.type === 'array';
-    result = {
-      keyType: getPrimitiveType(typeName, {
-        ...placeholderTypeInfo,
-        type: typeInfo.additionalProperties.keyType
-      }).templateInput.type,
-      valueType: generatedValueType.templateInput.type,
-      valueTypeReferenced: isReferenced,
-      valuePrimitiveType: isArray ? 'array' : (valueTypeInfo.type ?? 'object'),
-      valueComposerType:
-        'composerType' in generatedValueType.templateInput
-          ? (generatedValueType.templateInput.composerType ?? null)
-          : null
+    return {
+      templateInput: {
+        keyType: getPrimitiveType(typeName, {
+          ...placeholderTypeInfo,
+          type: typeInfo.additionalProperties.keyType
+        }).templateInput.type,
+        valueType: generatedValueType.templateInput.type,
+        valueTypeReferenced: isReferenced,
+        valuePrimitiveType: isArray ? 'array' : (valueTypeInfo.type ?? 'object'),
+        valueComposerType:
+          'composerType' in generatedValueType.templateInput
+            ? (generatedValueType.templateInput.composerType ?? null)
+            : null
+      },
+      primitives: generatedValueType.primitives
     };
   } else if (valueIsTypeInfo(typeInfo.additionalProperties)) {
     const valueTypeInfo = typeInfo.additionalProperties;
@@ -143,18 +148,21 @@ async function generateAdditionalPropertiesType(
     );
     const isReferenced = valueTypeInfo.$ref !== null;
     const isArray = valueTypeInfo.type === 'array';
-    result = {
-      keyType: stringKeyType,
-      valueType: generatedValueType.templateInput.type,
-      valueTypeReferenced: isReferenced,
-      valuePrimitiveType: isArray ? 'array' : (valueTypeInfo.type ?? 'object'),
-      valueComposerType:
-        'composerType' in generatedValueType.templateInput
-          ? (generatedValueType.templateInput.composerType ?? null)
-          : null
+    return {
+      templateInput: {
+        keyType: stringKeyType,
+        valueType: generatedValueType.templateInput.type,
+        valueTypeReferenced: isReferenced,
+        valuePrimitiveType: isArray ? 'array' : (valueTypeInfo.type ?? 'object'),
+        valueComposerType:
+          'composerType' in generatedValueType.templateInput
+            ? (generatedValueType.templateInput.composerType ?? null)
+            : null
+      },
+      primitives: generatedValueType.primitives
     };
   }
-  return result;
+  return null;
 }
 
 async function generateObjectType(
@@ -271,13 +279,14 @@ async function generateObjectType(
   }
 
   // Generating additional property types
-  const additionalProperties = await generateAdditionalPropertiesType(
+  const additionalPropertiesResult = await generateAdditionalPropertiesType(
     typeName + 'AdditionalProperty',
     typeInfo,
     parentTypes
   );
-  if (additionalProperties !== null) {
-    templateInput.additionalProperties = additionalProperties;
+  if (additionalPropertiesResult !== null) {
+    templateInput.additionalProperties = additionalPropertiesResult.templateInput;
+    primitives.push(...additionalPropertiesResult.primitives);
   }
 
   const result: GeneratedType<ObjectTemplateInput> = {

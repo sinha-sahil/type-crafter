@@ -172,6 +172,11 @@ export type AdditionalPropertiesTemplateInput = {
   valueComposerType: string | null;
 };
 
+export type AdditionalPropertiesGenerationResult = {
+  templateInput: AdditionalPropertiesTemplateInput;
+  primitives: Set<string>;
+};
+
 export type ExporterModuleTemplateInput = {
   modules: string[];
 };
