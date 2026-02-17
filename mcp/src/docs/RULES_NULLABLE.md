@@ -1,48 +1,25 @@
 # Nullable Types Rules
 
-## The Core Rule
+## The Only Mechanism
 
-**Properties NOT in the `required` array become `Type | null` in TypeScript.**
+**The `required` array is the only way to control nullability.** No other mechanism exists in Type Crafter.
 
-This is the ONLY way to control nullability. No other mechanism exists.
+- Properties listed in `required` -> non-nullable
+- Properties NOT listed in `required` -> nullable
+- No `required` array at all -> all properties are nullable
 
----
-
-## What Does NOT Work
-
-```yaml
-# WRONG: nullable property does NOT exist
-name:
-  type: string
-  nullable: true      # INVALID - will be ignored or error
-
-# WRONG: optional property does NOT exist
-name:
-  type: string
-  optional: true      # INVALID - will be ignored or error
-
-# WRONG: ? suffix is NOT supported
-properties:
-  name?:              # INVALID SYNTAX
-    type: string
-
-# WRONG: Array type syntax
-name:
-  type: [string, null]  # INVALID - not supported
-```
+There are no keywords like `nullable`, `optional`, `nillable`, or any other annotation. There is no `?` suffix syntax. There is no `type: [string, null]` syntax. The `required` array is it.
 
 ---
 
-## What DOES Work
+## How It Works
 
 ```yaml
 User:
   type: object
-  required: # This array controls EVERYTHING
-    - id # id is required -> string
-    - email # email is required -> string
-    # name is NOT here -> string | null
-    # age is NOT here -> number | null
+  required:
+    - id
+    - email
   properties:
     id:
       type: string
@@ -54,16 +31,7 @@ User:
       type: number
 ```
 
-**TypeScript:**
-
-```typescript
-export type User = {
-  id: string; // Required
-  email: string; // Required
-  name: string | null; // Nullable (not in required)
-  age: number | null; // Nullable (not in required)
-};
-```
+In this example, `id` and `email` are in `required` so they are non-nullable. `name` and `age` are not in `required` so they are nullable.
 
 ---
 
@@ -80,20 +48,17 @@ User:
     - name
     - age
   properties:
-    id: { type: string }
-    email: { type: string }
-    name: { type: string }
-    age: { type: number }
+    id:
+      type: string
+    email:
+      type: string
+    name:
+      type: string
+    age:
+      type: number
 ```
 
-```typescript
-export type User = {
-  id: string;
-  email: string;
-  name: string;
-  age: number;
-};
-```
+All four properties are non-nullable.
 
 ### Some Properties Required
 
@@ -104,56 +69,46 @@ User:
     - id
     - email
   properties:
-    id: { type: string }
-    email: { type: string }
-    name: { type: string }
-    age: { type: number }
+    id:
+      type: string
+    email:
+      type: string
+    name:
+      type: string
+    age:
+      type: number
 ```
 
-```typescript
-export type User = {
-  id: string;
-  email: string;
-  name: string | null;
-  age: number | null;
-};
-```
+`id` and `email` are non-nullable. `name` and `age` are nullable.
 
 ### No Properties Required (All Nullable)
 
 ```yaml
 User:
   type: object
-  # No required array at all
   properties:
-    id: { type: string }
-    email: { type: string }
-    name: { type: string }
+    id:
+      type: string
+    email:
+      type: string
+    name:
+      type: string
 ```
 
-```typescript
-export type User = {
-  id: string | null;
-  email: string | null;
-  name: string | null;
-};
-```
+All three properties are nullable.
 
 ### Empty Required Array (All Nullable)
 
 ```yaml
 User:
   type: object
-  required: [] # Explicit empty array
+  required: []
   properties:
-    id: { type: string }
+    id:
+      type: string
 ```
 
-```typescript
-export type User = {
-  id: string | null;
-};
-```
+`id` is nullable.
 
 ---
 
@@ -166,31 +121,22 @@ User:
   type: object
   required:
     - id
-    - profile # profile object is required
+    - profile
   properties:
     id:
       type: string
     profile:
       type: object
       required:
-        - name # name inside profile is required
+        - name
       properties:
         name:
           type: string
         bio:
-          type: string # NOT required inside profile
+          type: string
 ```
 
-```typescript
-export type User = {
-  id: string;
-  profile: {
-    // profile is required (non-null)
-    name: string; // name is required inside profile
-    bio: string | null; // bio is nullable inside profile
-  };
-};
-```
+`profile` is non-nullable (it's in User's `required`). Inside profile, `name` is non-nullable (it's in profile's `required`), but `bio` is nullable (not in profile's `required`).
 
 ---
 
@@ -203,7 +149,7 @@ Post:
   type: object
   required:
     - id
-    - tags # tags array is required
+    - tags
   properties:
     id:
       type: string
@@ -211,30 +157,20 @@ Post:
       type: array
       items:
         type: string
-    comments: # NOT in required
+    comments:
       type: array
       items:
         type: object
         required:
           - text
         properties:
-          text: { type: string }
-          author: { type: string }
+          text:
+            type: string
+          author:
+            type: string
 ```
 
-```typescript
-export type Post = {
-  id: string;
-  tags: string[]; // Required array
-  comments:
-    | {
-        // Nullable array
-        text: string;
-        author: string | null;
-      }[]
-    | null;
-};
-```
+`tags` is non-nullable (in `required`). `comments` is nullable (not in `required`). Inside each comment item, `text` is non-nullable but `author` is nullable.
 
 ---
 
@@ -246,48 +182,40 @@ Referenced types maintain their own nullability. The reference's position in `re
 types:
   Profile:
     type: object
-    required: [bio]
+    required:
+      - bio
     properties:
-      bio: { type: string }
-      avatar: { type: string } # nullable inside Profile
+      bio:
+        type: string
+      avatar:
+        type: string
 
   User:
     type: object
     required:
       - id
-      - mainProfile # This reference is required
+      - mainProfile
     properties:
       id:
         type: string
       mainProfile:
         $ref: '#/types/Profile'
-      backupProfile: # NOT in required
+      backupProfile:
         $ref: '#/types/Profile'
 ```
 
-```typescript
-export type Profile = {
-  bio: string;
-  avatar: string | null;
-};
-
-export type User = {
-  id: string;
-  mainProfile: Profile; // Required reference
-  backupProfile: Profile | null; // Nullable reference
-};
-```
+`mainProfile` is non-nullable (in `required`). `backupProfile` is nullable (not in `required`). Inside Profile, `bio` is non-nullable and `avatar` is nullable regardless of where Profile is referenced.
 
 ---
 
 ## Quick Reference
 
-| Scenario                     | Result                                                |
-| ---------------------------- | ----------------------------------------------------- |
-| Property in `required` array | `Type`                                                |
-| Property NOT in `required`   | `Type \| null`                                        |
-| No `required` array          | All properties `Type \| null`                         |
-| `required: []` (empty)       | All properties `Type \| null`                         |
-| Nested object                | Uses its own `required` array                         |
-| Array items                  | Follow their own `required` rules                     |
-| References                   | Reference position in `required` controls nullability |
+| Scenario | Result |
+| --- | --- |
+| Property in `required` array | Non-nullable |
+| Property NOT in `required` | Nullable |
+| No `required` array | All properties nullable |
+| `required: []` (empty) | All properties nullable |
+| Nested object | Uses its own `required` array |
+| Array items | Follow their own `required` rules |
+| References | Reference position in `required` controls nullability |

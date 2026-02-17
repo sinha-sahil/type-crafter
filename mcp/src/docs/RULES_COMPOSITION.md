@@ -1,8 +1,34 @@
 # Composition Rules
 
-## oneOf - Union Types
+**Only two composition keywords exist: `oneOf` and `allOf`. No other composition mechanism exists (`anyOf`, `not`, `extends`, `implements`, `inherits`, `mixin`, `merge`, `discriminator` are all invalid).**
 
-Creates TypeScript union: `TypeA | TypeB | TypeC`
+---
+
+## Valid Composition Keywords (Complete List)
+
+| Keyword | Use Case |
+| --- | --- |
+| `oneOf` | Value is one of several types (union) |
+| `allOf` | Combine/merge multiple types (intersection) |
+
+**No other composition keywords exist.**
+
+---
+
+## What Can Appear Inside `oneOf` / `allOf` Arrays
+
+Each array item must be one of:
+
+- `$ref` to another type
+- `type: object` with `properties`
+- `type: string/number/boolean/unknown` (primitives)
+- `type: string` with `enum`
+- `type: array` with `items`
+- Nested `oneOf` or `allOf`
+
+---
+
+## oneOf - Union Types
 
 Use when a value can be ONE of several types.
 
@@ -15,8 +41,6 @@ Response:
     - $ref: '#/types/ErrorResponse'
 ```
 
-**TypeScript:** `export type Response = SuccessResponse | ErrorResponse;`
-
 ### Union with Primitives
 
 ```yaml
@@ -27,27 +51,23 @@ Value:
     - type: boolean
 ```
 
-**TypeScript:** `export type Value = string | number | boolean;`
-
 ### Union with Inline Objects
 
 ```yaml
 Result:
   oneOf:
     - type: object
-      required: [data]
+      required:
+        - data
       properties:
-        data: { type: string }
+        data:
+          type: string
     - type: object
-      required: [error]
+      required:
+        - error
       properties:
-        error: { type: string }
-```
-
-**TypeScript:**
-
-```typescript
-export type Result = { data: string } | { error: string };
+        error:
+          type: string
 ```
 
 ### Union with Arrays
@@ -61,20 +81,20 @@ Items:
         type: string
 ```
 
-**TypeScript:** `export type Items = string | string[];`
-
 ### Union with Enums
 
 ```yaml
 Status:
   oneOf:
     - type: string
-      enum: [pending, loading]
+      enum:
+        - pending
+        - loading
     - type: string
-      enum: [success, error]
+      enum:
+        - success
+        - error
 ```
-
-**TypeScript:** `export type Status = 'pending' | 'loading' | 'success' | 'error';`
 
 ### Complex Union Example
 
@@ -86,10 +106,13 @@ ApiResponse:
     - type: string
     - type: number
     - type: string
-      enum: [pending, loading]
+      enum:
+        - pending
+        - loading
     - type: object
       properties:
-        status: { type: string }
+        status:
+          type: string
     - type: array
       items:
         type: string
@@ -98,25 +121,9 @@ ApiResponse:
         $ref: '#/types/User'
 ```
 
-**TypeScript:**
-
-```typescript
-export type ApiResponse =
-  | User
-  | Error
-  | string
-  | number
-  | ('pending' | 'loading')
-  | { status: string | null }
-  | string[]
-  | User[];
-```
-
 ---
 
 ## allOf - Intersection/Merge Types
-
-Creates TypeScript intersection: `TypeA & TypeB & TypeC`
 
 Use to combine multiple types into one (all properties merged).
 
@@ -129,39 +136,29 @@ AdminUser:
     - $ref: '#/types/AdminPermissions'
 ```
 
-**TypeScript:** `export type AdminUser = BaseUser & AdminPermissions;`
-
 ### Intersection with Inline Extension
 
 ```yaml
 types:
   BaseUser:
     type: object
-    required: [id]
+    required:
+      - id
     properties:
-      id: { type: string }
+      id:
+        type: string
 
   ExtendedUser:
     allOf:
       - $ref: '#/types/BaseUser'
       - type: object
-        required: [email]
+        required:
+          - email
         properties:
-          email: { type: string }
-          name: { type: string }
-```
-
-**TypeScript:**
-
-```typescript
-export type BaseUser = {
-  id: string;
-};
-
-export type ExtendedUser = BaseUser & {
-  email: string;
-  name: string | null;
-};
+          email:
+            type: string
+          name:
+            type: string
 ```
 
 ### Multiple Inheritance Pattern
@@ -170,45 +167,37 @@ export type ExtendedUser = BaseUser & {
 types:
   Timestamped:
     type: object
-    required: [createdAt, updatedAt]
+    required:
+      - createdAt
+      - updatedAt
     properties:
-      createdAt: { type: string, format: date }
-      updatedAt: { type: string, format: date }
+      createdAt:
+        type: string
+        format: date
+      updatedAt:
+        type: string
+        format: date
 
   Identifiable:
     type: object
-    required: [id]
+    required:
+      - id
     properties:
-      id: { type: string }
+      id:
+        type: string
 
   User:
     allOf:
       - $ref: '#/types/Timestamped'
       - $ref: '#/types/Identifiable'
       - type: object
-        required: [email]
+        required:
+          - email
         properties:
-          email: { type: string }
-          name: { type: string }
-```
-
-**TypeScript:**
-
-```typescript
-export type User = Timestamped &
-  Identifiable & {
-    email: string;
-    name: string | null;
-  };
-
-// Effectively:
-// {
-//   createdAt: Date;
-//   updatedAt: Date;
-//   id: string;
-//   email: string;
-//   name: string | null;
-// }
+          email:
+            type: string
+          name:
+            type: string
 ```
 
 ---
@@ -226,12 +215,14 @@ Response:
         - $ref: '#/types/BaseResponse'
         - type: object
           properties:
-            data: { $ref: '#/types/User' }
+            data:
+              $ref: '#/types/User'
     - allOf:
         - $ref: '#/types/BaseResponse'
         - type: object
           properties:
-            error: { type: string }
+            error:
+              type: string
 ```
 
 ### Intersection with Union Property
@@ -245,7 +236,9 @@ Entity:
         status:
           oneOf:
             - type: string
-              enum: [active, inactive]
+              enum:
+                - active
+                - inactive
             - type: number
 ```
 
@@ -259,32 +252,34 @@ Entity:
 types:
   SuccessResult:
     type: object
-    required: [type, data]
+    required:
+      - type
+      - data
     properties:
       type:
         type: string
-        enum: [success]
-      data: { type: unknown }
+        enum:
+          - success
+      data:
+        type: unknown
 
   ErrorResult:
     type: object
-    required: [type, message]
+    required:
+      - type
+      - message
     properties:
       type:
         type: string
-        enum: [error]
-      message: { type: string }
+        enum:
+          - error
+      message:
+        type: string
 
   Result:
     oneOf:
       - $ref: '#/types/SuccessResult'
       - $ref: '#/types/ErrorResult'
-```
-
-**TypeScript:**
-
-```typescript
-export type Result = { type: 'success'; data: unknown } | { type: 'error'; message: string };
 ```
 
 ### Mixin Pattern
@@ -293,51 +288,34 @@ export type Result = { type: 'success'; data: unknown } | { type: 'error'; messa
 types:
   WithTimestamps:
     type: object
-    required: [createdAt]
+    required:
+      - createdAt
     properties:
-      createdAt: { type: string, format: date }
-      updatedAt: { type: string, format: date }
+      createdAt:
+        type: string
+        format: date
+      updatedAt:
+        type: string
+        format: date
 
   WithSoftDelete:
     type: object
     properties:
-      deletedAt: { type: string, format: date }
+      deletedAt:
+        type: string
+        format: date
 
   User:
     allOf:
       - $ref: '#/types/WithTimestamps'
       - $ref: '#/types/WithSoftDelete'
       - type: object
-        required: [id, email]
+        required:
+          - id
+          - email
         properties:
-          id: { type: string }
-          email: { type: string }
+          id:
+            type: string
+          email:
+            type: string
 ```
-
-### Nullable Union
-
-```yaml
-MaybeUser:
-  oneOf:
-    - $ref: '#/types/User'
-    - type: object
-      properties: {} # Empty object as "null" representation
-```
-
----
-
-## Rules Summary
-
-| Operator | TypeScript    | Use Case                      |
-| -------- | ------------- | ----------------------------- |
-| `oneOf`  | `A \| B \| C` | Value is one of several types |
-| `allOf`  | `A & B & C`   | Combine/merge multiple types  |
-
-### What Can Be in oneOf/allOf
-
-- `$ref` to other types
-- `type: object` with properties
-- `type: string/number/boolean` primitives
-- `type: string` with `enum`
-- `type: array` with items
-- Nested `oneOf` or `allOf`
