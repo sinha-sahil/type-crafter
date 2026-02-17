@@ -9,6 +9,11 @@ import { dirname } from 'path';
 import { parse as parseYaml } from 'yaml';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const packageJson = require('../package.json');
+const MCP_VERSION: string = packageJson.version;
 
 // ES module dirname workaround
 const __filename = fileURLToPath(import.meta.url);
@@ -296,7 +301,7 @@ function checkSpecContent(specContent: string, resolvedSpecPath: string): CheckR
 const server = new McpServer(
   {
     name: 'type-crafter-mcp',
-    version: '0.2.0',
+    version: MCP_VERSION,
   },
   {
     capabilities: {
@@ -699,11 +704,30 @@ server.registerTool(
   }
 );
 
+// Tool 6: get-version
+server.registerTool(
+  'get-version',
+  {
+    description: 'Returns the current version of the Type Crafter MCP server.',
+    inputSchema: z.object({}),
+  },
+  async () => {
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: `Type Crafter MCP v${MCP_VERSION}`,
+        },
+      ],
+    };
+  }
+);
+
 // Start the server
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('Type Crafter MCP Server v0.2.0 running on stdio');
+  console.error(`Type Crafter MCP Server v${MCP_VERSION} running on stdio`);
 }
 
 main().catch((error) => {
