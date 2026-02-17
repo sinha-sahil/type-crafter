@@ -1,6 +1,120 @@
 # Type Crafter YAML Specification Guide
 
-Type Crafter generates TypeScript types from YAML specifications. This guide teaches you how to write valid specs.
+Type Crafter generates typed code from YAML specifications. This guide is the definitive reference for what is valid. **If something is not listed here, it is not supported and will be rejected.**
+
+---
+
+## Complete Valid Keyword Reference
+
+### Root-Level Keys (ONLY these three exist)
+
+| Key | Required | Description |
+| --- | --- | --- |
+| `info` | Yes (for top files) | Version and title metadata |
+| `types` | At least one of `types` or `groupedTypes` | Flat/top-level type definitions |
+| `groupedTypes` | At least one of `types` or `groupedTypes` | Namespaced type definitions |
+
+**No other root-level keys exist.** Do not add `schemas`, `definitions`, `components`, or anything else at the root.
+
+### The `info` Object (ONLY these two keys)
+
+| Key | Type | Required | Description |
+| --- | --- | --- | --- |
+| `version` | string | Yes | Semver format, e.g. `'1.0.0'` |
+| `title` | string | Yes | Descriptive title |
+
+**No other info keys exist.** Do not add `description`, `contact`, `license`, or anything else.
+
+### Valid Type Values (ONLY these)
+
+| `type` value | Notes |
+| --- | --- |
+| `string` | Basic string |
+| `number` | Numeric value |
+| `integer` | Numeric value (same as number) |
+| `boolean` | True/false |
+| `unknown` | Dynamic/untyped value |
+| `object` | Must have `properties` and/or `additionalProperties` |
+| `array` | Must have `items`. **Cannot be a top-level type.** |
+
+**No other type values exist.** Do not use `date`, `datetime`, `float`, `int`, `any`, `null`, `void`, `map`, `list`, `dict`, or anything else.
+
+### Valid Format Values (ONLY one exists)
+
+| `format` value | Applies to | Description |
+| --- | --- | --- |
+| `date` | `type: string` only | Represents a date value |
+
+**No other format values exist.** Do not use `date-time`, `datetime`, `time`, `email`, `uri`, `url`, `uuid`, `iso8601`, or anything else.
+
+### Valid Keywords Per Type Kind
+
+#### On a primitive (`type: string | number | integer | boolean | unknown`)
+
+| Keyword | Required | Description |
+| --- | --- | --- |
+| `type` | Yes | One of: `string`, `number`, `integer`, `boolean`, `unknown` |
+| `enum` | No | Array of allowed values. Creates a union of literals. |
+| `format` | No | Only `date`, only on `type: string` |
+| `description` | No | Documentation comment |
+| `example` | No | Documentation example |
+
+#### On an object (`type: object`)
+
+| Keyword | Required | Description |
+| --- | --- | --- |
+| `type` | Yes | Must be `object` |
+| `properties` | Yes (unless `additionalProperties` only) | Map of property names to type definitions |
+| `required` | No | Array of property names that are non-nullable |
+| `additionalProperties` | No | `true` or object with `keyType` and `valueType` for hashmaps |
+| `description` | No | Documentation comment |
+| `example` | No | Documentation example |
+
+#### On an array (`type: array`)
+
+| Keyword | Required | Description |
+| --- | --- | --- |
+| `type` | Yes | Must be `array` |
+| `items` | Yes | Type definition for array elements |
+| `description` | No | Documentation comment |
+
+#### On a reference
+
+| Keyword | Required | Description |
+| --- | --- | --- |
+| `$ref` | Yes | Path to referenced type |
+
+#### On a composition
+
+| Keyword | Required | Description |
+| --- | --- | --- |
+| `oneOf` | Yes (for unions) | Array of type definitions. Union of types. |
+| `allOf` | Yes (for intersections) | Array of type definitions. Intersection of types. |
+
+**No other keywords exist anywhere.** Do not use `nullable`, `optional`, `extensible`, `default`, `minimum`, `maximum`, `minLength`, `maxLength`, `pattern`, `title` (on properties), `readOnly`, `writeOnly`, `deprecated`, `discriminator`, `allowed_values`, `values`, `options`, `choices`, or anything from OpenAPI/JSON Schema that is not listed above.
+
+---
+
+## Nullability: The Only Mechanism
+
+Properties **not** listed in the `required` array become nullable. This is the **only** way to make a property nullable. There is no other mechanism.
+
+```yaml
+User:
+  type: object
+  required:
+    - id
+    - email
+  properties:
+    id:
+      type: string
+    email:
+      type: string
+    name:
+      type: string
+```
+
+In this example, `id` and `email` are non-nullable. `name` is not in `required`, so it is nullable.
 
 ---
 
@@ -23,125 +137,29 @@ types:
       email:
         type: string
       name:
-        type: string # Not in required = nullable (string | null)
-```
-
-**Generated TypeScript:**
-
-```typescript
-export type User = {
-  id: string;
-  email: string;
-  name: string | null;
-};
-```
-
----
-
-## Common Mistakes - DO NOT DO THESE
-
-### 1. Using `nullable: true` - DOES NOT EXIST
-
-```yaml
-# WRONG
-name:
-  type: string
-  nullable: true # THIS PROPERTY DOES NOT EXIST
-
-# CORRECT - Omit from required array
-required:
-  - id # id is required
-  # name is NOT here, so it becomes nullable
-properties:
-  id: { type: string }
-  name: { type: string } # Generates: string | null
-```
-
-### 2. Using `optional: true` - DOES NOT EXIST
-
-```yaml
-# WRONG
-name:
-  type: string
-  optional: true # THIS PROPERTY DOES NOT EXIST
-
-# CORRECT - Use required array
-required: [id] # Only id is required
-properties:
-  id: { type: string }
-  name: { type: string } # Not in required = nullable
-```
-
-### 3. Using `?` suffix - NOT SUPPORTED
-
-```yaml
-# WRONG
-properties:
-  name?:  # INVALID SYNTAX
-    type: string
-
-# CORRECT
-required: [id]
-properties:
-  name: { type: string }
-```
-
-### 4. Top-level array types - NOT ALLOWED
-
-```yaml
-# WRONG - Arrays cannot be top-level types
-Tags:
-  type: array
-  items:
-    type: string
-
-# CORRECT - Arrays must be properties within objects
-Post:
-  type: object
-  properties:
-    tags:
-      type: array
-      items:
         type: string
-```
-
-### 5. Using `../` in paths - WRONG
-
-```yaml
-# WRONG - Relative paths from current file
-$ref: '../common/types.yaml#/User'
-
-# CORRECT - Paths from project root (where CLI runs)
-$ref: './src/common/types.yaml#/User'
-```
-
-### 6. Using `#/` references in non-top files
-
-```yaml
-# In a file WITHOUT info section (non-top file)
-# WRONG
-$ref: '#/Cart/CartItem'
-
-# CORRECT - Must use full path
-$ref: './docs/cart.yaml#/Cart/CartItem'
 ```
 
 ---
 
 ## Quick Reference
 
-| Concept           | YAML                         | TypeScript           |
-| ----------------- | ---------------------------- | -------------------- |
-| Required property | In `required` array          | `prop: Type`         |
-| Nullable property | NOT in `required`            | `prop: Type \| null` |
-| String            | `type: string`               | `string`             |
-| Number            | `type: number`               | `number`             |
-| Boolean           | `type: boolean`              | `boolean`            |
-| Date              | `type: string, format: date` | `Date`               |
-| Array             | `type: array, items: {...}`  | `Type[]`             |
-| Enum              | `type: string, enum: [...]`  | `'a' \| 'b'`         |
-| Union             | `oneOf: [...]`               | `A \| B`             |
-| Intersection      | `allOf: [...]`               | `A & B`              |
+| Concept | YAML |
+| --- | --- |
+| Required property | Listed in `required` array |
+| Nullable property | NOT listed in `required` array |
+| String | `type: string` |
+| Number | `type: number` |
+| Boolean | `type: boolean` |
+| Date | `type: string` with `format: date` |
+| Unknown | `type: unknown` |
+| String enum | `type: string` with `enum` list |
+| Number enum | `type: number` with `enum` list |
+| Array | `type: array` with `items` |
+| Union | `oneOf` with array of types |
+| Intersection | `allOf` with array of types |
+| Reference | `$ref` with path |
+| Hashmap | `additionalProperties: true` or with `keyType`/`valueType` |
 
 ---
 
@@ -149,21 +167,21 @@ $ref: './docs/cart.yaml#/Cart/CartItem'
 
 Call `get-rules-section` with these topics for deep dives:
 
-| Section       | What You'll Learn                                   |
-| ------------- | --------------------------------------------------- |
-| `structure`   | Root structure, info section, types vs groupedTypes |
-| `types`       | Objects, enums, primitives, arrays, nested objects  |
-| `nullable`    | How `required` array controls nullability           |
-| `references`  | $ref syntax, top-file vs non-top-file rules         |
-| `composition` | oneOf (unions), allOf (intersections)               |
-| `patterns`    | Common patterns with full examples                  |
+| Section | What You'll Learn |
+| --- | --- |
+| `structure` | Root structure, info section, types vs groupedTypes |
+| `types` | Objects, enums, primitives, arrays, nested objects |
+| `nullable` | How `required` array controls nullability |
+| `references` | $ref syntax, top-file vs non-top-file rules |
+| `composition` | oneOf (unions), allOf (intersections) |
+| `patterns` | Common patterns with full examples |
 
 ---
 
 ## Workflow
 
 1. Read this guide (you just did)
-2. Write your YAML spec
+2. Write your YAML spec using ONLY the keywords listed above
 3. Call `validate-spec` to check for errors
 4. Fix any issues
 5. Run `type-crafter generate` CLI in your project
@@ -172,8 +190,11 @@ Call `get-rules-section` with these topics for deep dives:
 
 ## Key Rules Summary
 
-1. **Nullability = `required` array** - Nothing else controls this
-2. **Arrays = properties only** - Never top-level types
-3. **Paths = from project root** - Where you run the CLI
-4. **Top file = has `info` section** - Can use `#/` references
-5. **Non-top file = no `info`** - Must use full file paths for ALL references
+1. **Only use keywords listed in this guide** - Anything else is invalid and will be rejected
+2. **Nullability = `required` array** - The only mechanism that controls this
+3. **Only valid format is `date`** - No other format values exist
+4. **Only valid types are `string`, `number`, `integer`, `boolean`, `unknown`, `object`, `array`**
+5. **Arrays = properties only** - Never top-level types
+6. **Paths = from project root** - Where you run the CLI
+7. **Top file = has `info` section** - Can use `#/` references
+8. **Non-top file = no `info`** - Must use full file paths for ALL references

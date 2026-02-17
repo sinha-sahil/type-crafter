@@ -1,65 +1,88 @@
 # Types Rules
 
+**Only the keywords documented here are valid. Anything not listed will be rejected.**
+
+---
+
+## Valid Type Values (Complete List)
+
+These are the **only** values the `type` field accepts:
+
+| `type` value | Notes |
+| --- | --- |
+| `string` | Accepts optional `format: date` and/or `enum` |
+| `number` | Accepts optional `enum` |
+| `integer` | Same as number. Accepts optional `enum` |
+| `boolean` | |
+| `unknown` | Dynamic/untyped value |
+| `object` | Requires `properties` and/or `additionalProperties` |
+| `array` | Requires `items`. Cannot be a top-level type |
+
+**No other type values exist.** `date`, `datetime`, `float`, `int`, `any`, `null`, `void`, `map`, `list` are all invalid.
+
+---
+
+## Valid Format Values (Complete List)
+
+There is exactly **one** valid format:
+
+| `format` value | Applies to |
+| --- | --- |
+| `date` | `type: string` only |
+
+**No other format values exist.** `date-time`, `datetime`, `time`, `email`, `uri`, `uuid`, `iso8601`, `url` are all invalid.
+
+---
+
 ## Primitive Types
 
-| YAML Type                 | TypeScript | Notes               |
-| ------------------------- | ---------- | ------------------- |
-| `string`                  | `string`   | Basic string        |
-| `string` + `format: date` | `Date`     | Date object         |
-| `number`                  | `number`   | Floating point      |
-| `integer`                 | `number`   | Also becomes number |
-| `boolean`                 | `boolean`  | True/false          |
-| `unknown`                 | `unknown`  | Dynamic/any type    |
+Valid keywords on a primitive: `type`, `enum`, `format`, `description`, `example`. Nothing else.
 
 ```yaml
 properties:
-  name: { type: string }
-  age: { type: number }
-  isActive: { type: boolean }
-  birthDate: { type: string, format: date }
-  metadata: { type: unknown }
+  name:
+    type: string
+  age:
+    type: number
+  isActive:
+    type: boolean
+  birthDate:
+    type: string
+    format: date
+  metadata:
+    type: unknown
 ```
 
 ---
 
 ## Object Types
 
+Valid keywords on an object: `type`, `properties`, `required`, `additionalProperties`, `description`, `example`. Nothing else.
+
 ```yaml
 User:
   type: object
-  description: 'User account' # Optional - becomes JSDoc
-  example: "{ id: '123' }" # Optional - becomes JSDoc
+  description: 'User account'
   required:
     - id
     - email
   properties:
     id:
       type: string
-      description: 'Unique ID' # Optional
-      example: 'user-123' # Optional
+      description: 'Unique ID'
     email:
       type: string
     name:
-      type: string # Not in required = nullable
+      type: string
 ```
 
-**TypeScript:**
-
-```typescript
-/**
- * @description User account
- */
-export type User = {
-  /** @description Unique ID */
-  id: string;
-  email: string;
-  name: string | null;
-};
-```
+In this example, `name` is not in `required`, so it is nullable.
 
 ---
 
 ## Enum Types
+
+Enums use the `enum` keyword with either `type: string` or `type: number`. No other enum mechanism exists (`allowed_values`, `values`, `options`, `choices` are all invalid).
 
 ### String Enum (Top-Level)
 
@@ -72,8 +95,6 @@ Status:
     - pending
 ```
 
-**TypeScript:** `export type Status = 'active' | 'inactive' | 'pending';`
-
 ### Number Enum (Top-Level)
 
 ```yaml
@@ -84,8 +105,6 @@ Priority:
     - 2
     - 3
 ```
-
-**TypeScript:** `export type Priority = 1 | 2 | 3;`
 
 ### Inline Enum (Property)
 
@@ -101,28 +120,22 @@ User:
         - guest
 ```
 
-**TypeScript:**
-
-```typescript
-export type User = {
-  role: ('admin' | 'user' | 'guest') | null;
-};
-```
-
 ---
 
 ## Array Types
 
-### CRITICAL: Arrays Cannot Be Top-Level Types
+Valid keywords on an array: `type`, `items`, `description`. Nothing else.
+
+### Arrays Cannot Be Top-Level Types
 
 ```yaml
-# WRONG - This will NOT work
+# WRONG - will not work
 Tags:
   type: array
   items:
     type: string
 
-# CORRECT - Arrays must be properties
+# CORRECT - arrays must be properties
 Post:
   type: object
   properties:
@@ -142,8 +155,6 @@ properties:
       type: string
 ```
 
-**TypeScript:** `tags: string[] | null`
-
 ### Array of Objects
 
 ```yaml
@@ -152,13 +163,14 @@ properties:
     type: array
     items:
       type: object
-      required: [text]
+      required:
+        - text
       properties:
-        text: { type: string }
-        author: { type: string }
+        text:
+          type: string
+        author:
+          type: string
 ```
-
-**TypeScript:** `comments: { text: string; author: string | null }[] | null`
 
 ### Array of References
 
@@ -170,11 +182,11 @@ properties:
       $ref: '#/types/Post'
 ```
 
-**TypeScript:** `posts: Post[] | null`
-
 ---
 
 ## Nested Objects
+
+Each nested object follows the same keyword rules as top-level objects.
 
 ```yaml
 Company:
@@ -198,22 +210,11 @@ Company:
           type: string
 ```
 
-**TypeScript:**
-
-```typescript
-export type Company = {
-  id: string;
-  address: {
-    street: string;
-    city: string | null;
-    zip: string | null;
-  };
-};
-```
-
 ---
 
 ## Additional Properties (Hashmaps/Dictionaries)
+
+`additionalProperties` accepts either `true` or an object with `keyType` and `valueType`. No other forms.
 
 ### Simple Hashmap (any values)
 
@@ -222,8 +223,6 @@ Metadata:
   type: object
   additionalProperties: true
 ```
-
-**TypeScript:** `{ [keys: string]: unknown }`
 
 ### Typed Hashmap
 
@@ -236,8 +235,6 @@ StringMap:
       type: string
 ```
 
-**TypeScript:** `{ [keys: string]: string }`
-
 ### Number Keys
 
 ```yaml
@@ -248,8 +245,6 @@ IdMap:
     valueType:
       $ref: '#/types/User'
 ```
-
-**TypeScript:** `{ [keys: number]: User }`
 
 ### Mixed: Properties + Additional
 
@@ -267,25 +262,27 @@ UserWithMeta:
       type: string
 ```
 
-**TypeScript:**
-
-```typescript
-export type UserWithMeta = {
-  id: string;
-  [keys: string]: string;
-};
-```
-
 ---
+
+## Valid Keywords Summary
+
+| Type Kind | Valid Keywords (and ONLY these) |
+| --- | --- |
+| Primitive | `type`, `enum`, `format`, `description`, `example` |
+| Object | `type`, `properties`, `required`, `additionalProperties`, `description`, `example` |
+| Array | `type`, `items`, `description` |
+| Reference | `$ref` |
+| Union | `oneOf` |
+| Intersection | `allOf` |
 
 ## Type Definition Summary
 
-| Type         | Structure                      | Top-Level? |
-| ------------ | ------------------------------ | ---------- |
-| Object       | `type: object` + `properties`  | Yes        |
-| Enum         | `type: string/number` + `enum` | Yes        |
-| Primitive    | `type: string/number/boolean`  | Yes        |
-| Array        | `type: array` + `items`        | **NO**     |
-| Union        | `oneOf: [...]`                 | Yes        |
-| Intersection | `allOf: [...]`                 | Yes        |
-| Reference    | `$ref: '...'`                  | Yes        |
+| Type | Structure | Top-Level? |
+| --- | --- | --- |
+| Object | `type: object` + `properties` | Yes |
+| Enum | `type: string` or `type: number` + `enum` | Yes |
+| Primitive | `type: string` / `number` / `boolean` / `unknown` | Yes |
+| Array | `type: array` + `items` | **NO** |
+| Union | `oneOf` with array | Yes |
+| Intersection | `allOf` with array | Yes |
+| Reference | `$ref` with path | Yes |

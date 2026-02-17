@@ -1,35 +1,43 @@
 # Structure Rules
 
-## Root Structure
+**Only the structure documented here is valid. Any keys or sections not listed will be rejected.**
 
-Every Type Crafter spec file has this structure:
+---
 
-```yaml
-info:
-  version: '1.0.0' # Required - semver format
-  title: 'My Types' # Required - descriptive title
+## Valid Root-Level Keys (Complete List)
 
-types: # Optional - flat/top-level types
-  TypeName: { ... }
+A spec file has exactly **three** possible root-level keys:
 
-groupedTypes: # Optional - organized into namespaces
-  GroupName:
-    TypeName: { ... }
-```
+| Key | Type | Required | Description |
+| --- | --- | --- | --- |
+| `info` | object | Yes (for top files) | Metadata with version and title |
+| `types` | object | At least one required | Flat/top-level type definitions |
+| `groupedTypes` | object | At least one required | Namespaced type definitions |
+
+**No other root-level keys exist.** Do not add `schemas`, `definitions`, `components`, `models`, `imports`, `config`, or anything else.
 
 **Rule:** At least ONE of `types` or `groupedTypes` is required.
 
 ---
 
-## The `info` Section
+## The `info` Object (Complete List)
+
+The `info` object accepts exactly **two** keys:
+
+| Key | Type | Required |
+| --- | --- | --- |
+| `version` | string (semver) | Yes |
+| `title` | string | Yes |
+
+**No other info keys exist.** Do not add `description`, `contact`, `license`, `baseUrl`, `servers`, or anything else.
 
 ```yaml
 info:
-  version: '1.0.0' # String, semver format
-  title: 'API Types' # String, describes the spec
+  version: '1.0.0'
+  title: 'API Types'
 ```
 
-Both fields are **required**. Without them, the file is a "non-top file" with different reference rules.
+Without a valid `info` section, the file is a "non-top file" with different reference rules.
 
 ---
 
@@ -38,7 +46,6 @@ Both fields are **required**. Without them, the file is a "non-top file" with di
 ### Top File (has `info` section)
 
 ```yaml
-# top-file.yaml
 info:
   version: '1.0.0'
   title: 'Main Types'
@@ -48,11 +55,12 @@ types:
     type: object
     properties:
       profile:
-        $ref: '#/types/Profile' # Can use #/ for same-file refs
+        $ref: '#/types/Profile'
   Profile:
     type: object
     properties:
-      bio: { type: string }
+      bio:
+        type: string
 ```
 
 **Rules for top files:**
@@ -64,18 +72,17 @@ types:
 ### Non-Top File (no `info` section)
 
 ```yaml
-# shared/cart.yaml - NO info section
 Cart:
   CartItem:
     type: object
     properties:
       product:
-        # MUST use full path, even for same-file refs
         $ref: './shared/cart.yaml#/Cart/Product'
   Product:
     type: object
     properties:
-      name: { type: string }
+      name:
+        type: string
 ```
 
 **Rules for non-top files:**
@@ -94,26 +101,22 @@ For standalone, top-level types:
 types:
   User:
     type: object
-    required: [id]
+    required:
+      - id
     properties:
-      id: { type: string }
+      id:
+        type: string
 
   Status:
     type: string
-    enum: [active, inactive]
+    enum:
+      - active
+      - inactive
 
   ApiResponse:
     oneOf:
       - $ref: '#/types/User'
       - type: string
-```
-
-**Generated TypeScript:**
-
-```typescript
-export type User = { id: string };
-export type Status = 'active' | 'inactive';
-export type ApiResponse = User | string;
 ```
 
 ---
@@ -127,41 +130,37 @@ groupedTypes:
   Auth:
     LoginRequest:
       type: object
-      required: [email, password]
+      required:
+        - email
+        - password
       properties:
-        email: { type: string }
-        password: { type: string }
+        email:
+          type: string
+        password:
+          type: string
 
     LoginResponse:
       type: object
-      required: [token]
+      required:
+        - token
       properties:
-        token: { type: string }
+        token:
+          type: string
         user:
           $ref: '#/groupedTypes/Auth/User'
 
     User:
       type: object
       properties:
-        id: { type: string }
+        id:
+          type: string
 
   Shop:
     Product:
       type: object
       properties:
-        name: { type: string }
-```
-
-**Generated TypeScript (with FolderWithFiles mode):**
-
-```
-output/
-  Auth/
-    LoginRequest.ts
-    LoginResponse.ts
-    User.ts
-  Shop/
-    Product.ts
+        name:
+          type: string
 ```
 
 ---
@@ -176,22 +175,24 @@ info:
   title: 'Full API'
 
 types:
-  # Shared/common types
   Timestamp:
     type: object
-    required: [createdAt]
+    required:
+      - createdAt
     properties:
-      createdAt: { type: string, format: date }
+      createdAt:
+        type: string
+        format: date
 
 groupedTypes:
-  # Domain-specific types
   Users:
     User:
       allOf:
         - $ref: '#/types/Timestamp'
         - type: object
           properties:
-            name: { type: string }
+            name:
+              type: string
 ```
 
 ---

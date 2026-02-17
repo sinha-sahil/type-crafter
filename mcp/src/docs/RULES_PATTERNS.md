@@ -38,14 +38,6 @@ types:
       - $ref: '#/types/ErrorResponse'
 ```
 
-**TypeScript:**
-
-```typescript
-export type ApiResponse =
-  | { success: boolean; data: unknown }
-  | { success: boolean; error: string; code: number | null };
-```
-
 ---
 
 ## Pattern 2: Paginated Response
@@ -88,9 +80,12 @@ types:
       - id
       - email
     properties:
-      id: { type: string }
-      email: { type: string }
-      name: { type: string }
+      id:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
 ```
 
 ---
@@ -120,9 +115,12 @@ types:
           - id
           - email
         properties:
-          id: { type: string }
-          email: { type: string }
-          name: { type: string }
+          id:
+            type: string
+          email:
+            type: string
+          name:
+            type: string
 
   Post:
     allOf:
@@ -132,19 +130,12 @@ types:
           - id
           - title
         properties:
-          id: { type: string }
-          title: { type: string }
-          content: { type: string }
-```
-
-**TypeScript:**
-
-```typescript
-export type User = Timestamps & {
-  id: string;
-  email: string;
-  name: string | null;
-};
+          id:
+            type: string
+          title:
+            type: string
+          content:
+            type: string
 ```
 
 ---
@@ -224,17 +215,6 @@ types:
           $ref: '#/types/MenuItem'
 ```
 
-**TypeScript:**
-
-```typescript
-export type MenuItem = {
-  id: string;
-  label: string;
-  url: string | null;
-  children: MenuItem[] | null;
-};
-```
-
 ---
 
 ## Pattern 6: Form Request/Response
@@ -294,9 +274,12 @@ types:
       - id
       - email
     properties:
-      id: { type: string }
-      email: { type: string }
-      name: { type: string }
+      id:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
 ```
 
 ---
@@ -312,10 +295,15 @@ types:
       - type
       - createdAt
     properties:
-      id: { type: string }
-      type: { type: string }
-      createdAt: { type: string, format: date }
-      read: { type: boolean }
+      id:
+        type: string
+      type:
+        type: string
+      createdAt:
+        type: string
+        format: date
+      read:
+        type: boolean
 
   EmailNotification:
     allOf:
@@ -327,9 +315,12 @@ types:
         properties:
           type:
             type: string
-            enum: [email]
-          subject: { type: string }
-          body: { type: string }
+            enum:
+              - email
+          subject:
+            type: string
+          body:
+            type: string
 
   SmsNotification:
     allOf:
@@ -341,9 +332,12 @@ types:
         properties:
           type:
             type: string
-            enum: [sms]
-          message: { type: string }
-          phoneNumber: { type: string }
+            enum:
+              - sms
+          message:
+            type: string
+          phoneNumber:
+            type: string
 
   PushNotification:
     allOf:
@@ -354,9 +348,12 @@ types:
         properties:
           type:
             type: string
-            enum: [push]
-          title: { type: string }
-          body: { type: string }
+            enum:
+              - push
+          title:
+            type: string
+          body:
+            type: string
 
   Notification:
     oneOf:
@@ -378,21 +375,30 @@ types:
       - port
       - database
     properties:
-      host: { type: string }
-      port: { type: number }
-      database: { type: string }
-      username: { type: string }
-      password: { type: string }
-      ssl: { type: boolean }
+      host:
+        type: string
+      port:
+        type: number
+      database:
+        type: string
+      username:
+        type: string
+      password:
+        type: string
+      ssl:
+        type: boolean
 
   CacheConfig:
     type: object
     required:
       - enabled
     properties:
-      enabled: { type: boolean }
-      ttl: { type: number }
-      maxSize: { type: number }
+      enabled:
+        type: boolean
+      ttl:
+        type: number
+      maxSize:
+        type: number
 
   AppConfig:
     type: object
@@ -402,7 +408,10 @@ types:
     properties:
       environment:
         type: string
-        enum: [development, staging, production]
+        enum:
+          - development
+          - staging
+          - production
       database:
         $ref: '#/types/DatabaseConfig'
       cache:
@@ -446,18 +455,24 @@ groupedTypes:
   UserTypes:
     User:
       type: object
-      required: [id, email]
+      required:
+        - id
+        - email
       properties:
-        id: { type: string }
-        email: { type: string }
+        id:
+          type: string
+        email:
+          type: string
         profile:
           $ref: '#/groupedTypes/UserTypes/UserProfile'
 
     UserProfile:
       type: object
       properties:
-        name: { type: string }
-        avatar: { type: string }
+        name:
+          type: string
+        avatar:
+          type: string
 ```
 
 ---
@@ -466,7 +481,6 @@ groupedTypes:
 
 ```yaml
 types:
-  # String to string map
   Headers:
     type: object
     additionalProperties:
@@ -474,12 +488,10 @@ types:
       valueType:
         type: string
 
-  # String to any map
   Metadata:
     type: object
     additionalProperties: true
 
-  # ID to entity map
   UserCache:
     type: object
     additionalProperties:
@@ -487,13 +499,13 @@ types:
       valueType:
         $ref: '#/types/User'
 
-  # Mixed: fixed properties + dynamic
   Response:
     type: object
     required:
       - status
     properties:
-      status: { type: number }
+      status:
+        type: number
     additionalProperties:
       keyType: string
       valueType:
@@ -501,16 +513,9 @@ types:
 
   User:
     type: object
-    required: [id]
+    required:
+      - id
     properties:
-      id: { type: string }
-```
-
-**TypeScript:**
-
-```typescript
-export type Headers = { [keys: string]: string };
-export type Metadata = { [keys: string]: unknown };
-export type UserCache = { [keys: string]: User };
-export type Response = { status: number; [keys: string]: unknown };
+      id:
+        type: string
 ```

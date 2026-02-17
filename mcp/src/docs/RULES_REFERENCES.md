@@ -1,46 +1,37 @@
 # References Rules
 
-## Reference Syntax
-
-References use `$ref` to point to other types:
-
-```yaml
-$ref: '#/types/TypeName'           # Same file, top-level type
-$ref: '#/groupedTypes/Group/Type'  # Same file, grouped type
-$ref: './path/file.yaml#/TypeName' # External file
-```
+**Only the `$ref` keyword is used for references. No other referencing mechanism exists (`$include`, `$import`, `extends`, `inherits`, etc. are all invalid).**
 
 ---
 
-## Top File vs Non-Top File (CRITICAL)
+## Valid Reference Formats (Complete List)
+
+There are exactly **three** valid `$ref` formats:
+
+| Format | When to use | Example |
+| --- | --- | --- |
+| `#/types/TypeName` | Top file, same-file, types section | `$ref: '#/types/User'` |
+| `#/groupedTypes/Group/TypeName` | Top file, same-file, grouped section | `$ref: '#/groupedTypes/Auth/Token'` |
+| `'./path/file.yaml#/TypePath'` | External file, OR any ref in non-top files | `$ref: './shared/types.yaml#/User'` |
+
+**No other reference formats exist.**
+
+---
+
+## Top File vs Non-Top File
 
 ### Identifying File Type
 
-**Top File** = Has `info` section at root:
+**Top File** = Has `info` section with valid `version` and `title`.
 
-```yaml
-info:
-  version: '1.0.0'
-  title: 'My Types'
-types:
-  User: { ... }
-```
-
-**Non-Top File** = No `info` section:
-
-```yaml
-# No info section here
-UserTypes:
-  User: { ... }
-  Profile: { ... }
-```
+**Non-Top File** = No `info` section.
 
 ### Reference Rules by File Type
 
-| File Type    | Same-File Reference                | External Reference         |
-| ------------ | ---------------------------------- | -------------------------- |
-| Top File     | `#/types/Name`                     | `'./path/file.yaml#/Name'` |
-| Non-Top File | `'./path/to/this-file.yaml#/Name'` | `'./path/file.yaml#/Name'` |
+| File Type | Same-File Reference | External Reference |
+| --- | --- | --- |
+| Top File | `#/types/Name` or `#/groupedTypes/Group/Name` | `'./path/file.yaml#/Name'` |
+| Non-Top File | `'./path/to/this-file.yaml#/Name'` (full path required) | `'./path/file.yaml#/Name'` |
 
 ---
 
@@ -49,7 +40,6 @@ UserTypes:
 In a file WITH `info` section:
 
 ```yaml
-# types.yaml (TOP FILE)
 info:
   version: '1.0.0'
   title: 'API Types'
@@ -59,12 +49,13 @@ types:
     type: object
     properties:
       profile:
-        $ref: '#/types/Profile' # Same-file reference
+        $ref: '#/types/Profile'
 
   Profile:
     type: object
     properties:
-      bio: { type: string }
+      bio:
+        type: string
 
 groupedTypes:
   Auth:
@@ -72,14 +63,15 @@ groupedTypes:
       type: object
       properties:
         user:
-          $ref: '#/types/User' # Reference to types section
+          $ref: '#/types/User'
         session:
-          $ref: '#/groupedTypes/Auth/Session' # Same group
+          $ref: '#/groupedTypes/Auth/Session'
 
     Session:
       type: object
       properties:
-        token: { type: string }
+        token:
+          type: string
 ```
 
 ---
@@ -89,7 +81,6 @@ groupedTypes:
 In a file WITHOUT `info` section, you MUST use full paths for EVERYTHING:
 
 ```yaml
-# shared/cart.yaml (NON-TOP FILE - no info section)
 Cart:
   CartItem:
     type: object
@@ -97,7 +88,6 @@ Cart:
       - product
     properties:
       product:
-        # MUST use full path even for same-file reference
         $ref: './shared/cart.yaml#/Cart/Product'
       quantity:
         type: number
@@ -105,26 +95,13 @@ Cart:
   Product:
     type: object
     properties:
-      name: { type: string }
-      price: { type: number }
+      name:
+        type: string
+      price:
+        type: number
 ```
 
 **Why?** Non-top files have no root context. The parser needs the full path to resolve references.
-
-### Common Mistake in Non-Top Files
-
-```yaml
-# shared/cart.yaml (NON-TOP FILE)
-Cart:
-  CartItem:
-    type: object
-    properties:
-      product:
-        $ref: '#/Cart/Product'  # WRONG! Missing file path
-
-      product:
-        $ref: './shared/cart.yaml#/Cart/Product'  # CORRECT
-```
 
 ---
 
@@ -152,7 +129,6 @@ my-project/           # <- Run CLI from here
 ### References in api.yaml (top file)
 
 ```yaml
-# specs/api.yaml
 info:
   version: '1.0.0'
   title: 'API'
@@ -171,39 +147,20 @@ groupedTypes:
 ### References in cart.yaml (non-top file)
 
 ```yaml
-# specs/shop/cart.yaml (NON-TOP FILE)
 Cart:
   CartItem:
     type: object
     properties:
       product:
-        # Reference to another non-top file
         $ref: './specs/shop/product.yaml#/Product/ProductInfo'
-
-      # Same-file reference - still needs full path!
       discount:
         $ref: './specs/shop/cart.yaml#/Cart/Discount'
 
   Discount:
     type: object
     properties:
-      amount: { type: number }
-```
-
-### WRONG: Using Relative Paths
-
-```yaml
-# specs/shop/cart.yaml
-Cart:
-  CartItem:
-    type: object
-    properties:
-      product:
-        # WRONG - Don't use ../
-        $ref: '../product.yaml#/Product'
-
-        # CORRECT - From project root
-        $ref: './specs/shop/product.yaml#/Product'
+      amount:
+        type: number
 ```
 
 ---
@@ -213,29 +170,28 @@ Cart:
 You can reference an entire group, not just individual types:
 
 ```yaml
-# api.yaml (top file)
 info:
   version: '1.0.0'
   title: 'API'
 
 groupedTypes:
-  # Import entire Auth group from external file
   Auth:
     $ref: './specs/auth/types.yaml#/AuthTypes'
 ```
 
 ```yaml
-# specs/auth/types.yaml (can be top or non-top)
 AuthTypes:
   LoginRequest:
     type: object
     properties:
-      email: { type: string }
+      email:
+        type: string
 
   LoginResponse:
     type: object
     properties:
-      token: { type: string }
+      token:
+        type: string
 ```
 
 ---
@@ -255,7 +211,7 @@ TreeNode:
     children:
       type: array
       items:
-        $ref: '#/types/TreeNode' # Self-reference
+        $ref: '#/types/TreeNode'
 
 LinkedList:
   type: object
@@ -263,40 +219,16 @@ LinkedList:
     value:
       type: number
     next:
-      $ref: '#/types/LinkedList' # Self-reference
-```
-
-**TypeScript:**
-
-```typescript
-export type TreeNode = {
-  value: string;
-  children: TreeNode[] | null;
-};
-
-export type LinkedList = {
-  value: number | null;
-  next: LinkedList | null;
-};
+      $ref: '#/types/LinkedList'
 ```
 
 ---
 
-## Reference Path Formats
+## Valid Reference Formats Summary
 
-| Context                      | Format                      | Example                                |
-| ---------------------------- | --------------------------- | -------------------------------------- |
-| Top file, same file, types   | `#/types/Name`              | `$ref: '#/types/User'`                 |
-| Top file, same file, grouped | `#/groupedTypes/Group/Name` | `$ref: '#/groupedTypes/Auth/Token'`    |
-| Top file, external           | `'./path/file.yaml#/...'`   | `$ref: './shared/types.yaml#/User'`    |
-| Non-top file, ANY reference  | `'./path/file.yaml#/...'`   | `$ref: './this/file.yaml#/Group/Type'` |
-
----
-
-## Checklist
-
-- [ ] Is this a top file or non-top file?
-- [ ] If non-top: Am I using full paths for ALL references?
-- [ ] Are paths from project root (not relative to current file)?
-- [ ] Do paths start with `./`?
-- [ ] No `../` in any path?
+| Context | Format | Example |
+| --- | --- | --- |
+| Top file, same file, types | `#/types/Name` | `$ref: '#/types/User'` |
+| Top file, same file, grouped | `#/groupedTypes/Group/Name` | `$ref: '#/groupedTypes/Auth/Token'` |
+| Top file, external | `'./path/file.yaml#/...'` | `$ref: './shared/types.yaml#/User'` |
+| Non-top file, ANY reference | `'./path/file.yaml#/...'` | `$ref: './this/file.yaml#/Group/Type'` |
