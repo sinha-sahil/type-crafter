@@ -101,18 +101,19 @@ async function generateAdditionalPropertiesType(
     type: 'string'
   }).templateInput.type;
   if (typeof typeInfo.additionalProperties === 'boolean') {
+    const unknownType = getPrimitiveType(typeName, {
+      ...placeholderTypeInfo,
+      type: 'unknown'
+    });
     return {
       templateInput: {
         keyType: stringKeyType,
-        valueType: getPrimitiveType(typeName, {
-          ...placeholderTypeInfo,
-          type: 'unknown'
-        }).templateInput.type,
+        valueType: unknownType.templateInput.type,
         valueTypeReferenced: false,
         valuePrimitiveType: 'unknown',
         valueComposerType: null
       },
-      primitives: new Set<string>()
+      primitives: unknownType.primitives
     };
   } else if (valueIsKeyedAdditionalProperties(typeInfo.additionalProperties)) {
     const valueTypeInfo = typeInfo.additionalProperties.valueType;
