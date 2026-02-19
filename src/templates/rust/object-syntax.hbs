@@ -10,7 +10,9 @@ pub struct {{typeName}} {
 {{#if this.description}}
     /// {{{this.description}}}
 {{/if}}
+{{#unless (eq @key (toSnakeCase @key))}}
     #[serde(rename = "{{@key}}")]
+{{/unless}}
 {{#unless this.required}}
     #[serde(skip_serializing_if = "Option::is_none")]
 {{/unless}}
