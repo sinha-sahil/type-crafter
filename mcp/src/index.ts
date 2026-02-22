@@ -688,16 +688,28 @@ server.registerTool(
             'Supported Languages for type-crafter generate:\n\n' +
             '1. typescript\n' +
             '   - Generates TypeScript type definitions (.ts files)\n' +
+            '   - Type mappings: string→string, number→number, integer→number, boolean→boolean, unknown→unknown\n' +
+            '   - Formats: date→string (no special type)\n' +
             '   - Usage: type-crafter generate typescript <spec.yaml> <output-dir>\n\n' +
             '2. typescript-with-decoders\n' +
             '   - Generates TypeScript types WITH runtime decoders\n' +
             '   - Useful for runtime validation of API responses\n' +
+            '   - Same type mappings as typescript\n' +
             '   - Usage: type-crafter generate typescript-with-decoders <spec.yaml> <output-dir>\n\n' +
+            '3. rust\n' +
+            '   - Generates Rust struct/enum definitions (.rs files) with serde derives\n' +
+            '   - Type mappings: string→String, number→i32, integer→i32, boolean→bool, unknown→serde_json::Value\n' +
+            '   - Formats: date→time::Date, date-time→time::OffsetDateTime\n' +
+            '   - Arrays: Vec<T>\n' +
+            '   - Handles reserved keywords with r# prefix\n' +
+            '   - Supports customAttributes for serde rename (x-name) and rename_all (renameAll)\n' +
+            '   - Module structure: snake_case mod files with mod.rs exporters\n' +
+            '   - Usage: type-crafter generate rust <spec.yaml> <output-dir>\n\n' +
             'Writer Modes:\n' +
             '- typesWriterMode: SingleFile | Files\n' +
             '- groupedTypesWriterMode: FolderWithFiles | SingleFile\n\n' +
             'Example:\n' +
-            'type-crafter generate typescript ./types.yaml ./src/types SingleFile FolderWithFiles',
+            'type-crafter generate rust ./types.yaml ./src/types SingleFile FolderWithFiles',
         },
       ],
     };

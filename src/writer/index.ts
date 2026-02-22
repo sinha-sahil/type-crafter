@@ -107,7 +107,9 @@ async function writeTypesToFile(
 
 async function writeExporterModules(files: Set<string>, folder: string): Promise<void> {
   const exporterModuleContent = Runtime.getExporterModuleTemplate()({
-    modules: [...files].map((file) => file.replace(Runtime.getConfig().output.fileExtension, ''))
+    modules: [...files]
+      .map((file) => file.replace(Runtime.getConfig().output.fileExtension, ''))
+      .sort()
   });
   const config = Runtime.getConfig();
   // Merging the contents of exporter module & types file in case their names are same.

@@ -8,15 +8,15 @@
 
 These are the **only** values the `type` field accepts:
 
-| `type` value | Notes |
-| --- | --- |
-| `string` | Accepts optional `format: date` and/or `enum` |
-| `number` | Accepts optional `enum` |
-| `integer` | Same as number. Accepts optional `enum` |
-| `boolean` | |
-| `unknown` | Dynamic/untyped value |
-| `object` | Requires `properties` and/or `additionalProperties` |
-| `array` | Requires `items`. Cannot be a top-level type |
+| `type` value | Notes                                                                |
+| ------------ | -------------------------------------------------------------------- |
+| `string`     | Accepts optional `format: date` or `format: date-time` and/or `enum` |
+| `number`     | Accepts optional `enum`                                              |
+| `integer`    | Same as number. Accepts optional `enum`                              |
+| `boolean`    |                                                                      |
+| `unknown`    | Dynamic/untyped value                                                |
+| `object`     | Requires `properties` and/or `additionalProperties`                  |
+| `array`      | Requires `items`. Cannot be a top-level type                         |
 
 **No other type values exist.** `date`, `datetime`, `float`, `int`, `any`, `null`, `void`, `map`, `list` are all invalid.
 
@@ -24,19 +24,20 @@ These are the **only** values the `type` field accepts:
 
 ## Valid Format Values (Complete List)
 
-There is exactly **one** valid format:
+There are exactly **two** valid formats:
 
-| `format` value | Applies to |
-| --- | --- |
-| `date` | `type: string` only |
+| `format` value | Applies to          | Description                 |
+| -------------- | ------------------- | --------------------------- |
+| `date`         | `type: string` only | Date without time           |
+| `date-time`    | `type: string` only | Date with time and timezone |
 
-**No other format values exist.** `date-time`, `datetime`, `time`, `email`, `uri`, `uuid`, `iso8601`, `url` are all invalid.
+**No other format values exist.** `datetime`, `time`, `email`, `uri`, `uuid`, `iso8601`, `url` are all invalid.
 
 ---
 
 ## Primitive Types
 
-Valid keywords on a primitive: `type`, `enum`, `format`, `description`, `example`. Nothing else.
+Valid keywords on a primitive: `type`, `enum`, `format`, `customAttributes`, `description`, `example`. Nothing else.
 
 ```yaml
 properties:
@@ -49,6 +50,9 @@ properties:
   birthDate:
     type: string
     format: date
+  createdAt:
+    type: string
+    format: date-time
   metadata:
     type: unknown
 ```
@@ -57,7 +61,7 @@ properties:
 
 ## Object Types
 
-Valid keywords on an object: `type`, `properties`, `required`, `additionalProperties`, `description`, `example`. Nothing else.
+Valid keywords on an object: `type`, `properties`, `required`, `additionalProperties`, `customAttributes`, `description`, `example`. Nothing else.
 
 ```yaml
 User:
@@ -124,7 +128,7 @@ User:
 
 ## Array Types
 
-Valid keywords on an array: `type`, `items`, `description`. Nothing else.
+Valid keywords on an array: `type`, `items`, `customAttributes`, `description`. Nothing else.
 
 ### Arrays Cannot Be Top-Level Types
 
@@ -264,25 +268,68 @@ UserWithMeta:
 
 ---
 
+## Custom Attributes (Pass-Through)
+
+`customAttributes` is an optional key/value map available on any type (primitive, object, array). It is **not validated** by Type Crafter — values are passed directly to language templates. Different templates read different keys.
+
+### On a Property (e.g. custom serialization name)
+
+```yaml
+Product:
+  type: object
+  required:
+    - id
+    - bodyHtml
+  properties:
+    id:
+      type: string
+    bodyHtml:
+      type: string
+      customAttributes:
+        x-name: 'Body (HTML)'
+```
+
+The Rust template reads `x-name` to emit `#[serde(rename = "Body (HTML)")]` on that field.
+
+### On an Object (e.g. rename_all strategy)
+
+```yaml
+Product:
+  type: object
+  customAttributes:
+    renameAll: camelCase
+  required:
+    - id
+  properties:
+    id:
+      type: string
+    productType:
+      type: string
+```
+
+The Rust template reads `renameAll` to emit `#[serde(rename_all = "camelCase")]` on the struct, suppressing automatic per-field renames.
+
+---
+
 ## Valid Keywords Summary
 
-| Type Kind | Valid Keywords (and ONLY these) |
-| --- | --- |
-| Primitive | `type`, `enum`, `format`, `description`, `example` |
-| Object | `type`, `properties`, `required`, `additionalProperties`, `description`, `example` |
-| Array | `type`, `items`, `description` |
-| Reference | `$ref` |
-| Union | `oneOf` |
-| Intersection | `allOf` |
+| Type Kind    | Valid Keywords (and ONLY these)                                                                        |
+| ------------ | ------------------------------------------------------------------------------------------------------ |
+| Primitive    | `type`, `enum`, `format`, `customAttributes`, `description`, `example`                                 |
+| Object       | `type`, `properties`, `required`, `additionalProperties`, `customAttributes`, `description`, `example` |
+| Array        | `type`, `items`, `customAttributes`, `description`                                                     |
+| Reference    | `$ref`                                                                                                 |
+| Union        | `oneOf`                                                                                                |
+| Intersection | `allOf`                                                                                                |
 
 ## Type Definition Summary
 
-| Type | Structure | Top-Level? |
-| --- | --- | --- |
-| Object | `type: object` + `properties` | Yes |
-| Enum | `type: string` or `type: number` + `enum` | Yes |
-| Primitive | `type: string` / `number` / `boolean` / `unknown` | Yes |
-| Array | `type: array` + `items` | **NO** |
-| Union | `oneOf` with array | Yes |
-| Intersection | `allOf` with array | Yes |
-| Reference | `$ref` with path | Yes |
+| Type         | Structure                                         | Top-Level? |
+| ------------ | ------------------------------------------------- | ---------- |
+| Object       | `type: object` + `properties`                     | Yes        |
+| Enum         | `type: string` or `type: number` + `enum`         | Yes        |
+| Primitive    | `type: string` / `number` / `boolean` / `unknown` | Yes        |
+| Array        | `type: array` + `items`                           | **NO**     |
+| Union        | `oneOf` with array                                | Yes        |
+| Intersection | `allOf` with array                                | Yes        |
+| Reference    | `$ref` with path                                  | Yes        |

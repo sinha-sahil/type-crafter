@@ -181,6 +181,7 @@ export type ObjectTemplateInputProperty = TypeDescriptors & {
   primitiveType: string;
   composerType: string | null;
   optional: boolean;
+  customAttributes?: Record<string, unknown> | null;
 };
 
 export type AdditionalPropertiesTemplateInput = {
