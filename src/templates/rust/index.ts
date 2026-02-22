@@ -53,13 +53,13 @@ export async function config(
     language: {
       exporterModuleName: 'mod',
       typeMapper: {
-        string: { default: 'String' },
+        string: { default: 'String', date: 'time::Date', 'date-time': 'time::OffsetDateTime' },
         number: { default: 'i32' },
         integer: { default: 'i32' },
         boolean: 'bool',
         array: 'Vec<~ItemType~>',
         object: 'type',
-        unknown: 'String'
+        unknown: 'serde_json::Value'
       },
       modulePathConfig: {
         separator: '::',

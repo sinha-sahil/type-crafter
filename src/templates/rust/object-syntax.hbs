@@ -5,14 +5,23 @@
 /// Example: {{{example}}}
 {{/if}}
 #[derive(Debug, Clone, Serialize, Deserialize)]
+{{#if customAttributes.renameAll}}
+#[serde(rename_all = "{{{customAttributes.renameAll}}}")]
+{{/if}}
 pub struct {{typeName}} {
 {{#each properties}}
 {{#if this.description}}
     /// {{{this.description}}}
 {{/if}}
+{{#if this.customAttributes.[x-name]}}
+    #[serde(rename = "{{{this.customAttributes.[x-name]}}}")]
+{{else}}
+{{#unless ../customAttributes.renameAll}}
 {{#unless (eq @key (toSnakeCase @key))}}
     #[serde(rename = "{{@key}}")]
 {{/unless}}
+{{/unless}}
+{{/if}}
 {{#unless this.required}}
     #[serde(skip_serializing_if = "Option::is_none")]
 {{/unless}}

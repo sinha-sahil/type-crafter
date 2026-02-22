@@ -273,7 +273,8 @@ async function generateObjectType(
         example: propertyDetails.example,
         description: propertyDetails.description,
         summary: propertyDetails.summary,
-        optional: typeInfo.optional?.includes(propertyName) ?? false
+        optional: typeInfo.optional?.includes(propertyName) ?? false,
+        customAttributes: propertyDetails.customAttributes ?? null
       }
     };
   }
@@ -358,7 +359,8 @@ async function generateArrayType(
     dynamicGeneratedType += arrayItemsType.content;
     arrayItemsType.templateInput.type = itemTypeName;
   } else {
-    arrayItemsType = await generateType(typeName + 'Item', typeInfo.items, parentTypes);
+    const itemName = toPascalCase(typeName) + 'Item';
+    arrayItemsType = await generateType(itemName, typeInfo.items, parentTypes);
     // For referenced types (e.g. enums via $ref), use the type name as the item type
     // identifier, consistent with how inline enums are handled above.
     // Also only keep the direct reference — the referenced type handles its own imports.
@@ -370,6 +372,10 @@ async function generateArrayType(
         templateInput: { ...arrayItemsType.templateInput, type: refItemTypeName },
         references: new Set([refItemTypeName])
       };
+    } else {
+      // For inline types (e.g. anonymous objects), include the generated type definition
+      // so it is emitted alongside the struct that references it.
+      dynamicGeneratedType += arrayItemsType.content;
     }
   }
 
