@@ -302,7 +302,7 @@ export function formatModulePath(
 
   const formattedPath = path.replace(/\//g, config.separator);
   if (parentPart === '') {
-    return formattedPath;
+    return config.selfRef + config.separator + formattedPath;
   }
 
   return parentPart + config.separator + formattedPath;
