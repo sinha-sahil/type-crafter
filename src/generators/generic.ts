@@ -136,7 +136,11 @@ async function generateAdditionalPropertiesType(
         valueComposerType:
           'composerType' in generatedValueType.templateInput
             ? (generatedValueType.templateInput.composerType ?? null)
-            : null
+            : null,
+        valueArrayNestingDepth:
+          'arrayNestingDepth' in generatedValueType.templateInput
+            ? (generatedValueType.templateInput.arrayNestingDepth ?? 0)
+            : 0
       },
       primitives: generatedValueType.primitives
     };
@@ -158,7 +162,11 @@ async function generateAdditionalPropertiesType(
         valueComposerType:
           'composerType' in generatedValueType.templateInput
             ? (generatedValueType.templateInput.composerType ?? null)
-            : null
+            : null,
+        valueArrayNestingDepth:
+          'arrayNestingDepth' in generatedValueType.templateInput
+            ? (generatedValueType.templateInput.arrayNestingDepth ?? 0)
+            : 0
       },
       primitives: generatedValueType.primitives
     };
@@ -206,6 +214,7 @@ async function generateObjectType(
 
     const primitiveType = propertyType ?? 'object';
     let composerType = null;
+    let arrayNestingDepth = 0;
     let recursivePropertyName;
     let languageDataType: string | null = null;
     let isReferenced = false;
@@ -234,6 +243,7 @@ async function generateObjectType(
       references.push(...arrayDataGenOutput.references);
       languageDataType = arrayDataGenOutput.templateInput.type;
       composerType = arrayDataGenOutput.templateInput.composerType ?? null;
+      arrayNestingDepth = arrayDataGenOutput.templateInput.arrayNestingDepth ?? 0;
       dynamicGeneratedType += arrayDataGenOutput.content;
     } else if (propertyType === 'object') {
       recursivePropertyName = typeName + toPascalCase(propertyName);
@@ -270,6 +280,7 @@ async function generateObjectType(
         referenced: isReferenced,
         primitiveType,
         composerType,
+        arrayNestingDepth,
         example: propertyDetails.example,
         description: propertyDetails.description,
         summary: propertyDetails.summary,
@@ -392,6 +403,19 @@ async function generateArrayType(
 
   const dataType = fillPatterns(arrayTypeMap, fillerPatterns);
 
+  const innerComposerType =
+    'composerType' in arrayItemsType.templateInput
+      ? (arrayItemsType.templateInput.composerType ?? arrayItemsType.templateInput.type)
+      : arrayItemsType.templateInput.type;
+
+  const innerNestingDepth =
+    'arrayNestingDepth' in arrayItemsType.templateInput
+      ? (arrayItemsType.templateInput.arrayNestingDepth ?? 0)
+      : 0;
+
+  const arrayNestingDepth =
+    typeInfo.items?.type === 'array' ? innerNestingDepth + 1 : 0;
+
   const result: GeneratedType<VariableTemplateInput> = {
     content: dynamicGeneratedType,
     references: arrayItemsType.references,
@@ -399,7 +423,8 @@ async function generateArrayType(
     templateInput: {
       typeName,
       type: dataType,
-      composerType: arrayItemsType.templateInput.type,
+      composerType: innerComposerType,
+      arrayNestingDepth,
       description: typeInfo.description,
       example: typeInfo.example,
       summary: typeInfo.summary

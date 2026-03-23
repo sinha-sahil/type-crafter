@@ -1,3 +1,10 @@
+{{#*inline "nestedArrayDecoder"}}
+{{~#if depth~}}
+(item: unknown) => decodeArray(item, {{~> nestedArrayDecoder depth=(subtract depth 1) composerType=composerType~}})
+{{~else~}}
+decode{{{toPascalCase composerType}}}
+{{~/if~}}
+{{/inline}}
 export type {{typeName}} =
   {{#each compositions}}
   | {{#if (eq this.source 'referenced')}}C{{../typeName}}{{referencedType}}
@@ -20,7 +27,7 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   {{else if (eq this.dataType 'object')}}
     decodeC{{this.templateInput.typeName}}(rawInput)
   {{else if (eq this.dataType 'array')}}
-    decodeArray(rawInput, decode{{{toPascalCase this.templateInput.composerType}}})
+    decodeArray(rawInput, {{~> nestedArrayDecoder depth=this.templateInput.arrayNestingDepth composerType=this.templateInput.composerType~}})
   {{else if this.templateInput.values}}
     decode{{this.templateInput.typeName}}(rawInput)
   {{else}}
