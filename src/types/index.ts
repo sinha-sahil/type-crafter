@@ -180,6 +180,7 @@ export type ObjectTemplateInputProperty = TypeDescriptors & {
   referenced: boolean;
   primitiveType: string;
   composerType: string | null;
+  arrayNestingDepth?: number;
   optional: boolean;
   customAttributes?: Record<string, unknown> | null;
 };
@@ -190,6 +191,7 @@ export type AdditionalPropertiesTemplateInput = {
   valueTypeReferenced: boolean;
   valuePrimitiveType: string;
   valueComposerType: string | null;
+  valueArrayNestingDepth?: number;
 };
 
 export type AdditionalPropertiesGenerationResult = {
@@ -254,6 +256,7 @@ export type VariableTemplateInput = TypeDescriptors & {
   typeName: string;
   type: string;
   composerType?: string;
+  arrayNestingDepth?: number;
 };
 
 export type TemplateInput =

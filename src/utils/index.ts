@@ -232,6 +232,11 @@ export function registerTemplateHelpers(): void {
       return value1 || value2;
     }
   });
+  Handlebars.registerHelper(
+    'subtract',
+    (a: unknown, b: unknown) =>
+      typeof a === 'number' && typeof b === 'number' ? a - b : 0
+  );
 }
 
 export function readNestedValue(json: unknown, keyPath: string[]): JSONObject {

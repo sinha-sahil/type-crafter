@@ -1,3 +1,10 @@
+{{#*inline "nestedArrayDecoder"}}
+{{~#if depth~}}
+(item: unknown) => decodeArray(item, {{~> nestedArrayDecoder depth=(subtract depth 1) composerType=composerType~}})
+{{~else~}}
+decode{{{toPascalCase composerType}}}
+{{~/if~}}
+{{/inline}}
 /**
  * @type { {{typeName}} }
  {{#if description}}
@@ -42,8 +49,8 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
     const decoded{{variableName @key}} = {{#if this.referenced ~}}
       {{#if this.optional}}_{{/if}}decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}]);
     {{~else~}}
-      {{~#if (eq this.primitiveType 'array')~}} 
-      decodeArray(rawInput[{{{indexKey @key}}}], decode{{{toPascalCase this.composerType}}})
+      {{~#if (eq this.primitiveType 'array')~}}
+      decodeArray(rawInput[{{{indexKey @key}}}], {{~> nestedArrayDecoder depth=this.arrayNestingDepth composerType=this.composerType~}})
       {{~else~}}
        {{#if this.optional}}_{{/if}}decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}])
       {{~/if~}};
@@ -67,13 +74,13 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
     for (const key in rawInput) {
       {{#if additionalProperties.valueTypeReferenced}}
       const decodedValue = {{#if (eq additionalProperties.valuePrimitiveType 'array')~}}
-        decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+        decodeArray(rawInput[key], {{~> nestedArrayDecoder depth=additionalProperties.valueArrayNestingDepth composerType=additionalProperties.valueComposerType~}});
       {{~else~}}
         decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
       {{~/if}}
       {{else}}
       {{#if (eq additionalProperties.valuePrimitiveType 'array')}}
-      const decodedValue = decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+      const decodedValue = decodeArray(rawInput[key], {{~> nestedArrayDecoder depth=additionalProperties.valueArrayNestingDepth composerType=additionalProperties.valueComposerType~}});
       {{else}}
       const decodedValue = decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
       {{/if}}
@@ -91,13 +98,13 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
       if (!knownKeys.has(key)) {
         {{#if additionalProperties.valueTypeReferenced}}
         const decodedValue = {{#if (eq additionalProperties.valuePrimitiveType 'array')~}}
-          decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+          decodeArray(rawInput[key], {{~> nestedArrayDecoder depth=additionalProperties.valueArrayNestingDepth composerType=additionalProperties.valueComposerType~}});
         {{~else~}}
           decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
         {{~/if}}
         {{else}}
         {{#if (eq additionalProperties.valuePrimitiveType 'array')}}
-        const decodedValue = decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+        const decodedValue = decodeArray(rawInput[key], {{~> nestedArrayDecoder depth=additionalProperties.valueArrayNestingDepth composerType=additionalProperties.valueComposerType~}});
         {{else}}
         const decodedValue = decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
         {{/if}}
@@ -135,7 +142,7 @@ export function _decode{{typeName}}(rawInput: unknown): {{typeName}} | undefined
       {{#if this.optional}}_{{/if}}decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}]);
     {{~else~}}
       {{~#if (eq this.primitiveType 'array')~}}
-      decodeArray(rawInput[{{{indexKey @key}}}], decode{{{toPascalCase this.composerType}}})
+      decodeArray(rawInput[{{{indexKey @key}}}], {{~> nestedArrayDecoder depth=this.arrayNestingDepth composerType=this.composerType~}})
       {{~else~}}
         {{#if this.optional}}_{{/if}}decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}])
       {{~/if~}};
@@ -159,13 +166,13 @@ export function _decode{{typeName}}(rawInput: unknown): {{typeName}} | undefined
     for (const key in rawInput) {
       {{#if additionalProperties.valueTypeReferenced}}
       const decodedValue = {{#if (eq additionalProperties.valuePrimitiveType 'array')~}}
-        decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+        decodeArray(rawInput[key], {{~> nestedArrayDecoder depth=additionalProperties.valueArrayNestingDepth composerType=additionalProperties.valueComposerType~}});
       {{~else~}}
         decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
       {{~/if}}
       {{else}}
       {{#if (eq additionalProperties.valuePrimitiveType 'array')}}
-      const decodedValue = decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+      const decodedValue = decodeArray(rawInput[key], {{~> nestedArrayDecoder depth=additionalProperties.valueArrayNestingDepth composerType=additionalProperties.valueComposerType~}});
       {{else}}
       const decodedValue = decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
       {{/if}}
@@ -183,13 +190,13 @@ export function _decode{{typeName}}(rawInput: unknown): {{typeName}} | undefined
       if (!knownKeys.has(key)) {
         {{#if additionalProperties.valueTypeReferenced}}
         const decodedValue = {{#if (eq additionalProperties.valuePrimitiveType 'array')~}}
-          decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+          decodeArray(rawInput[key], {{~> nestedArrayDecoder depth=additionalProperties.valueArrayNestingDepth composerType=additionalProperties.valueComposerType~}});
         {{~else~}}
           decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
         {{~/if}}
         {{else}}
         {{#if (eq additionalProperties.valuePrimitiveType 'array')}}
-        const decodedValue = decodeArray(rawInput[key], decode{{{toPascalCase additionalProperties.valueComposerType}}});
+        const decodedValue = decodeArray(rawInput[key], {{~> nestedArrayDecoder depth=additionalProperties.valueArrayNestingDepth composerType=additionalProperties.valueComposerType~}});
         {{else}}
         const decodedValue = decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
         {{/if}}
