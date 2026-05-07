@@ -222,12 +222,14 @@ export type EnumTemplateInput = TypeDescriptors & {
   typeName: string;
   type: string;
   values: string[] | number[];
+  customAttributes?: Record<string, unknown> | null;
 };
 
 export type OneOfTemplateInput = TypeDescriptors & {
   typeName: string;
   type: string;
   compositions: OneOfTemplateInputComposition[];
+  customAttributes?: Record<string, unknown> | null;
 };
 
 export type OneOfTemplateInputComposition = {
@@ -242,6 +244,7 @@ export type AllOfTemplateInput = TypeDescriptors & {
   typeName: string;
   type: string;
   compositions: AllOfTemplateInputComposition[];
+  customAttributes?: Record<string, unknown> | null;
 };
 
 export type AllOfTemplateInputComposition = {

@@ -332,7 +332,8 @@ function generateEnumType(typeName: string, typeInfo: TypeInfo): GeneratedType<E
     values: typeInfo.enum,
     example: typeInfo.example,
     description: typeInfo.description,
-    summary: typeInfo.summary
+    summary: typeInfo.summary,
+    customAttributes: typeInfo.customAttributes ?? null
   };
 
   const result: GeneratedType<EnumTemplateInput> = {
@@ -511,7 +512,8 @@ async function generateOneOfTypes(
     compositions: [],
     description: typeInfo.description,
     example: typeInfo.example,
-    summary: typeInfo.summary
+    summary: typeInfo.summary,
+    customAttributes: typeInfo.customAttributes ?? null
   };
 
   const result: GeneratedType<OneOfTemplateInput> = {
@@ -577,7 +579,8 @@ async function generateAllOfTypes(
     compositions: [],
     description: typeInfo.description,
     example: typeInfo.example,
-    summary: typeInfo.summary
+    summary: typeInfo.summary,
+    customAttributes: typeInfo.customAttributes ?? null
   };
 
   const result: GeneratedType<AllOfTemplateInput> = {
