@@ -18,6 +18,7 @@ export type {{typeName}} =
 {{/if}}
 {{/each}}
 
+{{#unless customAttributes.skipDecoderGeneration}}
 export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   {{#each compositions}}
   {{#if (eq this.source 'referenced')}}
@@ -40,3 +41,4 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
     }
   return null;
 }
+{{/unless}}

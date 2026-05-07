@@ -19,6 +19,7 @@ export type {{typeName}} =
   {{/if}}
 {{/each}};
 
+{{#unless customAttributes.skipDecoderGeneration}}
 export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   const result: {{typeName}} | null =
   {{#each compositions}}
@@ -36,6 +37,7 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   {{/each}};
   return result;
 }
+{{/unless}}
 
 
 {{#each compositions}}
@@ -50,6 +52,7 @@ export class C{{../typeName}}{{referencedType}} {
   }
 }
 
+{{#unless ../customAttributes.skipDecoderGeneration}}
 export function decodeC{{../typeName}}{{referencedType}}(rawInput: unknown): C{{../typeName}}{{referencedType}} | null {
   const result = decode{{referencedType}}(rawInput);
   if (result === null) {
@@ -57,6 +60,7 @@ export function decodeC{{../typeName}}{{referencedType}}(rawInput: unknown): C{{
   }
   return new C{{../typeName}}{{referencedType}}(result);
 }
+{{/unless}}
 
 {{else if (eq this.dataType 'object')}}
 
@@ -69,6 +73,7 @@ export class C{{../typeName}}{{this.templateInput.typeName}} {
   }
 }
 
+{{#unless ../customAttributes.skipDecoderGeneration}}
 export function decodeC{{this.templateInput.typeName}}(rawInput: unknown) {
   const result = decode{{this.templateInput.typeName}}(rawInput);
   if (result === null) {
@@ -76,6 +81,7 @@ export function decodeC{{this.templateInput.typeName}}(rawInput: unknown) {
   }
   return new C{{../typeName}}{{this.templateInput.typeName}}(result);
 }
+{{/unless}}
 
 {{/if}}
 {{/each}}
