@@ -50,7 +50,7 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
       {{#if this.optional}}_{{/if}}decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}]);
     {{~else~}}
       {{~#if (eq this.primitiveType 'array')~}}
-      decodeArray(rawInput[{{{indexKey @key}}}], {{~> nestedArrayDecoder depth=this.arrayNestingDepth composerType=this.composerType~}})
+      decodeArray(rawInput[{{{indexKey @key}}}], {{~> nestedArrayDecoder depth=this.arrayNestingDepth composerType=this.composerType~}}){{#if this.optional}} ?? undefined{{/if}}
       {{~else~}}
        {{#if this.optional}}_{{/if}}decode{{{toPascalCase this.type}}}(rawInput[{{{indexKey @key}}}])
       {{~/if~}};
@@ -85,9 +85,11 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
       const decodedValue = decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
       {{/if}}
       {{/if}}
+      {{#unless (eq additionalProperties.valuePrimitiveType 'unknown')}}
       if (decodedValue === null) {
         return null;
       }
+      {{/unless}}
       decodedAdditionalProperties[key] = decodedValue;
     }
     return decodedAdditionalProperties;
@@ -109,9 +111,11 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
         const decodedValue = decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
         {{/if}}
         {{/if}}
+        {{#unless (eq additionalProperties.valuePrimitiveType 'unknown')}}
         if (decodedValue === null) {
           return null;
         }
+        {{/unless}}
         decodedAdditionalProperties[key] = decodedValue;
       }
     }
@@ -177,9 +181,11 @@ export function _decode{{typeName}}(rawInput: unknown): {{typeName}} | undefined
       const decodedValue = decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
       {{/if}}
       {{/if}}
+      {{#unless (eq additionalProperties.valuePrimitiveType 'unknown')}}
       if (decodedValue === null) {
         return;
       }
+      {{/unless}}
       decodedAdditionalProperties[key] = decodedValue;
     }
     return decodedAdditionalProperties;
@@ -201,9 +207,11 @@ export function _decode{{typeName}}(rawInput: unknown): {{typeName}} | undefined
         const decodedValue = decode{{{toPascalCase additionalProperties.valueType}}}(rawInput[key]);
         {{/if}}
         {{/if}}
+        {{#unless (eq additionalProperties.valuePrimitiveType 'unknown')}}
         if (decodedValue === null) {
           return;
         }
+        {{/unless}}
         decodedAdditionalProperties[key] = decodedValue;
       }
     }
