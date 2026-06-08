@@ -97,7 +97,7 @@ Type Crafter generates typed code from YAML specifications. This guide is the de
 
 **No other keywords exist anywhere.** Do not use `nullable`, `optional`, `extensible`, `default`, `minimum`, `maximum`, `minLength`, `maxLength`, `pattern`, `title` (on properties), `readOnly`, `writeOnly`, `deprecated`, `discriminator`, `allowed_values`, `values`, `options`, `choices`, or anything from OpenAPI/JSON Schema that is not listed above.
 
-> **Note on `customAttributes`:** This field is a generic pass-through map. Its keys/values are not validated by Type Crafter — they are forwarded directly to language templates. Different language templates may read different keys (e.g. the Rust template reads `x-name` for serde rename and `renameAll` for `serde(rename_all)`). Consult the template documentation for your target language.
+> **Note on `customAttributes`:** This field is a generic pass-through map. Its keys/values are not validated by Type Crafter — they are forwarded directly to language templates. Different language templates may read different keys (e.g. the Rust template reads `x-name` for serde rename, `renameAll` for `serde(rename_all)`, and `x-derive` to append custom `#[derive(...)]` macros). Consult the template documentation for your target language.
 
 ---
 

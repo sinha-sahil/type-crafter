@@ -194,6 +194,35 @@ export function escapeReservedWord(input: unknown): unknown {
   return input;
 }
 
+export function appendUnique(base: unknown, additions: unknown): string {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  const add = (item: unknown): void => {
+    if (typeof item !== 'string') {
+      return;
+    }
+    const trimmed = item.trim();
+    if (trimmed.length === 0 || seen.has(trimmed)) {
+      return;
+    }
+    seen.add(trimmed);
+    result.push(trimmed);
+  };
+
+  if (typeof base === 'string') {
+    base.split(',').forEach(add);
+  }
+
+  if (Array.isArray(additions)) {
+    additions.forEach(add);
+  } else {
+    add(additions);
+  }
+
+  return result.join(', ');
+}
+
 export function registerTemplateHelpers(): void {
   Handlebars.registerHelper('getOptionalKeys', getOptionalKeys);
   Handlebars.registerHelper('getRequiredKeys', getRequiredKeys);
@@ -221,6 +250,7 @@ export function registerTemplateHelpers(): void {
   Handlebars.registerHelper('variableName', refineVariableName);
   Handlebars.registerHelper('indexKey', refineIndexKey);
   Handlebars.registerHelper('escapeReservedWord', escapeReservedWord);
+  Handlebars.registerHelper('appendUnique', appendUnique);
   Handlebars.registerHelper('stringify', (value: unknown) => JSON.stringify(value));
   Handlebars.registerHelper('not', (value: unknown) => {
     if (typeof value === 'boolean') {
@@ -232,10 +262,8 @@ export function registerTemplateHelpers(): void {
       return value1 || value2;
     }
   });
-  Handlebars.registerHelper(
-    'subtract',
-    (a: unknown, b: unknown) =>
-      typeof a === 'number' && typeof b === 'number' ? a - b : 0
+  Handlebars.registerHelper('subtract', (a: unknown, b: unknown) =>
+    typeof a === 'number' && typeof b === 'number' ? a - b : 0
   );
 }
 

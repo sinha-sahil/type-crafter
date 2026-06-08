@@ -4,7 +4,7 @@
 {{#if example}}
 /// Example: {{{example}}}
 {{/if}}
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive({{{appendUnique "Debug, Clone, Serialize, Deserialize" customAttributes.[x-derive]}}})]
 {{#if customAttributes.renameAll}}
 #[serde(rename_all = "{{{customAttributes.renameAll}}}")]
 {{/if}}
