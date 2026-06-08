@@ -4,7 +4,7 @@
 {{#if example}}
 /// Example: {{{example}}}
 {{/if}}
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive({{{appendUnique "Debug, Clone, Serialize, Deserialize" customAttributes.[x-derive]}}})]
 pub enum {{typeName}} {
 {{#each values}}
 {{#if (eq ../type 'string')}}

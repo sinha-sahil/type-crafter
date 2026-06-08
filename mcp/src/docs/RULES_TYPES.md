@@ -309,6 +309,39 @@ Product:
 
 The Rust template reads `renameAll` to emit `#[serde(rename_all = "camelCase")]` on the struct, suppressing automatic per-field renames.
 
+### On a Type (e.g. custom derive macros)
+
+```yaml
+Point:
+  type: object
+  customAttributes:
+    x-derive:
+      - PartialEq
+      - Eq
+      - Hash
+  required:
+    - x
+    - y
+  properties:
+    x:
+      type: integer
+    y:
+      type: integer
+```
+
+The Rust template reads `x-derive` (a list of derive macro names) on objects, enums, `oneOf`, and `allOf` types and **appends** them to the always-present defaults, producing:
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub struct Point { /* ... */ }
+```
+
+Notes on `x-derive`:
+
+- It is **append-only**. The defaults `Debug, Clone, Serialize, Deserialize` are always emitted and cannot be removed via `x-derive` — this keeps the serde attributes the generator emits (`rename`, `rename_all`, `untagged`, `flatten`, `skip_serializing_if`) working. Duplicates (e.g. listing `Clone`) are ignored.
+- It only adds names to the `#[derive(...)]` line. Derives that require an `import`/`use` (e.g. `strum::EnumString`) will **not** get their `use` statement added automatically — only std-prelude derives such as `PartialEq`, `Eq`, `Hash`, `Default`, `Ord`, `PartialOrd` work out of the box.
+- It is applied per type. If a type with `x-derive` references a nested inline type, add `x-derive` to that nested type too if the derived trait must hold transitively (e.g. `PartialEq` on a struct whose fields are themselves generated structs).
+
 ---
 
 ## Valid Keywords Summary
