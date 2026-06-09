@@ -5,6 +5,9 @@
 /// Example: {{{example}}}
 {{/if}}
 #[derive({{{appendUnique "Debug, Clone, Serialize, Deserialize" customAttributes.[x-derive]}}})]
+{{#each customAttributes.[x-attributes]}}
+#[{{{this}}}]
+{{/each}}
 {{#if customAttributes.renameAll}}
 #[serde(rename_all = "{{{customAttributes.renameAll}}}")]
 {{/if}}

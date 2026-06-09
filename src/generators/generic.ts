@@ -113,7 +113,8 @@ async function generateAdditionalPropertiesType(
         valuePrimitiveType: 'unknown',
         valueComposerType: null
       },
-      primitives: unknownType.primitives
+      primitives: unknownType.primitives,
+      references: new Set()
     };
   } else if (valueIsKeyedAdditionalProperties(typeInfo.additionalProperties)) {
     const valueTypeInfo = typeInfo.additionalProperties.valueType;
@@ -142,7 +143,10 @@ async function generateAdditionalPropertiesType(
             ? (generatedValueType.templateInput.arrayNestingDepth ?? 0)
             : 0
       },
-      primitives: generatedValueType.primitives
+      primitives: generatedValueType.primitives,
+      references: isReferenced
+        ? new Set([generatedValueType.templateInput.typeName])
+        : generatedValueType.references
     };
   } else if (valueIsTypeInfo(typeInfo.additionalProperties)) {
     const valueTypeInfo = typeInfo.additionalProperties;
@@ -168,7 +172,10 @@ async function generateAdditionalPropertiesType(
             ? (generatedValueType.templateInput.arrayNestingDepth ?? 0)
             : 0
       },
-      primitives: generatedValueType.primitives
+      primitives: generatedValueType.primitives,
+      references: isReferenced
+        ? new Set([generatedValueType.templateInput.typeName])
+        : generatedValueType.references
     };
   }
   return null;
@@ -299,6 +306,7 @@ async function generateObjectType(
   if (additionalPropertiesResult !== null) {
     templateInput.additionalProperties = additionalPropertiesResult.templateInput;
     primitives.push(...additionalPropertiesResult.primitives);
+    references.push(...additionalPropertiesResult.references);
   }
 
   const result: GeneratedType<ObjectTemplateInput> = {
@@ -414,8 +422,7 @@ async function generateArrayType(
       ? (arrayItemsType.templateInput.arrayNestingDepth ?? 0)
       : 0;
 
-  const arrayNestingDepth =
-    typeInfo.items?.type === 'array' ? innerNestingDepth + 1 : 0;
+  const arrayNestingDepth = typeInfo.items?.type === 'array' ? innerNestingDepth + 1 : 0;
 
   const result: GeneratedType<VariableTemplateInput> = {
     content: dynamicGeneratedType,

@@ -342,6 +342,43 @@ Notes on `x-derive`:
 - It only adds names to the `#[derive(...)]` line. Derives that require an `import`/`use` (e.g. `strum::EnumString`) will **not** get their `use` statement added automatically — only std-prelude derives such as `PartialEq`, `Eq`, `Hash`, `Default`, `Ord`, `PartialOrd` work out of the box.
 - It is applied per type. If a type with `x-derive` references a nested inline type, add `x-derive` to that nested type too if the derived trait must hold transitively (e.g. `PartialEq` on a struct whose fields are themselves generated structs).
 
+### On a Type — raw container attributes (e.g. sqlx)
+
+Some derives need a companion container attribute — e.g. `sqlx::Type` on an enum stored in a `TEXT` column needs `#[sqlx(type_name = "text")]`, otherwise sqlx assumes a custom Postgres enum type. Use `x-attributes` (a list of attribute strings) alongside `x-derive`:
+
+```yaml
+Runner:
+  type: string
+  enum:
+    - alpha_runner
+    - beta_runner
+  customAttributes:
+    x-derive:
+      - PartialEq
+      - sqlx::Type
+    x-attributes:
+      - sqlx(type_name = "text", rename_all = "snake_case")
+```
+
+The Rust template emits each entry as a `#[...]` line directly below the `#[derive(...)]` line, producing:
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, sqlx::Type)]
+#[sqlx(type_name = "text", rename_all = "snake_case")]
+pub enum Runner {
+    #[serde(rename = "alpha_runner")]
+    AlphaRunner,
+    #[serde(rename = "beta_runner")]
+    BetaRunner,
+}
+```
+
+Notes on `x-attributes`:
+
+- Supported on objects, enums, `oneOf`, and `allOf` types.
+- Each entry must be the attribute's inner content only (`sqlx(...)`, `serde(deny_unknown_fields)`) — do **not** include the `#[...]` wrapper; the template adds it.
+- Entries are emitted verbatim and are not validated — invalid Rust in an entry produces invalid generated code.
+
 ---
 
 ## Valid Keywords Summary
