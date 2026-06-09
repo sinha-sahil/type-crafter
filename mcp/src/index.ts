@@ -702,7 +702,7 @@ server.registerTool(
             '   - Formats: date→time::Date, date-time→time::OffsetDateTime\n' +
             '   - Arrays: Vec<T>\n' +
             '   - Handles reserved keywords with r# prefix\n' +
-            '   - Supports customAttributes for serde rename (x-name) and rename_all (renameAll)\n' +
+            '   - Supports customAttributes for serde rename (x-name), rename_all (renameAll), extra derives (x-derive), and raw container attributes like #[sqlx(...)] (x-attributes)\n' +
             '   - Module structure: snake_case mod files with mod.rs exporters\n' +
             '   - Usage: type-crafter generate rust <spec.yaml> <output-dir>\n\n' +
             'Writer Modes:\n' +

@@ -197,6 +197,7 @@ export type AdditionalPropertiesTemplateInput = {
 export type AdditionalPropertiesGenerationResult = {
   templateInput: AdditionalPropertiesTemplateInput;
   primitives: Set<string>;
+  references: Set<string>;
 };
 
 export type ExporterModuleTemplateInput = {

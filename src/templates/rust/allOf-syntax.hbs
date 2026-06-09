@@ -2,6 +2,9 @@
 /// {{{description}}}
 {{/if}}
 #[derive({{{appendUnique "Debug, Clone, Serialize, Deserialize" customAttributes.[x-derive]}}})]
+{{#each customAttributes.[x-attributes]}}
+#[{{{this}}}]
+{{/each}}
 pub struct {{typeName}} {
 {{#each compositions}}
 {{#if (eq this.source 'referenced')}}

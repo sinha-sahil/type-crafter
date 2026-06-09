@@ -52,26 +52,26 @@ Type Crafter generates typed code from YAML specifications. This guide is the de
 
 #### On a primitive (`type: string | number | integer | boolean | unknown`)
 
-| Keyword            | Required | Description                                                            |
-| ------------------ | -------- | ---------------------------------------------------------------------- |
-| `type`             | Yes      | One of: `string`, `number`, `integer`, `boolean`, `unknown`            |
-| `enum`             | No       | Array of allowed values. Creates a union of literals.                  |
-| `format`           | No       | `date` or `date-time`, only on `type: string`                          |
-| `customAttributes` | No       | Pass-through key/value map for template-level features (e.g. `x-name`) |
-| `description`      | No       | Documentation comment                                                  |
-| `example`          | No       | Documentation example                                                  |
+| Keyword            | Required | Description                                                                                        |
+| ------------------ | -------- | -------------------------------------------------------------------------------------------------- |
+| `type`             | Yes      | One of: `string`, `number`, `integer`, `boolean`, `unknown`                                        |
+| `enum`             | No       | Array of allowed values. Creates a union of literals.                                              |
+| `format`           | No       | `date` or `date-time`, only on `type: string`                                                      |
+| `customAttributes` | No       | Pass-through key/value map for template-level features (e.g. `x-name`, `x-derive`, `x-attributes`) |
+| `description`      | No       | Documentation comment                                                                              |
+| `example`          | No       | Documentation example                                                                              |
 
 #### On an object (`type: object`)
 
-| Keyword                | Required                                 | Description                                                               |
-| ---------------------- | ---------------------------------------- | ------------------------------------------------------------------------- |
-| `type`                 | Yes                                      | Must be `object`                                                          |
-| `properties`           | Yes (unless `additionalProperties` only) | Map of property names to type definitions                                 |
-| `required`             | No                                       | Array of property names that are non-nullable                             |
-| `additionalProperties` | No                                       | `true` or object with `keyType` and `valueType` for hashmaps              |
-| `customAttributes`     | No                                       | Pass-through key/value map for template-level features (e.g. `renameAll`) |
-| `description`          | No                                       | Documentation comment                                                     |
-| `example`              | No                                       | Documentation example                                                     |
+| Keyword                | Required                                 | Description                                                                                           |
+| ---------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `type`                 | Yes                                      | Must be `object`                                                                                      |
+| `properties`           | Yes (unless `additionalProperties` only) | Map of property names to type definitions                                                             |
+| `required`             | No                                       | Array of property names that are non-nullable                                                         |
+| `additionalProperties` | No                                       | `true` or object with `keyType` and `valueType` for hashmaps                                          |
+| `customAttributes`     | No                                       | Pass-through key/value map for template-level features (e.g. `renameAll`, `x-derive`, `x-attributes`) |
+| `description`          | No                                       | Documentation comment                                                                                 |
+| `example`              | No                                       | Documentation example                                                                                 |
 
 #### On an array (`type: array`)
 
@@ -97,7 +97,7 @@ Type Crafter generates typed code from YAML specifications. This guide is the de
 
 **No other keywords exist anywhere.** Do not use `nullable`, `optional`, `extensible`, `default`, `minimum`, `maximum`, `minLength`, `maxLength`, `pattern`, `title` (on properties), `readOnly`, `writeOnly`, `deprecated`, `discriminator`, `allowed_values`, `values`, `options`, `choices`, or anything from OpenAPI/JSON Schema that is not listed above.
 
-> **Note on `customAttributes`:** This field is a generic pass-through map. Its keys/values are not validated by Type Crafter — they are forwarded directly to language templates. Different language templates may read different keys (e.g. the Rust template reads `x-name` for serde rename, `renameAll` for `serde(rename_all)`, and `x-derive` to append custom `#[derive(...)]` macros). Consult the template documentation for your target language.
+> **Note on `customAttributes`:** This field is a generic pass-through map. Its keys/values are not validated by Type Crafter — they are forwarded directly to language templates. Different language templates may read different keys (e.g. the Rust template reads `x-name` for serde rename, `renameAll` for `serde(rename_all)`, `x-derive` to append custom `#[derive(...)]` macros, and `x-attributes` to emit raw container attributes such as `#[sqlx(type_name = "text")]`). Consult the template documentation for your target language.
 
 ---
 
