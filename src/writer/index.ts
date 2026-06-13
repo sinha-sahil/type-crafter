@@ -109,6 +109,7 @@ async function writeExporterModules(files: Set<string>, folder: string): Promise
   const exporterModuleContent = Runtime.getExporterModuleTemplate()({
     modules: [...files]
       .map((file) => file.replace(Runtime.getConfig().output.fileExtension, ''))
+      .filter((name) => name !== Runtime.getConfig().language.exporterModuleName)
       .sort()
   });
   const config = Runtime.getConfig();
