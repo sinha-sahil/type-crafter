@@ -379,6 +379,27 @@ Notes on `x-attributes`:
 - Each entry must be the attribute's inner content only (`sqlx(...)`, `serde(deny_unknown_fields)`) — do **not** include the `#[...]` wrapper; the template adds it.
 - Entries are emitted verbatim and are not validated — invalid Rust in an entry produces invalid generated code.
 
+### On a Union (e.g. shorter wrapper class names) — TypeScript only
+
+> **Supported only for TypeScript generation** (the `typescript-with-decoders` template). The `rust` and other language templates do not emit these wrapper classes and ignore this attribute entirely.
+
+The `typescript-with-decoders` template wraps each `oneOf` member (object or `$ref` members) in a disambiguating class named `C{UnionTypeName}{MemberTypeName}`. The `{UnionTypeName}` prefix guarantees the wrapper never collides with another union's wrapper, but it can make names long. The `x-class-name-prefix` attribute (type-level, on the `oneOf`) controls that prefix:
+
+```yaml
+Pet:
+  oneOf:
+    - $ref: '#/types/Cat'
+    - $ref: '#/types/Dog'
+  customAttributes:
+    x-class-name-prefix: Animal # => class CAnimalCat, CAnimalDog
+```
+
+- **A string** sets a custom prefix: `x-class-name-prefix: Animal` produces `CAnimalCat` / `CAnimalDog` (and matching `decodeCAnimalCat` …).
+- **`false`** (or an empty string / `null`) removes the prefix entirely: the wrappers become `CCat` / `CDog`. Use this only when you are confident the member type names are unique across all unions in the output, since the prefix is what prevents cross-union collisions.
+- **Omitted** keeps the default `C{UnionTypeName}{MemberTypeName}`.
+
+This attribute is a TypeScript-only concern — it only affects the `typescript-with-decoders` wrapper classes. Non-TypeScript templates (e.g. `rust`) ignore it.
+
 ---
 
 ## Valid Keywords Summary

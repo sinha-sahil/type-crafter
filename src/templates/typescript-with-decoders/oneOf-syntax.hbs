@@ -5,14 +5,14 @@
 decode{{{toPascalCase composerType}}}
 {{~/if~}}
 {{/inline}}
+{{#*inline "composerClassName"}}C{{#if (eq prefix false)}}{{else if (eq prefix "")}}{{else if prefix}}{{prefix}}{{else}}{{typeName}}{{/if}}{{member}}{{/inline}}
 export type {{typeName}} =
   {{#each compositions}}
-  | {{#if (eq this.source 'referenced')}}C{{../typeName}}{{referencedType}}
+  | {{#if (eq this.source 'referenced')}}{{> composerClassName typeName=../typeName member=this.referencedType prefix=../customAttributes.[x-class-name-prefix]}}
   {{else if (eq this.source 'inline')}}
     {{#if this.templateInput.values}}
       {{this.templateInput.typeName}}
-    {{else if (eq this.dataType 'object')}}
-      C{{typeName}}{{this.templateInput.typeName}}
+    {{else if (eq this.dataType 'object')}}{{> composerClassName typeName=../typeName member=this.templateInput.typeName prefix=../customAttributes.[x-class-name-prefix]}}
     {{else}}
       {{this.templateInput.type}}
     {{/if}}
@@ -24,7 +24,7 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
   const result: {{typeName}} | null =
   {{#each compositions}}
   {{#if (eq this.source 'referenced')}}
-    decodeC{{../typeName}}{{referencedType}}(rawInput)
+    decode{{> composerClassName typeName=../typeName member=this.referencedType prefix=../customAttributes.[x-class-name-prefix]}}(rawInput)
   {{else if (eq this.dataType 'object')}}
     decodeC{{this.templateInput.typeName}}(rawInput)
   {{else if (eq this.dataType 'array')}}
@@ -45,7 +45,7 @@ export function decode{{typeName}}(rawInput: unknown): {{typeName}} | null {
 {{#if this.templateInput.values}}
 {{{this.content}}}
 {{else if (eq this.source 'referenced')}}
-export class C{{../typeName}}{{referencedType}} {
+export class {{> composerClassName typeName=../typeName member=this.referencedType prefix=../customAttributes.[x-class-name-prefix]}} {
   data: {{referencedType}};
   constructor(data: {{referencedType}}) {
     this.data = data;
@@ -53,12 +53,12 @@ export class C{{../typeName}}{{referencedType}} {
 }
 
 {{#unless ../customAttributes.skipDecoderGeneration}}
-export function decodeC{{../typeName}}{{referencedType}}(rawInput: unknown): C{{../typeName}}{{referencedType}} | null {
+export function decode{{> composerClassName typeName=../typeName member=this.referencedType prefix=../customAttributes.[x-class-name-prefix]}}(rawInput: unknown): {{> composerClassName typeName=../typeName member=this.referencedType prefix=../customAttributes.[x-class-name-prefix]}} | null {
   const result = decode{{referencedType}}(rawInput);
   if (result === null) {
     return null;
   }
-  return new C{{../typeName}}{{referencedType}}(result);
+  return new {{> composerClassName typeName=../typeName member=this.referencedType prefix=../customAttributes.[x-class-name-prefix]}}(result);
 }
 {{/unless}}
 
@@ -66,7 +66,7 @@ export function decodeC{{../typeName}}{{referencedType}}(rawInput: unknown): C{{
 
 {{{this.content}}}
 
-export class C{{../typeName}}{{this.templateInput.typeName}} {
+export class {{> composerClassName typeName=../typeName member=this.templateInput.typeName prefix=../customAttributes.[x-class-name-prefix]}} {
   data: {{this.templateInput.typeName}};
   constructor(data: {{this.templateInput.typeName}}) {
     this.data = data;
@@ -79,7 +79,7 @@ export function decodeC{{this.templateInput.typeName}}(rawInput: unknown) {
   if (result === null) {
     return null;
   }
-  return new C{{../typeName}}{{this.templateInput.typeName}}(result);
+  return new {{> composerClassName typeName=../typeName member=this.templateInput.typeName prefix=../customAttributes.[x-class-name-prefix]}}(result);
 }
 {{/unless}}
 
