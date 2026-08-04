@@ -68,6 +68,7 @@ jobs:
       contents: write
       packages: write
       pull-requests: write
+      id-token: write
 
     environment: publish-env
 
@@ -81,8 +82,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: '22'
+
+      # OIDC trusted publishing needs npm >= 11.5.1; Node 22 bundles npm 10.
+      - name: Update npm for trusted publishing
+        run: |
+          npm install -g npm@11
+          npm --version
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -161,8 +167,6 @@ jobs:
           npm publish
           echo "NPM publish successful!"
           echo "publish_success=true" >> $GITHUB_OUTPUT
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Skip publish (already exists)
         id: skip-publish
@@ -207,6 +211,7 @@ jobs:
       contents: write
       packages: write
       pull-requests: write
+      id-token: write
 
     environment: publish-env
 
@@ -220,8 +225,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: '22'
+
+      - name: Update npm for trusted publishing
+        run: |
+          npm install -g npm@11
+          npm --version
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -315,8 +324,6 @@ jobs:
           npm publish --access public
           echo "NPM publish successful!"
           echo "publish_success=true" >> $GITHUB_OUTPUT
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Skip publish (already exists)
         id: skip-publish

@@ -3,6 +3,7 @@
   "version": "0.19.0",
   "description": "A tool to generate types from a yaml schema for any language",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "type": "module",
   "bin": {
     "type-crafter": "./dist/index.js"
@@ -32,8 +33,14 @@
   "license": "ISC",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js"
+    },
+    "./sdk": {
+      "types": "./dist/sdk.d.ts",
+      "import": "./dist/sdk.js",
+      "require": "./dist/sdk.js"
     }
   },
   "repository": {
@@ -44,6 +51,9 @@
     "url": "https://github.com/sinha-sahil/type-crafter/issues"
   },
   "homepage": "https://github.com/sinha-sahil/type-crafter#readme",
+  "dependencies": {
+    "type-decoder": "^2.3.0"
+  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^29.0.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
@@ -61,8 +71,8 @@
     "prettier": "^3.8.1",
     "rollup": "^4.57.1",
     "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-dts": "^6.4.1",
     "tslib": "^2.8.1",
-    "type-decoder": "^2.3.0",
     "typescript": "^5.9.3",
     "yaml": "^2.8.2"
   }
