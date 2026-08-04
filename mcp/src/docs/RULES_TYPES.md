@@ -379,6 +379,46 @@ Notes on `x-attributes`:
 - Each entry must be the attribute's inner content only (`sqlx(...)`, `serde(deny_unknown_fields)`) — do **not** include the `#[...]` wrapper; the template adds it.
 - Entries are emitted verbatim and are not validated — invalid Rust in an entry produces invalid generated code.
 
+### On an Enum (e.g. extra accepted values)
+
+`x-alias` lets an enum variant accept additional values when deserializing. It is a map keyed by the **spec enum value**, where each entry is a **list** of aliases:
+
+```yaml
+Runner:
+  type: string
+  enum:
+    - alpha_runner
+    - beta_runner
+  customAttributes:
+    x-alias:
+      alpha_runner:
+        - alphaRunner
+        - ALPHA
+```
+
+The Rust template emits one `#[serde(alias = "…")]` line per alias, below the variant's `#[serde(rename = "…")]`:
+
+```rust
+pub enum Runner {
+    #[serde(rename = "alpha_runner")]
+    #[serde(alias = "alphaRunner")]
+    #[serde(alias = "ALPHA")]
+    AlphaRunner,
+    #[serde(rename = "beta_runner")]
+    BetaRunner,
+}
+```
+
+Use it to accept legacy or alternately-cased payloads without changing the type. Serialization is unaffected — the variant is still written using its canonical enum value.
+
+Notes on `x-alias`:
+
+- Supported on enums only (both `type: string` and `type: number`), and **Rust only** — other language templates ignore it.
+- Works on standalone enums and on inline enums declared under an object property.
+- Each entry must be a list. A bare string is ignored, as with `x-derive` and `x-attributes`.
+- Aliases are emitted verbatim and are not validated — an alias that collides with another variant's value produces code that fails to compile.
+- Keys that do not match an enum value are silently ignored.
+
 ### On a Union (e.g. shorter wrapper class names) — TypeScript only
 
 > **Supported only for TypeScript generation** (the `typescript-with-decoders` template). The `rust` and other language templates do not emit these wrapper classes and ignore this attribute entirely.

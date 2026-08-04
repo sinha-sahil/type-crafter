@@ -12,6 +12,11 @@ pub enum {{typeName}} {
 {{#each values}}
 {{#if (eq ../type 'string')}}
     #[serde(rename = "{{this}}")]
+{{/if}}
+{{#each (lookup ../customAttributes.[x-alias] this)}}
+    #[serde(alias = "{{{this}}}")]
+{{/each}}
+{{#if (eq ../type 'string')}}
     {{{toPascalCase this}}},
 {{else}}
     Value{{{this}}},
