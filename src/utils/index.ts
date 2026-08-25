@@ -257,10 +257,13 @@ export function registerTemplateHelpers(): void {
       return !value;
     }
   });
-  Handlebars.registerHelper('or', (value1: unknown, value2: unknown) => {
-    if (typeof value1 === 'boolean' && typeof value2 === 'boolean') {
-      return value1 || value2;
-    }
+  Handlebars.registerHelper('or', (...args: unknown[]) => {
+    const values = args.slice(0, -1);
+    return values.some(Boolean);
+  });
+  Handlebars.registerHelper('and', (...args: unknown[]) => {
+    const values = args.slice(0, -1);
+    return values.every(Boolean);
   });
   Handlebars.registerHelper('subtract', (a: unknown, b: unknown) =>
     typeof a === 'number' && typeof b === 'number' ? a - b : 0
