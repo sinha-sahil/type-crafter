@@ -61,6 +61,7 @@ The syntax for writing different types can be referred from the [OpenAPI Data Ty
 
 - [✔️] TypeScript
 - [✔️] TypeScript with Decoders (runtime validation)
+- [✔️] Rust
 - More languages coming soon
 
 ## MCP Server (AI Assistant Integration)
