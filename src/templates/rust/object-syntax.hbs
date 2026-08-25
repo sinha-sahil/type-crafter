@@ -16,6 +16,9 @@ pub struct {{typeName}} {
 {{#if this.description}}
     /// {{{this.description}}}
 {{/if}}
+{{#if (and (eq this.type 'time::OffsetDateTime') this.customAttributes.[x-date-format])}}
+    #[serde(with = "time::serde::{{{this.customAttributes.[x-date-format]}}}")]
+{{/if}}
 {{#if this.customAttributes.[x-name]}}
     #[serde(rename = "{{{this.customAttributes.[x-name]}}}")]
 {{else}}
