@@ -1,13 +1,12 @@
 name: Release and Deploy
 
 on:
-  pull_request:
+  push:
     branches: [release]
-    types: [closed]
 
 jobs:
   detect-changes:
-    if: github.event.pull_request.merged == true
+    if: "!startsWith(github.event.head_commit.message, 'chore: release')"
     runs-on: ubuntu-latest
     outputs:
       root_changed: ${{ steps.changes.outputs.root_changed }}
@@ -22,14 +21,9 @@ jobs:
       - name: Detect package changes
         id: changes
         run: |
-          # For rebase + fast-forward merges, use the PR commit count
-          # to determine how far back to compare
-          PR_COMMITS=${{ github.event.pull_request.commits }}
+          BASE_SHA=${{ github.event.before }}
+          HEAD_SHA=${{ github.event.after }}
 
-          BASE_SHA=$(git rev-parse HEAD~${PR_COMMITS})
-          HEAD_SHA=$(git rev-parse HEAD)
-
-          echo "PR had $PR_COMMITS commit(s)"
           echo "Comparing $BASE_SHA to $HEAD_SHA"
 
           # Get list of changed files
