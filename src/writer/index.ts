@@ -88,7 +88,7 @@ async function writeTypesToFile(
     // Removing references that are already written to file
     const _references = [...types[typeName].references].filter((x) => !typeNames.includes(x));
     templateInput.referencedTypes.push(..._references);
-    templateInput.typesContent += types[typeName].content + '\n';
+    templateInput.typesContent += types[typeName].content;
   }
 
   // remove duplicates
