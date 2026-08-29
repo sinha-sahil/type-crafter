@@ -4,7 +4,7 @@
 {{#if example}}
 /// Example: {{{example}}}
 {{/if}}
-#[derive({{{appendUnique "Debug, Clone, Serialize, Deserialize" customAttributes.[x-derive]}}})]
+#[derive({{{appendUnique "Debug, Clone, Deserialize, Serialize" customAttributes.[x-derive]}}})]
 {{#each customAttributes.[x-attributes]}}
 #[{{{this}}}]
 {{/each}}
