@@ -114,7 +114,10 @@ export function getReferencedTypeModules(_referencedTypes: unknown, _writtenAt: 
 export function toPascalCase(input: string): string {
   return input
     .split(/[-_]/)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => {
+      const rest = /^[A-Z0-9]+$/.test(word) ? word.slice(1).toLowerCase() : word.slice(1);
+      return word.charAt(0).toUpperCase() + rest;
+    })
     .join('');
 }
 
