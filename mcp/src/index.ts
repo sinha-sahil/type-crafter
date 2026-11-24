@@ -708,8 +708,11 @@ server.registerTool(
             'Writer Modes:\n' +
             '- typesWriterMode: SingleFile | Files\n' +
             '- groupedTypesWriterMode: FolderWithFiles | SingleFile\n\n' +
+            'Options:\n' +
+            '- --file <name>: write `types` into <output-dir>/<name> only, leaving the rest of the directory untouched (SingleFile types, no groupedTypes)\n\n' +
             'Example:\n' +
-            'type-crafter generate rust ./types.yaml ./src/types SingleFile FolderWithFiles',
+            'type-crafter generate rust ./types.yaml ./src/types SingleFile FolderWithFiles\n' +
+            'type-crafter generate rust ./types.yaml ./src/types SingleFile SingleFile --file generated',
         },
       ],
     };

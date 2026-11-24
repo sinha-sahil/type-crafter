@@ -15,12 +15,20 @@ export { generate } from './sdk';
 
 const { colorize, BRAND } = colors;
 
+function decodeTypesFileName(rawInput: string, fileExtension: string): string | null {
+  const name = rawInput.endsWith(fileExtension)
+    ? rawInput.slice(0, -fileExtension.length)
+    : rawInput;
+  return name !== '' && !/[\\/]/.test(name) ? name : null;
+}
+
 async function runner(
   language: string,
   inputFilePath: string,
   outputDirectory: string,
   _typesWriterMode: string,
-  _groupedTypesWriterMode: string
+  _groupedTypesWriterMode: string,
+  options: { file?: string }
 ): Promise<void> {
   const spinner = createSpinner('Initializing type generation...');
 
@@ -75,6 +83,20 @@ async function runner(
       throw new UnsupportedFeatureError(`Failed to get generator config for ${language}`);
     }
 
+    if (typeof options.file !== 'undefined') {
+      const typesFileName = decodeTypesFileName(options.file, generatorConfig.output.fileExtension);
+      if (typesFileName === null) {
+        spinner.stop();
+        throw new InvalidParamError('Types file name', options.file);
+      }
+      generatorConfig.output = {
+        ...generatorConfig.output,
+        typesFileName,
+        cleanWrite: false,
+        exporterModule: false
+      };
+    }
+
     spinner.update('Generating types...');
     await generate(generatorConfig);
 
@@ -109,6 +131,10 @@ program
   .argument('<outputDirectory>', 'Path to the output file')
   .argument('[typesWriterMode]', 'Writer mode for types', 'SingleFile')
   .argument('[groupedTypesWriterMode]', 'Writer mode for grouped types', 'SingleFile')
+  .option(
+    '--file <name>',
+    'Write types into <outputDirectory>/<name> only, leaving the rest of the directory untouched'
+  )
   .action(runner);
 
 program.parse();
