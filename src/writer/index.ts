@@ -13,6 +13,7 @@ import {
   getExpectedWrittenPath,
   writeFile
 } from '$utils';
+import { UnsupportedFeatureError } from '$utils/error-handler';
 import Runtime from '$runtime';
 import { formatModuleName, generateExpectedOutputFile } from './helpers';
 
@@ -129,6 +130,19 @@ async function writeExporterModules(files: Set<string>, folder: string): Promise
 
 export async function writeOutput(generationResult: GenerationResult): Promise<void> {
   const config: Configuration = Runtime.getConfig();
+  const exporterModule = config.output.exporterModule ?? true;
+
+  if (!exporterModule && config.output.writerMode.types !== 'SingleFile') {
+    throw new UnsupportedFeatureError(
+      'Types need the SingleFile writer mode without an exporter module'
+    );
+  }
+
+  if (!exporterModule && Object.keys(generationResult.groupedTypes).length > 0) {
+    throw new UnsupportedFeatureError(
+      'groupedTypes need an exporter module to declare their files'
+    );
+  }
 
   if (config.output.cleanWrite) {
     await deleteFolder(config.output.directory);
@@ -207,7 +221,9 @@ export async function writeOutput(generationResult: GenerationResult): Promise<v
 
   // #endregion
 
-  writtenFiles.forEach((files, folder) => {
-    void writeExporterModules(files, folder);
-  });
+  if (exporterModule) {
+    writtenFiles.forEach((files, folder) => {
+      void writeExporterModules(files, folder);
+    });
+  }
 }

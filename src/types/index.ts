@@ -14,6 +14,7 @@ export type OutputConfig = {
   fileExtension: string;
   directory: string;
   typesFileName: string;
+  exporterModule?: boolean;
   writerMode: {
     groupedTypes: GroupedTypesWriterMode;
     types: TypesWriterMode;

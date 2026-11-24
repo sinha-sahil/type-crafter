@@ -22,6 +22,16 @@ type-crafter generate <language> <types-specification-file> <output-directory>
 type-crafter generate typescript types.yaml ./types
 ```
 
+### Writing into one file
+
+`--file <name>` writes the spec's `types` into `<output-directory>/<name>` with the language's extension, and leaves everything else in the directory alone: no clean write, no exporter module (`mod.rs` / `index.ts`).
+
+```bash
+type-crafter generate rust types.yaml ./src/types SingleFile SingleFile --file generated
+```
+
+This writes only `./src/types/generated.rs`. The extension is optional (`--file generated.rs` works too). It needs the `SingleFile` types writer mode, and a spec with `groupedTypes` is refused, since each group needs its own module.
+
 Example input specification file can be found [here](https://github.com/sinha-sahil/type-crafter/blob/release/examples/input.yaml#L1)
 
 ## Input Specification
